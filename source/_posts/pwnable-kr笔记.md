@@ -26,6 +26,19 @@ gdb -q software
 # 加载
 ```
 
+将代码重新编译成可执行文件，关闭gcc编译器优化以启用缓冲区溢出。
+
+1. 禁用ASLR
+```
+sudo bash -c 'echo 0 > /proc/sys/kernel/randomize_va_space'
+```
+
+2. 禁用canary：
+```
+gcc overflow.c -o overflow -fno-stack-protector
+```
+
+
 
 # [Toddler's Bottle]
 
@@ -48,5 +61,15 @@ gdb -q software
 运行软件
 
 
+## random
+
+本题就考察的是对rand函数的理解。随机数生成器需要设置随机种子。如果rand未设置，rand会在调用时自动设置随机数种子为1。rand()产生的是伪随机数，每次执行的结果相同。若要不同，需要调用srand()初始化函数。
+利用gdb调试，rand()每次确实生成相同的数`0x6b8b4567`。
+所以可以利用异或得：
+```
+key = 0x6b8b4567^0xdeadbeef = 3039230856
+```
+
 ## unlink
+
 
