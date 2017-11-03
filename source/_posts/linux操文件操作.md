@@ -1,14 +1,51 @@
 ---
-title: linux操文件操作
+title: linux操作
 date: 2017-08-13 09:48:19
 tags:
 ---
 
-对linux文件操作拾遗
+对linux文件操作，网络操作拾遗
 
 <!-- more -->
 
+# 网络操作
 
+# 配置静态ip
+
+操作网络服务
+```
+/etc/init.d/networking stop #停止
+/etc/init.d/networking start #开启
+/etc/init.d/networking restart #重启
+``
+配置静态IP
+```
+sudo gedit /etc/network/interfaces # 打开配置文件
+#在打开的文件中输入以下
+auto lo
+iface lo inet loopback
+auto eth0
+iface eth0 inet static
+address 192.168.1.188
+netmask 255.255.255.0
+gateway 192.168.1.1
+dns-nameserver 8.8.8.8
+```
+需要说明的是：
+1. `auto eth0`表示让网卡`eth0`开机自动挂载`eth0`。
+2. `eth0`是通过`ifconfig`得出的网卡名称。
+3. 将`eth0`的IP分配方式修改为静态分配(static)后，为其制定IP、网关、子网掩码、DNS等信息。
+
+设置DNS。
+```
+sudo gedit /etc/resolv.conf
+#添加以下记录
+nameserver dns的ip地址,如8.8.8.8
+#重启服务
+sudo /etc/init.d/networking restart
+```
+
+# 文件操作
 ## 压缩解压缩
 
 
