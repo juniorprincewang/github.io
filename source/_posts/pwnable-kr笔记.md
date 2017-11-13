@@ -33,6 +33,12 @@ scp -P 2222  tiny_easy@pwnable.kr:/home/tiny_easy/tiny_easy .
 gdb -q software
 # 加载
 ```
+关闭`alarm(0x38u);`
+```
+gdb-peda$ handle SIGALRM print nopass
+Signal        Stop  Print   Pass to program Description
+SIGALRM       No    Yes No      Alarm clock
+```
 
 将代码重新编译成可执行文件，关闭gcc编译器优化以启用缓冲区溢出。
 
