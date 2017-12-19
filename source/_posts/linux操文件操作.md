@@ -98,7 +98,9 @@ tar xf archive.tar.xz
 tar xf archive.tar.gz
 tar xf archive.tar
 
+tar jxvf archive.tar.bz2
 ```
+
 
 ##  压缩
 
@@ -132,6 +134,28 @@ ulimit 用于限制 shell 启动进程所占用的资源，支持以下各种类
 
 [1] (ulimit命令) [http://man.linuxde.net/ulimit]
 
+## find
+
+`find`命令用于查找指定文件夹下的文件。
+
+```
+find [dir path] [params]
+```
+
+可以根据文件或正则表达式匹配。
+
+在当前目录查找后缀名为`txt`的文件。
+```
+find . -name "*.txt"
+```
+
+找出后缀名不是`txt`的文件。
+```
+find . ! -name "*.txt"
+```
+
+
+详情参考：(find命令)[http://man.linuxde.net/find]
 
 # 修改hosts文件
 
@@ -141,4 +165,20 @@ ulimit 用于限制 shell 启动进程所占用的资源，支持以下各种类
 ```
 /etc/init.d/networking restart
 ```
+
+# LD_PRELOAD
+
+LD_PRELOAD是linux的环境变量，用于动态库的加载，动态库加载的优先级最高。加载顺序为LD_PRELOAD>LD_LIBRARY_PATH>/etc/ld.so.cache>/lib>/usr/lib。
+
+举例为：
+1. 首先通过gcc把源文件打包成动态库。
+```
+gcc -shared -fpic -o libpreload.so preload.c
+```
+2. 使用LD_PRELOAD加载*.so文件。
+```
+LD_PRELOAD=./libpreload.so ./test
+```
+
+
 
