@@ -17,20 +17,31 @@ tags:
 /etc/init.d/networking stop #停止
 /etc/init.d/networking start #开启
 /etc/init.d/networking restart #重启
-``
+```
+
 配置静态IP
+
 ```
 sudo gedit /etc/network/interfaces # 打开配置文件
 #在打开的文件中输入以下
 auto lo
 iface lo inet loopback
 auto eth0
+# 设置IPv4
 iface eth0 inet static
-address 192.168.1.188
-netmask 255.255.255.0
-gateway 192.168.1.1
-dns-nameserver 8.8.8.8
+    address 192.168.1.188
+    netmask 255.255.255.0
+    gateway 192.168.1.1
+    dns-nameserver 8.8.8.8
+# 设置IPv6
+iface eth0 inet6 static
+    address 2a04:f80:0754:168:225:218:171:0/112
+    gateway 2a04:f80:0754::1
+    dns-nameservers 2001:4860:4860::8888
+
 ```
+
+
 需要说明的是：
 1. `auto eth0`表示让网卡`eth0`开机自动挂载`eth0`。
 2. `eth0`是通过`ifconfig`得出的网卡名称。
@@ -82,7 +93,7 @@ scp -P 2222 local_file remote_username@remote_ip:remote_folder
 ```
 复制本地文件夹到远端服务器。
 ```
-scp -P 2222 local_folder remote_username@remote_ip:remote_folder  
+scp -P 2222 -r local_folder remote_username@remote_ip:remote_folder  
 ```
 
 从远端服务器到本地，只需要把参数颠倒即可。
