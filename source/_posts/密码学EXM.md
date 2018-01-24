@@ -17,6 +17,21 @@ category:
 
 Cipher Block
 
+# base64/32/16编码
+
+原来仅仅听过base64，后来还听到了base32, base16。其实原理都一样，base64、base32、base16可以分别编码转化8位字节为6位、5位、4位。这里重点介绍base64。
+Base64常用于在通常处理文本数据的场合，表示、传输、存储一些二进制数据。包括MIME的email，email via MIME,在XML中存储复杂数据。
+
+编码原理：Base64编码要求把3个8位字节转化为4个6位的字节，之后在6位的前面补两个0，形成8位一个字节的形式，6位2进制能表示的最大数是2的6次方是64，这也是为什么是64个字符(A-Z,a-z，0-9，+，/这64个编码字符，=号不属于编码字符，而是填充字符)的原因，这样就需要一张映射表。
+
+python的base64模块用于base64/32/16编码和解码。
+```
+import base64
+s="test"
+t = base64.b64encode(s)
+print t
+print base64.b64decode(t)
+```
 
 
 RC4
