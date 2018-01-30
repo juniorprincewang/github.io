@@ -107,3 +107,4 @@ seesion的常用操作可以简化为如下命令。
 1. [Tmux - Linux从业者必备利器](http://cenalulu.github.io/linux/tmux/)
 2. [tmux 指南](http://wdxtub.com/2016/03/30/tmux-guide/)
 3. [优雅地使用命令行：Tmux 终端复用](http://harttle.land/2015/11/06/tmux-startup.html)
+4. [如何使用Tmux提高终端环境下的效率](https://linux.cn/article-3952-1.html)
