@@ -95,6 +95,32 @@ nameserver dns的ip地址,如8.8.8.8
 sudo /etc/init.d/networking restart
 ```
 
+## 通过IPv6访问Google等
+
+在有IPv6支持的网络中，设置自己的静态IPv6。
+如果没有IPv6网络支持，可以使用miredo网络工具。这是一款主要用于BSD和Linux的IPV6 Teredo隧道链接，可以转换不支持IPV6的网络连接IPV6，内核中需要有IPV6和TUN隧道支持。
+安装也很简单：
+```
+sudo apt install miredo
+```
+通过`ifconfig`可以查看到多了一个`teredo`网卡。
+接下来就可以`ping`通google的IPv6地址了。
+```
+ping6 ipv6.google.com
+```
+然后再在`/etc/hosts`中追加访问地址。幸好github上有开源项目：<https://github.com/lennylxx/ipv6-hosts>
+
+```
+sudo su
+curl https://github.com/lennylxx/ipv6-hosts/raw/master/hosts -L >> /etc/hosts
+ping6 ipv6.google.com
+```
+
+参考： 
+[1] [ubuntu16.04使用ipv6](http://blog.csdn.net/scylhy/article/details/72699166)
+[2] [ubuntu 使用 ipv6 隧道](http://blog.letow.top/2017/11/05/ubuntu-%E5%BC%80%E5%90%AF-ipv6/)
+[3] [IPv4下使用IPv6](https://newdee.cf/posts/8544442c/)
+
 ## scp
 
 `scp`是`secure copy`的缩写，用于远程文件的安全拷贝，使用ssh传输，认证。
@@ -206,6 +232,12 @@ tar -zxvf /opt/soft/test/log.tar.gz
 ```
 tar xJvf filename.tar.xz
 ```
+
+解压缩zip包：
+```
+unzip filename.zip
+```
+
 
 ## ulimit
 

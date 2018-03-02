@@ -32,9 +32,17 @@ categories:
 |--|--|
 |/pattern|向后搜索|
 |?pattern|向前搜索|
-|/\<pattern\>|全字匹配|
+|/\Cpattern |区分大小写的查找|
+|/\cpattern | 不区分大小写的查找|
+|:set ic(ignorecase 的缩写) | 通过指令指定设置忽略大小写|
+|:set noic(noignorecase 的缩写)| 通过指令指定设置不忽略大小写|
+|/\<pattern\>|全字匹配|  
 |N	|光标到达搜索结果的前一个目标|
 |n	| 光标到达搜索结果的后一个目标|
+|:set hlsearch| 搜索的所有匹配项将高亮显示 |
+
+
+
 
 # 插入模式
 
@@ -116,3 +124,4 @@ categories:
 # 参考
 [1] [Vim 常用命令总结](http://pizn.github.io/2012/03/03/vim-commonly-used-command.html)
 [2] [VIM进阶笔记(1) —— 查找与替换](http://brieflyx.me/2015/linux-tools/vim-advanced-1/)
+[3] [vim 技巧 – 查找的时候忽略大小写](https://xwsoul.com/posts/472)
