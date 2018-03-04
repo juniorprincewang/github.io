@@ -4,6 +4,8 @@ date: 2017-10-04 12:27:42
 tags:
 - vim
 - linux
+categories:
+- vim
 ---
 
 平时操作vim有些命令经常查，索性都记录在这篇博客里。包括搜索替换，行操作。
@@ -12,7 +14,7 @@ tags:
 # 移动光标
 
 |命令	|作用|
-|---|---|
+|--|--|
 |h,j,k,l	|h表示往左，j表示往下，k表示往上，l表示往右|
 |Ctrl+f	|下一页|
 |Ctrl+b	|上一页|
@@ -30,9 +32,17 @@ tags:
 |--|--|
 |/pattern|向后搜索|
 |?pattern|向前搜索|
-|/\<pattern\>|全字匹配|
+|/\Cpattern |区分大小写的查找|
+|/\cpattern | 不区分大小写的查找|
+|:set ic(ignorecase 的缩写) | 通过指令指定设置忽略大小写|
+|:set noic(noignorecase 的缩写)| 通过指令指定设置不忽略大小写|
+|/\<pattern\>|全字匹配|  
 |N	|光标到达搜索结果的前一个目标|
 |n	| 光标到达搜索结果的后一个目标|
+|:set hlsearch| 搜索的所有匹配项将高亮显示 |
+
+
+
 
 # 插入模式
 
@@ -122,3 +132,4 @@ tags:
 # 参考
 [1] [Vim 常用命令总结](http://pizn.github.io/2012/03/03/vim-commonly-used-command.html)
 [2] [VIM进阶笔记(1) —— 查找与替换](http://brieflyx.me/2015/linux-tools/vim-advanced-1/)
+[3] [vim 技巧 – 查找的时候忽略大小写](https://xwsoul.com/posts/472)
