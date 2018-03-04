@@ -8,6 +8,31 @@ tags:
 
 <!-- more -->
 
+# man
+
+有时候查阅函数时，比如`write`系统调用，通过`man write`查出的结果不对。
+
+	WRITE(1)
+	NAME
+	     write — send a message to another user
+
+	SYNOPSIS
+	     write user [tty]
+
+原因是`man`是按照手册的章节号的顺序进行搜索的，比如：
+使用`man -k write`命令可以查阅所有关于`write`的内容。
+
+	...
+	write (1)            - send a message to another user
+	===> write (2)            - write to a file descriptor
+	writev (2)           - read or write data into multiple buffers
+	...
+
+`man write`是`write`命令手册，我们可以定位到`write (2)`是我们想要的库函数。可以在命令行输入`2`来查阅第二个`write`。
+```
+	man 2 write
+```
+
 # 网络操作
 
 ## 配置静态ip
