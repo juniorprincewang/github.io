@@ -167,7 +167,7 @@ procedure analyse(extractvalue(rand(), concat(0x3a,(select concat(0x7e,username,
 在浏览器访问flagishere_askldjfklasjdfl.jpg即可得到flag。
 
 
-## ErrorBased 
+## 6.ErrorBased 
 
 - 猜测闭合字符
 - 猜测列数
@@ -220,7 +220,7 @@ http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/index.php?usernam
 
 	'::#adf#ad@@#:key#notfound!#::' 
 
-## 7题
+### 另一种解法
 
 //看数据库版本 5.1.73
 ```
@@ -255,6 +255,15 @@ http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/index.php?usernam
 ```
 //发现user表没有flag，读motto表
 key#notfound!#
+
+## 7.盲注
+
+[盲注](https://www.jianshu.com/p/65f05e7cc957)分为两类：
+　　　　1.布尔盲注　布尔很明显Ture跟Fales，也就是说它只会根据　　　　你的注入信息返回Ture跟Fales，也就没有了之前的报错信息。
+　　　　2.时间盲注　界面返回值只有一种,true 无论输入任何值 返回情况都会按正常的来处理。加入特定的时间函数，通过查看web页面返回的时间差来判断注入的语句是否正确。
+
+
+
 
 
 
