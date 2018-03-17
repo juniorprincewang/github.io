@@ -495,7 +495,8 @@ Out[35]: '276f722736c95d99e921722cf9ed621c'
 d.digest()
 Out[36]: "'or'6\xc9]\x99\xe9!r,\xf9\xedb\x1c"
 ```
-
+### 参考
+[1] [Python之数据加密与解密及相关操作（hashlib、hmac、random、base64、pycrypto）](http://www.cnblogs.com/yyds/p/7072492.html)
 
 # [RegTiger](http://redtiger.labs.overthewire.org)
 
