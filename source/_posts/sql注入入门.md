@@ -49,6 +49,12 @@ SELECT
 5. 查找数据库表； 
 6. 查找数据库表中字段以及字段值。
 
+## MySQL数据库常用知识
+
+
+在MySQL中，数据库名存放在information_schema数据库下schemata表schema_name字段中；表名存放在information_schema数据库下tables表table_name字段中；字段名存放在information_schema数据库下columns表column_name字段中。
+
+
 # 练习网站 [网络信息安全攻防学习平台](http://hackinglab.cn/index.php)
 
 ## 防注入
@@ -181,9 +187,10 @@ procedure analyse(extractvalue(rand(), concat(0x3a,(select concat(0x7e,username,
 - 尝试得到显示位
 - 得到数据库
 
-题目是基于错误的，用到的报错语句为：
+题目是基于错误的，当在一个聚合函数，比如count函数后面如果使用分组语句就会把查询的一部分以错误的形式显示出来。
+用到的报错语句为：
 ```
-select count(*),concat(0x3a,0x3a,(注入代码),0x3a,0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
+select 1,2,...,count(*),concat(0x3a,(注入代码),0x3a,floor(2*rand(0)))a FROM information_schema.tables GROUP BY a
 如
 select concat(0x3a,0x3a,(version()),0x3a,0x3a,floor(2*rand(0)))a,count(*) FROM information_schema.tables GROUP BY a
 
