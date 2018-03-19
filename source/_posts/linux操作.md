@@ -14,40 +14,8 @@ tags:
 
 # 网络操作
 
-# ssh
-
-## 让进程后台运行
-
-之前通过ssh登陆Linux服务器，在服务器上运行程序遇到这样一个问题，就是ssh连接中断或退出后，运行的程序会中止。因此，怎样才能让进程在后台长时间的运行呢？
-
-经过查询[Linux 技巧：让进程在后台可靠运行的几种方法](https://www.ibm.com/developerworks/cn/linux/l-cn-nohup/),总算找到了解决办法。
-
-### 解决办法
-
-当用户注销（logout）或者网络断开时，终端会收到 HUP（hangup）信号从而关闭其所有子进程。因此，我们的解决办法就有两种途径：要么让进程忽略 HUP 信号，要么让进程运行在新的会话里从而成为不属于此终端的子进程。
-
-### nohup
-
-nohup 的用途就是让提交的命令忽略 hangup 信号。需在要处理的命令前加上 nohup即可，标准输出和标准错误缺省会被重定向到nohup.out文件中。一般我们可在结尾加上"&"来将命令同时放入后台运行，也可用">filename 2>&1"来更改缺省的重定向文件名。
 
 
-### setsid
-
-nohup 无疑能通过忽略 HUP 信号来使我们的进程避免中途被中断，但如果进程不属于接受 HUP 信号的终端的子进程，那么NOHUP 指令将无效。幸运的是setsid 就能帮助我们做到这一点。仅在命令前加setsid即可。
-
-### &
-
-将一个或多个命名包含在“()”中就能让这些命令在子 shell 中运行中，当我们将"&"也放入"()"内之后，就会发现所提交的作业并不在作业列表中，也就是说，是无法通过jobs来查看的。
-
-### 跟后台进程有关的操作
-
-Linux Jobs等前后台运行命令解
-
-1. command & ：让进程在后台运行
-2. ctrl + z ：可以将一个正在前台执行的命令放到后台，并且暂停
-3. jobs ：查看后台运行的进程
-4. fg %number ：让后台运行的序号为number（不是pid）的进程到前台来
-5. bg %number ：让进程号为number的进程到后台去。
 
 ## 配置静态ip
 
@@ -113,6 +81,7 @@ ping6 ipv6.google.com
 ```
 sudo su
 curl https://github.com/lennylxx/ipv6-hosts/raw/master/hosts -L >> /etc/hosts
+/etc/init.d/networking restart
 ping6 ipv6.google.com
 ```
 
@@ -120,6 +89,48 @@ ping6 ipv6.google.com
 [1] [ubuntu16.04使用ipv6](http://blog.csdn.net/scylhy/article/details/72699166)
 [2] [ubuntu 使用 ipv6 隧道](http://blog.letow.top/2017/11/05/ubuntu-%E5%BC%80%E5%90%AF-ipv6/)
 [3] [IPv4下使用IPv6](https://newdee.cf/posts/8544442c/)
+
+## 网桥bridge
+
+安装两个配置网络所需软件包：
+```
+apt-get install bridge-utils        # 虚拟网桥工具
+apt-get install uml-utilities       # UML（User-mode linux）工具
+```
+### 添加网卡/网桥
+
+网桥是一个虚拟的交换机，而tap接口就是在这个虚拟交换机上用来和虚拟机连接的那个口。虚拟机就通过这么一个连接的方式和主机连接。
+
+创建网桥，名字是virbr0
+```
+sudo brctl added virbr0
+sudo ifconfig virbr0 192.168.122.1 net mask 255.255.255.0 up
+```
+
+创建tap接口，名字为tap0，并添加到网桥
+```
+sudo tunctl -t tap0
+sudo ifconfig tap0 0.0.0.0 up
+sudo brctl addif virbr0 tap0
+```
+
+### 删除网卡/网桥
+
+刪除虚拟网卡
+```
+tunctl -d <虚拟网卡名>
+```
+刪除虚拟网桥
+```
+ifconfig <网桥名> down
+brctl delbr <网桥名>
+```
+将网卡tap0, eth0 移出bridge(br0)
+```
+brctl delif br0 tap0
+brctl delif br0 eth0
+```
+
 
 ## scp
 
@@ -164,6 +175,10 @@ scp -P 2222 -r local_folder remote_username@remote_ip:remote_folder
 从远端服务器到本地，只需要把参数颠倒即可。
 
 [1] [每天一个linux命令（60）：scp命令](http://www.cnblogs.com/peida/archive/2013/03/15/2960802.html)
+
+
+
+
 
 # 文件操作
 
@@ -311,13 +326,60 @@ find . ! -name "*.txt"
 
 详情参考：(find命令)[http://man.linuxde.net/find]
 
-# 修改hosts文件
 
-1. hosts文件在`/etc/hosts`下，可通过vim或gedit打开进行编辑。
-2. 将<https://laod.cn/hosts/2017-google-hosts.html>提供的hosts文件内容添加到hosts的`# The following lines are desirable for IPv6 capable hosts`中。
-3. 重启网络使hosts生效
+# 进程管理
+
+## 查看进程和端口
+
+查看进程
 ```
-/etc/init.d/networking restart
+ps -ef | grep 进程名
+```
+
+查看端口占用情况
+
+```
+netstat -nap | grep 端口号
+```
+
+## 让进程后台运行
+
+之前通过ssh登陆Linux服务器，在服务器上运行程序遇到这样一个问题，就是ssh连接中断或退出后，运行的程序会中止。因此，怎样才能让进程在后台长时间的运行呢？
+
+经过查询[Linux 技巧：让进程在后台可靠运行的几种方法](https://www.ibm.com/developerworks/cn/linux/l-cn-nohup/),总算找到了解决办法。
+
+### 解决办法
+
+当用户注销（logout）或者网络断开时，终端会收到 HUP（hangup）信号从而关闭其所有子进程。因此，我们的解决办法就有两种途径：要么让进程忽略 HUP 信号，要么让进程运行在新的会话里从而成为不属于此终端的子进程。
+
+### nohup
+
+nohup 的用途就是让提交的命令忽略 hangup 信号。需在要处理的命令前加上 nohup即可，标准输出和标准错误缺省会被重定向到nohup.out文件中。一般我们可在结尾加上"&"来将命令同时放入后台运行，也可用">filename 2>&1"来更改缺省的重定向文件名。
+
+
+### setsid
+
+nohup 无疑能通过忽略 HUP 信号来使我们的进程避免中途被中断，但如果进程不属于接受 HUP 信号的终端的子进程，那么NOHUP 指令将无效。幸运的是setsid 就能帮助我们做到这一点。仅在命令前加setsid即可。
+
+### &
+
+将一个或多个命名包含在“()”中就能让这些命令在子 shell 中运行中，当我们将"&"也放入"()"内之后，就会发现所提交的作业并不在作业列表中，也就是说，是无法通过jobs来查看的。
+
+### 跟后台进程有关的操作
+
+Linux Jobs等前后台运行命令解
+
+1. command & ：让进程在后台运行
+2. ctrl + z ：可以将一个正在前台执行的命令放到后台，并且暂停
+3. jobs ：查看后台运行的进程
+4. fg %number ：让后台运行的序号为number（不是pid）的进程到前台来
+5. bg %number ：让进程号为number的进程到后台去。
+
+## 注销
+
+ubuntu 11.10及其以上版本，注销的命令行为：
+```
+gnome-session-quit
 ```
 
 # LD_PRELOAD
@@ -332,18 +394,5 @@ gcc -shared -fpic -o libpreload.so preload.c
 2. 使用LD_PRELOAD加载*.so文件。
 ```
 LD_PRELOAD=./libpreload.so ./test
-```
-
-# 进程管理
-
-查看进程
-```
-ps -ef | grep 进程名
-```
-
-查看端口占用情况
-
-```
-netstat -nap | grep 端口号
 ```
 
