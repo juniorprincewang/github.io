@@ -49,7 +49,11 @@ Linux2.6.24及其以上版本的内核都支持virtio。由于virtio的后端处
 
 ### 使用virtio_net
 
+为了让虚拟机能够与外界通信，QEMU为虚拟机提供了网络设备，支持的网络设备为：`ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio`。
+虚拟机的网络设备连接在QEMU虚拟的VLAN中。每个QEMU的运行实例是宿主机中的一个进程，而每个这样的进程中可以虚拟一些VLAN，虚拟机网络设备接入这些VLAN中。当某个VLAN上连接的网络设备发送数据帧，与它在同一个VLAN中的其它网路设备都能接收到数据帧。对虚拟机的网卡没有指定其连接的VLAN号时，QEMU默认会将该网卡连入vlan0。
+
 使用virtio_net半虚拟化驱动，可以提高网络吞吐量（throughput）和降低网络延迟（latency），达到原生网卡的性能。
+
 
 使用virtio_net需要宿主机中的QEMU工具和客户机的virtio_net驱动支持。
 
@@ -58,7 +62,7 @@ Linux2.6.24及其以上版本的内核都支持virtio。由于virtio的后端处
 # qemu-system-x86_64 -net nic,model=?
 qemu: Supported NIC models: ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio
 ```
-从输出的支持网卡类型克制，当前qemu-kvm支持virtio网卡类型。
+从输出的支持网卡类型可知，当前qemu-kvm支持virtio网卡类型。
 
 
 #### 启动客户机，指定分配virtio网卡设备
@@ -162,4 +166,5 @@ qemu-system-x86_64 -m 2048 -enable-kvm ubuntu.qcow2
 [3] [QEMU 1: 使用QEMU创建虚拟机](https://my.oschina.net/kelvinxupt/blog/265108)
 [4] Virtio: towards a de factor standard for virtual I/O devices
 [5] [访问qemu虚拟机的五种姿势](http://blog.csdn.net/richardysteven/article/details/54807927)
+[6] [qemu虚拟机与外部网络的通信](http://blog.csdn.net/shendl/article/details/9468227)
 
