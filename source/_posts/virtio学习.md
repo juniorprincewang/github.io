@@ -153,6 +153,35 @@ sudo brctl showstp br0
 	 designated cost	   0			hold timer		   0.00
 	 flags		
 
+为了在系统启动时能够自动配置虚拟网桥和TAP设备，需要重新编辑`/etc/network/interfaces`。
+```
+auto enp4s0                                                                                                                            
+iface enp4s0 inet dhcp                                                                                                                 
+                                                                                                                                       
+auto br0                                                                                                                               
+iface br0 inet dhcp                                                                                                                    
+#iface br0 inet static                                                                                                                 
+#address 192.168.0.1                                                                                                               
+#netmask 255.255.255.0                                                                                                                 
+#gateway 192.168.0.254                                                                                                               
+#dns-nameserver 8.8.8.8                                                                                                                
+bridge_ports enp4s0                                                                                                                    
+bridge_fd 1                                                                                                                            
+bridge_hello 1                                                                                                                         
+bridge_stp off                                                                                                                         
+                                                                                                                                       
+auto tap0                                                                                                                              
+iface tap0 inet manual                                                                                                                 
+#iface tap0 inet static                                                                                                                
+#address 192.168.0.2                                                                                                               
+#netmask 255.255.255.0                                                                                                                 
+#gateway 192.168.0.254                                                                                                               
+#dns-nameserver 8.8.8.8                                                                                                                
+pre-up tunctl -t tap0 -u root                                                                                                          
+pre-up ifconfig tap0 0.0.0.0 promisc up                                                                                                
+post-up brctl addif br0 tap0  
+```
+
 #### 启动客户机，指定分配virtio网卡设备
 
 
