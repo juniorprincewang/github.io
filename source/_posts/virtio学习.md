@@ -68,16 +68,6 @@ qemu: Supported NIC models: ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet
 
 本系统的网卡为enp4s0，启动了DHCP。
 
-	enp4s0    Link encap:以太网  硬件地址 60:a4:4c:e7:20:3e  
-          inet 地址:192.168.151.137  广播:192.168.151.255  掩码:255.255.255.0
-          inet6 地址: fe80::ab35:b61e:a133:7786/64 Scope:Link
-          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  跃点数:1
-          接收数据包:38255 错误:0 丢弃:83 过载:0 帧数:0
-          发送数据包:4485 错误:0 丢弃:0 过载:0 载波:0
-          碰撞:0 发送队列长度:1000 
-          接收字节:13743318 (13.7 MB)  发送字节:437139 (437.1 KB)
-          中断:17 Memory:f3300000-f3320000 
-
 ```
 sudo ifconfig enp4s0 down # 关闭enp4s0接口，之后ifconfig命令不显示enp4s0接口
 sudo brctl addbr br0	# 增加一个虚拟网桥br0
@@ -89,82 +79,85 @@ sudo ifconfig br0 0.0.0.0 promisc up	# 打开br0接口
 sudo ifconfig enp4s0 0.0.0.0 promisc up	# 打开enp4s0接口
 sudo dhclient br0	# 从dhcp服务器获得br0的IP地址
 ```
+
+查看虚拟网桥列表
 ```
-sudo brctl show br0	# 查看虚拟网桥列表
+sudo brctl show br0	
 ```
 
 	bridge name	bridge id		STP enabled	interfaces
 	br0		8000.60a44ce7203e	no		enp4s0
+查看br0的各个接口信息
 ```
-sudo brctl showstp br0	# 查看br0的各个接口信息
+sudo brctl showstp br0	
 ```
-br0
- bridge id		8000.60a44ce7203e
- designated root	8000.60a44ce7203e
- root port		   0			path cost		   0
- max age		  20.00			bridge max age		  20.00
- hello time		   1.00			bridge hello time	   1.00
- forward delay		   1.00			bridge forward delay	   1.00
- ageing time		 300.00
- hello timer		   0.00			tcn timer		   0.00
- topology change timer	   0.00			gc timer		 232.85
- flags			
+	br0
+	 bridge id		8000.60a44ce7203e
+	 designated root	8000.60a44ce7203e
+	 root port		   0			path cost		   0
+	 max age		  20.00			bridge max age		  20.00
+	 hello time		   1.00			bridge hello time	   1.00
+	 forward delay		   1.00			bridge forward delay	   1.00
+	 ageing time		 300.00
+	 hello timer		   0.00			tcn timer		   0.00
+	 topology change timer	   0.00			gc timer		 232.85
+	 flags			
 
 
-enp4s0 (1)
- port id		8001			state		     forwarding
- designated root	8000.60a44ce7203e	path cost		   4
- designated bridge	8000.60a44ce7203e	message age timer	   0.00
- designated port	8001			forward delay timer	   0.00
- designated cost	   0			hold timer		   0.00
- flags			
+	enp4s0 (1)
+	 port id		8001			state		     forwarding
+	 designated root	8000.60a44ce7203e	path cost		   4
+	 designated bridge	8000.60a44ce7203e	message age timer	   0.00
+	 designated port	8001			forward delay timer	   0.00
+	 designated cost	   0			hold timer		   0.00
+	 flags			
 
 #### 配置TAP设备操作:
 
 ```
-sudo tunctl -t tap1
-sudo brctl addif br0 tap1
-sudo ifconfig tap1 0.0.0.0 promisc up
+sudo tunctl -t tap1	# 创建一个tap1接口，默认允许root用户访问
+sudo brctl addif br0 tap1	 # 在虚拟网桥中增加一个tap1接口
+sudo ifconfig tap1 0.0.0.0 promisc up	# 打开tap1接口
 ```
-
+显示br0的各个接口
 ```
 sudo brctl showstp br0
 ```
 
-br0
- bridge id		8000.46105353cee8
- designated root	8000.46105353cee8
- root port		   0			path cost		   0
- max age		  20.00			bridge max age		  20.00
- hello time		   1.00			bridge hello time	   1.00
- forward delay		   1.00			bridge forward delay	   1.00
- ageing time		 300.00
- hello timer		   0.00			tcn timer		   0.00
- topology change timer	   0.00			gc timer		  98.28
- flags			
+	br0
+	 bridge id		8000.46105353cee8
+	 designated root	8000.46105353cee8
+	 root port		   0			path cost		   0
+	 max age		  20.00			bridge max age		  20.00
+	 hello time		   1.00			bridge hello time	   1.00
+	 forward delay		   1.00			bridge forward delay	   1.00
+	 ageing time		 300.00
+	 hello timer		   0.00			tcn timer		   0.00
+	 topology change timer	   0.00			gc timer		  98.28
+	 flags			
 
 
-enp4s0 (1)
- port id		8001			state		     forwarding
- designated root	8000.46105353cee8	path cost		   4
- designated bridge	8000.46105353cee8	message age timer	   0.00
- designated port	8001			forward delay timer	   0.00
- designated cost	   0			hold timer		   0.00
- flags			
+	enp4s0 (1)
+	 port id		8001			state		     forwarding
+	 designated root	8000.46105353cee8	path cost		   4
+	 designated bridge	8000.46105353cee8	message age timer	   0.00
+	 designated port	8001			forward delay timer	   0.00
+	 designated cost	   0			hold timer		   0.00
+	 flags			
 
-tap1 (2)
- port id		8002			state		       disabled
- designated root	8000.46105353cee8	path cost		 100
- designated bridge	8000.46105353cee8	message age timer	   0.00
- designated port	8002			forward delay timer	   0.00
- designated cost	   0			hold timer		   0.00
- flags		
+	tap1 (2)
+	 port id		8002			state		       disabled
+	 designated root	8000.46105353cee8	path cost		 100
+	 designated bridge	8000.46105353cee8	message age timer	   0.00
+	 designated port	8002			forward delay timer	   0.00
+	 designated cost	   0			hold timer		   0.00
+	 flags		
 
 #### 启动客户机，指定分配virtio网卡设备
 
 
 ```
-sudo qemu-system-x86_64 -enable-kvm -boot c -drive file=ubuntu16.04.qcow2,if=virtio -m 1024 -netdev type=tap,fname=tap1,script=no,id=net0 -device virtio-net-pci,netdev=net0
+sudo qemu-system-x86_64 -enable-kvm -boot c -drive file=ubuntu16.04.qcow2,if=virtio -m 1024 -netdev type=tap,ifname=tap1,script=no,id=net0 -device virtio-net-pci,netdev=net0
 ```
 
 qemu-system-x86-64命令行解释
@@ -173,7 +166,7 @@ qemu-system-x86-64命令行解释
 - `boot` 磁盘相关参数，设置客户机启动时的各种选项。`c`表示第一个硬盘。
 - `drive` 配置驱动。使用`file`文件作为镜像文件加载到客户机的驱动器中。`if`指定驱动器使用的接口类型，包括了virtio在内。
 - `m` 设置客户机内存大小，单位默认为`MB`。也可以用`G`为单位。
-- `netdev` 新型的网络配置方法，在宿主机中建立一个网络后端驱动。`TAP`是虚拟网络设备，它仿真了一个数据链路层设备。`TAP`用于创建一个网络桥，使用网桥连接和NAT模式网络的客户机都会用到`TAP`参数。`script`用于设置宿主机在启动客户机时自动执行的网络配置脚本，如果不指定，默认为`/etc/qemu-ifup`，如果不需要执行脚本，则设置`script=no`。`id`用于在宿主机中指定的TAP虚拟设备的`ID`。
+- `netdev` 新型的网络配置方法，在宿主机中建立一个网络后端驱动。`TAP`是虚拟网络设备，它仿真了一个数据链路层设备。`TAP`用于创建一个网络桥，使用网桥连接和NAT模式网络的客户机都会用到`TAP`参数。`ifname`指接口名称。`script`用于设置宿主机在启动客户机时自动执行的网络配置脚本，如果不指定，默认为`/etc/qemu-ifup`，如果不需要执行脚本，则设置`script=no`。`id`用于在宿主机中指定的TAP虚拟设备的`ID`。
 - `device` 为虚拟机添加设备。这里添加了`virtio-net-pci`设备，使用了`net0`的TAP虚拟网卡。
 
 
