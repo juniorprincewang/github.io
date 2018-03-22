@@ -41,7 +41,7 @@ Tmux的元素共分为三层。
 
 |操作     |       命令|
 |---------|-----------|
-|tmux new -s new blog|创建一个叫做blog的session|
+|tmux new -s blog|创建一个叫做blog的session|
 |tmux attach -t blog |重新开启叫做blog的session|
 |tmux switch -t project| 转换到叫做project的session|
 |tmux list-sessions / tmux ls | 列出现有的所有 session|

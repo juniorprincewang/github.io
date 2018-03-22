@@ -66,7 +66,7 @@ qemu: Supported NIC models: ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet
 
 #### 配置虚拟网桥
 
-本系统的网卡为enp4s0，启动了DHCP。
+本系统的网卡为enp4s0，启动了DHCP。[6]
 
 ```
 sudo ifconfig enp4s0 down # 关闭enp4s0接口，之后ifconfig命令不显示enp4s0接口
@@ -155,32 +155,33 @@ sudo brctl showstp br0
 
 为了在系统启动时能够自动配置虚拟网桥和TAP设备，需要重新编辑`/etc/network/interfaces`。
 ```
-auto enp4s0                                                                                                                            
-iface enp4s0 inet dhcp                                                                                                                 
+auto enp4s0
+iface enp4s0 inet dhcp                  
+auto br0
+iface br0 inet dhcp
+#iface br0 inet static
+#address 192.168.0.1
+#netmask 255.255.255.0 
+#gateway 192.168.0.254 
+#dns-nameserver 8.8.8.8
+bridge_ports enp4s0
+bridge_fd 1
+bridge_hello 1
+bridge_stp off
                                                                                                                                        
-auto br0                                                                                                                               
-iface br0 inet dhcp                                                                                                                    
-#iface br0 inet static                                                                                                                 
-#address 192.168.0.1                                                                                                               
-#netmask 255.255.255.0                                                                                                                 
+auto tap0
+iface tap0 inet manual
+#iface tap0 inet static
+#address 192.168.0.2 
+#netmask 255.255.255.0 
 #gateway 192.168.0.254                                                                                                               
-#dns-nameserver 8.8.8.8                                                                                                                
-bridge_ports enp4s0                                                                                                                    
-bridge_fd 1                                                                                                                            
-bridge_hello 1                                                                                                                         
-bridge_stp off                                                                                                                         
-                                                                                                                                       
-auto tap0                                                                                                                              
-iface tap0 inet manual                                                                                                                 
-#iface tap0 inet static                                                                                                                
-#address 192.168.0.2                                                                                                               
-#netmask 255.255.255.0                                                                                                                 
-#gateway 192.168.0.254                                                                                                               
-#dns-nameserver 8.8.8.8                                                                                                                
-pre-up tunctl -t tap0 -u root                                                                                                          
-pre-up ifconfig tap0 0.0.0.0 promisc up                                                                                                
-post-up brctl addif br0 tap0  
+#dns-nameserver 8.8.8.8
+pre-up tunctl -t tap0 -u root 
+pre-up ifconfig tap0 0.0.0.0 promisc up
+post-up brctl addif br0 tap0 
 ```
+
+当然还可以参考[7](https://www.linux-kvm.org/page/Networking)，写脚本来设置网络。
 
 #### 启动客户机，指定分配virtio网卡设备
 
@@ -284,4 +285,4 @@ qemu-system-x86_64 -m 2048 -enable-kvm ubuntu.qcow2
 [4] Virtio: towards a de factor standard for virtual I/O devices
 [5] [访问qemu虚拟机的五种姿势](http://blog.csdn.net/richardysteven/article/details/54807927)
 [6] [qemu虚拟机与外部网络的通信](http://blog.csdn.net/shendl/article/details/9468227)
-
+[7] [Configuring Guest Networking](https://www.linux-kvm.org/page/Networking)
