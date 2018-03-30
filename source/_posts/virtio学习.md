@@ -21,12 +21,230 @@ categories:
 
 # virtio原理
 
+## virtio的架构
+
+virto由大神Rusty Russell编写（现已转向区块链了。。。），是在Hypervisor之上的抽象API接口，客户机需要知道自己运行在虚拟化环境中，进而根据virtio标准和Hypervisor协作，提高客户机的性能（特别是I/O性能）。
+
+![virtio基本架构](../virtio学习/architecture.gif)
+
+前端驱动（Front-end driver）是在客户机中存在的驱动程序模块，而后端处理器程序（Back-end driver）是在QEMU中实现的。
+
+virtio是半虚拟化驱动的方式，其I/O性能几乎可以达到和native差不多的I/O性能。但是virtio必须要客户机安装特定的virtio驱动使其知道是运行在虚拟化环境中，并按照virtio的规定格式进行数据传输。
+
+Linux2.6.24及其以上版本的内核都支持virtio。由于virtio的后端处理程序是在位于用户空间的QEMU中实现的，所以宿主机中只需要比较新的内核即可，不需要特别地编译与virtio相关地驱动。但是客户机需要有特定地virtio驱动程序支持，以便客户机处理I/O操作请求时调用virtio驱动。
+
+### 层次结构
+
+
+
+![virtio 层次结构](../virtio学习/virtiolayer.png)
+
+每一个virtio设备（例如：块设备或网卡），在系统层面看来，都是一个pci设备。这些设备之间，有共性部分，也有差异部分。
+1. 共性部分：
+这些设备都需要挂接相应的buffer队列操作virtqueue_ops，都需要申请若干个buffer队列，当执行io输出时，需要向队列写入数据；都需要执行pci_iomap将设备配置寄存器区间映射到内存区间；都需要设置中断处理；等中断来了，都需要从队列读出数据，并通知虚拟机系统，数据已入队。
+
+2. 差异部分：
+设备中系统中，如何与业务关联起来。各个设备不相同。例如，网卡在内核中是一个net_device，与协议栈系统关联起来。同时，向队列中写入什么数据，数据的含义如何，各个设备不相同。队列中来了数据，是什么含义，如何处理，各个设备不相同。
+
+
+如果每个virtio设备都完整实现自己的功能，又会形成浪费。
+针对这个现象，virtio又设计了 `virtio_pci` 模块，以处理所有virtio设备的共性部分。这样一来，所有的virtio设备，在系统层面看来，都是一个pci设备，其设备驱动都是virtio_pci。
+但是，virtio_pci并不能完整的驱动任何一个设备。因此，`virtio_pci` 在probe（接管）每一个设备时，根据每个pci设备的subsystem vendor/device id来识别出这具体是哪一种virtio设备，然后相应的向内核注册一个 virtio 设备。当然，在注册 virtio 设备之前， virtio_pci 驱动已经为此设备做了诸多共性的操作。同时，还为设备提供了各种操作的适配接口，例如，一些常用的pci设备操作，还有申请buffer队列的操作。这些操作，都通过 `virtio_config_ops` 结构变量来适配。
+
+
+
+### 代码层次结构
+
+从虚拟机的角度看，virtio的类层次结构如下图所示。[8]
+
+在顶级的是 `virtio_driver`，它在虚拟机操作系统中表示前端驱动程序。与该驱动程序匹配的设备由 `virtio_device`（设备在虚拟机操作系统中的表示）封装。这引用 `virtio_config_ops` 结构（它定义配置 virtio 设备的操作）。 `virtio_device` 由 `virtqueue` 引用（它包含一个到它服务的 `virtio_device` 的引用）。最后，每个 `virtqueue` 对象引用 virtqueue_ops 对象，后者定义处理 hypervisor 的驱动程序的底层队列操作。这里需要说明的是，Linux并没有实现论文[10]中的`struct virtqueue_ops`，但是实现了对于`virtqueue`操作的函数。下面会讲到。
+
+![virtio基本数据结构层次](../virtio学习/structure.gif)
+
+
+该流程以创建 `virtio_driver` 并通过 `register_virtio_driver` 进行注册开始。`virtio_driver` 结构定义上层设备驱动程序(struct device_driver driver)、驱动程序支持的设备 ID 的列表（struct virtio_device_id \*id_table）、一个特性表单（取决于设备类型）（feature_table）和一个回调函数列表。当 hypervisor 识别到与设备列表中的设备 ID 相匹配的新设备时，将调用 `probe` 函数（由 `virtio_driver` 对象提供）来传入 `virtio_device` 对象。将这个对象和设备的管理数据缓存起来（以独立于驱动程序的方式缓存）。可能要调用 `virtio_config_ops`函数来获取或设置特定于设备的选项，例如，为 `virtio_blk` 设备获取磁盘的 `Read/Write`状态或设置块设备的块大小，具体情况取决于启动器的类型。
+
+注意，`virtio_device` 不包含到 `virtqueue` 的引用（但 `virtqueue` 确实引用了 `virtio_device`）。要识别与该 `virtio_device` 相关联的 `virtqueue`，需要结合使用 `virtio_config_ops` 对象和 `find_vq` 函数。该对象返回与这个 `virtio_device` 实例相关联的虚拟队列。`find_vq` 函数还允许为 `virtqueue` 指定一个回调函数。
+
+`virtio_driver` 有自己的PCI总线 `virtio_bus`。`probe`函数用于PCI总线发现设备。比如启动 `virtio_blk` 时，当通过`qemu`启动`guest`的时候如果指定`-device virtio-blk-device`，就会调用`virtio_blk`的 `virtblk_probe` 函数。
+
+### virtqueue
+
+```
+/**
+ * virtqueue - a queue to register buffers for sending or receiving.
+ * @list: the chain of virtqueues for this device
+ * @callback: the function to call when buffers are consumed (can be NULL).
+ * @name: the name of this virtqueue (mainly for debugging)
+ * @vdev: the virtio device this queue was created for.
+ * @priv: a pointer for the virtqueue implementation to use.
+ * @index: the zero-based ordinal number for this queue.
+ * @num_free: number of elements we expect to be able to fit.
+ *
+ * A note on @num_free: with indirect buffers, each buffer needs one
+ * element in the queue, otherwise a buffer will need one element per
+ * sg element.
+ */
+struct virtqueue {
+	struct list_head list;
+	void (*callback)(struct virtqueue *vq);
+	const char *name;
+	struct virtio_device *vdev;
+	unsigned int index;
+	unsigned int num_free;
+	void *priv;
+};
+```
+
+`virtqueue` 是guest操作系统内存的一部分，用作户前端驱动和后端驱动的数据传输缓存。
+它包括了一个可选的回调函数（在 hypervisor 使用缓冲池时调用）、一个到 `virtio_device` 的引用、队列的索引，以及一个引用要使用的底层实现的特殊 `priv` 引用。虽然 `callback` 是可选的，但是它能够动态地启用或禁用回调。
+
+针对 virtqueue 的操作包括`add_buf`、`kick`、`get_buf`、`disable_cb`、`enable_cb`等，定义了在guest操作系统和 hypervisor 之间移动命令和数据的方式：
+
++ virtqueue_add_buf()
+```
+int virtqueue_add(struct virtqueue *_vq,
+				struct scatterlist *sgs[],
+				unsigned int total_sg,
+				unsigned int out_sgs,
+				unsigned int in_sgs,
+				void *data,
+				void *ctx,
+				gfp_t gfp)
+```
+add_buf()用于向 queue 中添加一个新的 buffer，参数 data 是一个非空的令牌，用于识别 buffer，当 buffer 内容被消耗后，data 会返回。
+
+该请求以散集列表的形式存在。对于 `add_buf`，guest操作系统提供用于将请求添加到队列的 `virtqueue`、散集列表（地址和长度数组）、用作输出条目（目标是底层 hypervisor）的缓冲池数量，以及用作输入条目（hypervisor 将为它们储存数据并返回到guest操作系统）的缓冲池数量，以及数据。
+
++ virtqueue_kick()：
+```
+bool virtqueue_kick(struct virtqueue *vq);
+bool virtqueue_notify(struct virtqueue *vq);
+```
+
+
+当通过 add_buf 向 hypervisor 发出请求时，guest操作系统能够通过 `kick` 函数通知 hypervisor 新的请求。为了获得最佳的性能，guest操作系统应该在通过 kick 发出通知之前将尽可能多的缓冲池装载到 virtqueue。Guest 再调用 `virtqueue_notify()`来通知 host。
+
++ virtqueue_get_buf()
+```
+void *virtqueue_get_buf(struct virtqueue *_vq, unsigned int *len)
+```
+
+
+guest操作系统仅需调用该函数或通过提供的 `virtqueue callback` 函数等待通知就可以实现轮询。当guest操作系统知道缓冲区可用时，调用 get_buf 返回完成的缓冲区。
+
+该函数返回使用过的 buffer，len 为写入到 buffer 中数据的长度。获取数据，释放 buffer，更新 vring 描述符表格中的 index。
+
++ virtqueue_disable_cb()
+```
+void virtqueue_disable_cb(struct virtqueue *vq);
+```
+
+示意 guest 不再需要再知道一个 buffer 已经使用了，也就是关闭 device 的中断。驱动会在初始化时注册一个回调函数（在 virtqueue 中由 virtqueue 初始化的 callback 函数），disable_cb()通常在这个 virtqueue 回调函数中使用，用于关闭再次的回调发生。
+
++ virtqueue_enable_cb()
+```
+bool virtqueue_enable_cb(struct virtqueue *vq);
+```
+
+与 disable_cb()刚好相反，用于重新开启设备中断的上报。
+
+### host与guest操作系统之间数据交换流程
+1. guest 添加数据
+![virtio 数据交换流-guest add buf](../virtio学习/datachangeflow1.png)
+2. guest 通知 host
+![virtio 数据交换流-guest 通知 host](../virtio学习/datachangeflow2.png)
+3. host读取缓存数据
+![virtio 数据交换流-host读取缓存数据](../virtio学习/datachangeflow3.png)
+4. host写入缓存数据
+![virtio 数据交换流-host写入缓存数据](../virtio学习/datachangeflow4.png)
+5. guest读取返回数据
+![virtio 数据交换流-guest get buf](../virtio学习/datachangeflow5.png)
+
+
+### virtio_ring
+guest 操作系统（前端）驱动程序通过`virtqueue`与 hypervisor 交互，实现数据的共享。对于 I/O，guest 操作系统提供一个或多个表示请求的缓冲池。
+
+
+`vring` 是 `virtqueue` 的具体实现方式，在host和guest操作系统之间作内存映射，针对 vring 会有相应的描述符表格进行描述。框架如下图所示：
+
+![virtqueue实现](../virtio学习/virtio.jpg)
+
+virtio_ring 是 virtio 传输机制的实现，`vring` 引入 `ring buffers` 来作为我们数据传输的载体。每个buffer在内部被表示为一个散集列表（scatter-gather），列表中的每个条目表示一个地址和一个长度。
+
+virtio_ring 包含 3 部分：
+
++ vring_desc
+
+```
+/* Virtio ring descriptors: 16 bytes.  These can chain together via "next". */
+struct vring_desc {
+	/* Address (guest-physical). */
+	__virtio64 addr;
+	/* Length. */
+	__virtio32 len;
+	/* The flags as indicated above. */
+	__virtio16 flags;
+	/* We chain unused descriptors via this, too */
+	__virtio16 next;
+};
+
+```
+描述符数组（descriptor table）用于存储一些关联的描述符，每个描述符都是一个对 buffer 的描述，包含一个 address/length 的配对、下个buffer的指针、两个标志位（下个buffer是否有效和当前buffer是可读/写）。
+
++ vring_avail
+
+```
+struct vring_avail {
+	__virtio16 flags;
+	__virtio16 idx;
+	__virtio16 ring[];
+};
+
+```
+可用的 ring(available ring)用于 guest 端表示哪些描述符链当前是可用的。
+
++ vring_used
+```
+/* u32 is used here for ids for padding reasons. */
+struct vring_used_elem {
+	/* Index of start of used descriptor chain. */
+	__virtio32 id;
+	/* Total length of the descriptor chain which was used (written to) */
+	__virtio32 len;
+};
+
+struct vring_used {
+	__virtio16 flags;
+	__virtio16 idx;
+	struct vring_used_elem ring[];
+};
+
+```
+使用过的 ring(used ring)用于表示 Host 端表示哪些描述符已经使用。
+
+Ring 的数目必须是 2 的次幂。
+
+而vring的格式为：
+```
+struct vring {
+	unsigned int num;
+
+	struct vring_desc *desc;
+
+	struct vring_avail *avail;
+
+	struct vring_used *used;
+};
+```
+
+需要指出的是缓冲区的格式、顺序和内容仅对前端和后端驱动程序有意义。内部传输（当前实现中的连接点）仅移动缓冲区，并且不知道它们的内部表示。
 
 # virtio的使用
 
 由于传统的QEMU/KVM方式是使用QEMU纯软件模拟I/O设备（网卡、磁盘、显卡），导致效率并不高。在KVM中，可以在客户机使用半虚拟化（paravirtualized drivers）来提高客户机的性能。
 
-## QEMU模拟I/O设备得基本原理
+## QEMU模拟I/O设备的基本原理
 
 当客户机的设备驱动程序（Device Driver）发起I/O请求时，KVM模块中的I/O操作捕获代码会拦截这次I/O请求，然后经过处理后将本次I/O请求的信息存放到I/O共享页（sharing page），并通知用户控件的QEMU程序。QEMU模拟程序获得I/O操作的具体信息后，交给硬件模拟代码（Emulation Code）来模拟出本次的I/O操作，完成后把结果放回I/O共享页中，并通知KVM模块中的I/O操作捕获代码。最后由KVM模块中的捕获代码读取I/O共享页中的操作结果，把结果返回给客户机中。当然，这个操作过程中客户机作为一个QEMU进程在等待I/O时也可能被阻塞。
 
@@ -34,17 +252,22 @@ categories:
 
 QEMU模拟I/O设备不需要修改客户端操作系统，可以模拟各种各样的硬件设备，但是每次I/O操作的路径比较长，有太多的VMEntry和VMExit发生，需要多次上下文切换（context switch），多次的数据复制。性能方面很差。
 
-## virtio的基本原理
 
-virto由大神Rusty Russell编写（现已转向区块链了。。。），是在Hypervisor之上的抽象API接口，客户机需要知道自己运行在虚拟化环境中，进而根据virtio标准和Hypervisor协作，提高客户机的性能（特别是I/O性能）。
+virtio 有分为guest 中的前端程序和qemu中的后端程序。
+virtio中的五种前端程序为
 
-![virtio基本架构](../virtio学习/architecture.gif)
+> virtio-blk:/drivers/block/virtio-blk.c
+> virtio-net:/drivers/net/virtio-net.c
+> virtio-pci:/drivers/virtio/virtio-pci.c
+> virtio-ballon:/drivers/virtio/virtio-ballon.c
+> virtio-console:/drivers/virtio/virtio-console.c
 
-前端驱动（Front-end）是在客户机中存在的驱动程序模块，而后端处理器程序是在QEMU中实现的。
+这五种往下调用`/drivers/virtio/virtio.c` -> `/drivers/virtio/virtio_ring.c`
 
-virtio是版虚拟化驱动的方式，其I/O性能几乎可以达到和native差不多的I/O性能。但是virtio必须要客户机安装特定的virtio驱动使其知道是运行在虚拟化环境中，并按照virtio的规定格式进行数据传输。
+总结一下virtio的flow：`guest->qemu->host kernel ->hw`，如下图所示。
 
-Linux2.6.24及其以上版本的内核都支持virtio。由于virtio的后端处理程序是在位于用户空间的QEMU中实现的，所以宿主机中只需要比较新的内核即可，不需要特别地编译与virtio相关地驱动。但是客户机需要有特定地virtio驱动程序支持，以便客户机处理I/O操作请求时调用virtio驱动。
+![virtio 通信架构](../virtio学习/virtiopath.gif)
+
 
 
 ### 使用virtio_net
@@ -276,7 +499,11 @@ qemu-system-x86_64 -m 2048 -enable-kvm ubuntu.qcow2
 ```
 即可。
 
+### qemu monitor
 
+QEMU 监控器是终端窗口，可以执行一些命令来查看当前启动的操作系统一些配置和运行状况。
+可以通过 `-monitor stdio` 参数启动。
+或者在QEMU窗口中使用快捷键 `Ctrl+Alt+2`， 使用 `Ctrl+Alt+1` 切换回普通的客户机。
 
 # 参考
 [1] [Virtio](http://www.linux-kvm.org/page/Virtio)
@@ -286,3 +513,7 @@ qemu-system-x86_64 -m 2048 -enable-kvm ubuntu.qcow2
 [5] [访问qemu虚拟机的五种姿势](http://blog.csdn.net/richardysteven/article/details/54807927)
 [6] [qemu虚拟机与外部网络的通信](http://blog.csdn.net/shendl/article/details/9468227)
 [7] [Configuring Guest Networking](https://www.linux-kvm.org/page/Networking)
+[8] [Virtio：针对 Linux 的 I/O 虚拟化框架](https://www.ibm.com/developerworks/cn/linux/l-virtio/)
+[9] [Virtio 基本概念和设备操作](https://www.ibm.com/developerworks/cn/linux/1402_caobb_virtio/)
+[10] virtio: Towards a De-Facto Standard For Virtual I/O Devices
+[11] [Virtio](https://wiki.osdev.org/Virtio)
