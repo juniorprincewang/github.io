@@ -36,7 +36,7 @@ categories:
 |/\cpattern | 不区分大小写的查找|
 |:set ic(ignorecase 的缩写) | 通过指令指定设置忽略大小写|
 |:set noic(noignorecase 的缩写)| 通过指令指定设置不忽略大小写|
-|/\<pattern\>|全字匹配|  
+|`/\<pattern\>`|全字匹配pattern|  
 |N	|光标到达搜索结果的前一个目标|
 |n	| 光标到达搜索结果的后一个目标|
 |:set hlsearch| 搜索的所有匹配项将高亮显示 |

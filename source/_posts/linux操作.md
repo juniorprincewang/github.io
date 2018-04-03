@@ -12,11 +12,33 @@ tags:
 
 <!-- more -->
 
+# man
+
+有时候查阅函数时，比如`write`系统调用，通过`man write`查出的结果不对。
+
+    WRITE(1)
+    NAME
+         write — send a message to another user
+
+    SYNOPSIS
+         write user [tty]
+
+原因是`man`是按照手册的章节号的顺序进行搜索的，比如：
+使用`man -k write`命令可以查阅所有关于`write`的内容。
+
+    ...
+    write (1)            - send a message to another user
+    ===> write (2)            - write to a file descriptor
+    writev (2)           - read or write data into multiple buffers
+    ...
+
+`man write`是`write`命令手册，我们可以定位到`write (2)`是我们想要的库函数。可以在命令行输入`2`来查阅第二个`write`。
+```
+    man 2 write
+```
+
+
 # 网络操作
-
-
-
-
 ## 配置静态ip
 
 操作网络服务
@@ -383,7 +405,9 @@ ubuntu 11.10及其以上版本，注销的命令行为：
 gnome-session-quit
 ```
 
-# LD_PRELOAD
+
+
+## LD_PRELOAD
 
 LD_PRELOAD是linux的环境变量，用于动态库的加载，动态库加载的优先级最高。加载顺序为LD_PRELOAD>LD_LIBRARY_PATH>/etc/ld.so.cache>/lib>/usr/lib。
 
@@ -392,8 +416,68 @@ LD_PRELOAD是linux的环境变量，用于动态库的加载，动态库加载�
 ```
 gcc -shared -fpic -o libpreload.so preload.c
 ```
-2. 使用LD_PRELOAD加载*.so文件。
+2. 使用LD_PRELOAD加载\*.so文件。
 ```
 LD_PRELOAD=./libpreload.so ./test
 ```
 
+# 信息查看
+
+## CPU
+
+可以直接得到CPU详细的信息
+
+```
+sudo cat /proc/cpuinfo
+```
+
+查看物理CPU的个数
+
+```
+sudo cat /proc/cpuinfo |grep "physical id" | sort | uniq |wc -l
+
+```
+
+查看逻辑CPU的个数
+
+```
+cat /proc/cpuinfo |grep "processor"|wc -l
+```
+
+查看CPU是几核
+```
+cat /proc/cpuinfo |grep "cores"|uniq
+```
+ 
+查看CPU的主频
+```
+cat /proc/cpuinfo |grep MHz|uniq
+```
+
+## 当前操作系统内核信息
+
+```
+uname -a
+```
+
+## 当前操作系统发行版本
+```
+cat /etc/issue
+
+```
+得到更详细的信息
+```
+sudo lsb_release -a
+```
+
+## 当前CPU运行模式
+
+```
+getconf LONG_BIT
+```
+如果是32，说明当前CPU运行在32bit模式下, 但不代表CPU不支持64bit。
+如果是64，说明当前CPU支持64bit。
+
+参考
+
+[linux 下查看机器是cpu是几核的](https://www.cnblogs.com/xd502djj/archive/2011/02/28/1967350.html)
