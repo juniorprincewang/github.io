@@ -154,8 +154,29 @@ gcc -o main a.c -L. -lcudab -I /usr/local/cuda/include
 ```
 
 
+# 可能遇到的错误
+
+## error while loading shared libraries:XXX.so
+
+1. 如果共享库安装到了 `/lib` 或者 `/usr/lib` 目录下，需要执行一下 `ldconfig` 命令。
+
+`ldconfig` 命令的用途，主要是在默认搜寻目录(`/lib` 和 `/usr/lib` )以及动态库配置文件 `/etc/ld.so.conf `内所列的目录下，搜索出可共享的动态链接库(格式如 `lib*.so*` )，进而创建出动态装入程序( `ld.so` )所需的连接和缓存文件。缓存文件默认为 `/etc/ld.so.cache` ，此文件保存已排好序的动态链接库名字列表。
+
+
+2. 如果共享库文件安装到了 `/usr/local/lib` （很多开源的共享库都会安装到该目录下）或其它 "非/lib或/usr/lib" 目录下, 那么在执行 `ldconfig` 命令前，还要把新共享库目录加入到共享库配置文件 `/etc/ld.so.conf` 中, 如下:
+
+```
+# cat /etc/ld.so.conf
+include /etc/ld.so.conf.d/*.conf
+# echo "/usr/local/lib" >> /etc/ld.so.conf
+# ldconfig
+```
+
+3. 如果共享库文件安装到了其它 "非/lib或/usr/lib" 目录下，但是又不想在 `/etc/ld.so.conf` 中加路径（或者是没有权限加路径）。那可以 `export` 一个全局变量 `LD_LIBRARY_PATH` ，然后运行程序的时候就会去这个目录中找共享库.。
 
 
 # 参考
 [1] [Cuda C - Linker error - undefined reference
 ](https://stackoverflow.com/questions/13553015/cuda-c-linker-error-undefined-reference)
+[2] [在.c文件中调用c++定义的函数](https://blog.csdn.net/wang11234514/article/details/24034969)
+[3] [Linux下c和cuda混合编译，并生成动态链接库.so和使用](https://blog.csdn.net/u012816621/article/details/52334622)

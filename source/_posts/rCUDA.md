@@ -264,6 +264,53 @@ make EXTRA_NVCCFLAGS=--cudart=shared
 
 优化虚拟机，TCP/IP速度与virtio。数据代码签名。
 
+
+
+# rCUDA的分析
+
+**CUDA8.0及以上版本**
+
+## `kernel` 函数的重现。
+
+
+    __host__cudaError_t cudaLaunchKernel (const void
+    *func, dim3 gridDim, dim3 blockDim, void **args, size_t
+    sharedMem, cudaStream_t stream)
+    
+    Launches a device function.
+
+    Parameters
+        func - Device function symbol
+        gridDim - Grid dimentions
+        blockDim - Block dimentions
+        args - Arguments
+        sharedMem - Shared memory
+        stream - Stream identifier
+    Returns
+        cudaSuccess, cudaErrorInvalidDeviceFunction, cudaErrorInvalidConfiguration,
+        cudaErrorLaunchFailure, cudaErrorLaunchTimeout, cudaErrorLaunchOutOfResources,
+        cudaErrorSharedObjectInitFailed, cudaErrorInvalidPtx,
+        cudaErrorNoKernelImageForDevice, cudaErrorJitCompilerNotFound
+
+
+Description
+
+    The function invokes kernel func on gridDim (gridDim.x × gridDim.y ×
+    gridDim.z) grid of blocks. Each block contains blockDim (blockDim.x ×
+    blockDim.y × blockDim.z) threads.
+    If the kernel has N parameters the args should point to array of N pointers. Each
+    pointer, from args[0] to args[N - 1], point to the region of memory from which the
+    actual parameter will be copied.
+    For templated functions, pass the function symbol as follows:
+    func_name<template_arg_0,...,template_arg_N>
+    sharedMem sets the amount of dynamic shared memory that will be available to each
+    thread block.
+    stream specifies a stream the invocation is associated to
+
+
+`rCUDA` 提到了guest执行 `kernel` 函数时候将 `cudaLaunch` , `kernel_name`, `execution stack` 传递给服务器，服务器返回 `CUDA result code` 。
+
+
 # 参考文献
 [1] [Ubuntu 16.04 CUDA 8 cuDNN 5.1安装](http://blog.csdn.net/jhszh418762259/article/details/52958287)
 [2] [ldconfig命令](http://man.linuxde.net/ldconfig)
