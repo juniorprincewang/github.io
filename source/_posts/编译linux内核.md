@@ -26,3 +26,4 @@ Linux的内核负责管理系统的进程、内存、设备驱动程序、文件
 [1] [Linux 内核编译步骤及配置详解](https://www.cnblogs.com/xiaocen/p/3717993.html)
 [2] [LINUX KERNEL内核配置方式详解](http://smilejay.com/2011/05/linux-kernel-configuration/)
 [3] [linux系统替换新内核（编译安装替换与打包替换）](http://blog.csdn.net/star_xiong/article/details/17357821)
+[4] [编译出你的第一个内核](https://blog.csdn.net/RichardYSteven/article/details/56480485)
