@@ -37,6 +37,45 @@ tags:
     man 2 write
 ```
 
+# 查找软件源
+
+## 更新软件源
+
+`ubuntu 14.04` 的软件源配置文件是 `/etc/apt/sources.list` 。将系统自带的该文件做个备份，将该文件替换为下面内容。
+
+- 更新为清华源
+
+```
+# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-updates main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-backports main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-backports main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-security main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-security main restricted universe multiverse
+
+# 预发布软件源，不建议启用
+# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-proposed main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ trusty-proposed main restricted universe multiverse
+```
+
+- 更新软件包
+
+```
+sudo apt update
+sudo apt upgrade
+```
+
+`ubuntu` 其他系列如 `ubuntu16.04` 需要的软件源参考<https://mirror.tuna.tsinghua.edu.cn/help/ubuntu/>。
+
+## 查找不确定的软件包
+
+比如查找 支持 `gd` 的 `php` 软件包。
+```
+apt-cache search gd | grep php
+```
 
 # 网络操作
 ## 配置静态ip

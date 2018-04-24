@@ -16,6 +16,13 @@ category:
 
 # 写在前面
 
+## 在 `ubuntu` 中修改 `apache2` 网站根目录。
+
+修改根目录： 
+在 `/etc/apache2/sites-available` 中修改 `000-default.conf` 中的 `DocumentRoot /var/www/` 修改为想要的目录。
+然后重启 `apache2`， `sudo service apache2 restart` 。
+
+# 知识点
 ## mysql中select的格式
 
 ```
