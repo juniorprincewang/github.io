@@ -248,6 +248,20 @@ cd $HOME/NVIDIA_CUDA_Samples/1_Utilities/deviceQuery
 make EXTRA_NVCCFLAGS=--cudart=shared
 ```
 
+####  nvcc编译选项
+```
+--cudart 
+
+Specify the type of CUDA runtime library
+to be used: no CUDA runtime library,
+shared/dynamic CUDA runtime library, or
+static CUDA runtime library.
+Allowed values for this option: none ,
+shared , static .
+Default value: static
+```
+由于 `rCUDA` 的原理是 API Remoting， `CUDA`的运行时库应当指定为共享态，即 `--cudart=shared` 。
+
 如果有InfiniBand网络，rCUDA用户可以通过高通信传输性能的InfiniBand Verbs API替代TCP/IP协议。
 
 ### 运行程序

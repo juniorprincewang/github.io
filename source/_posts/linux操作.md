@@ -32,6 +32,19 @@ tags:
     writev (2)           - read or write data into multiple buffers
     ...
 
+其中查询出得每条结果后面数字代表得意义：
+```
+       1       可执行程序或 shell 命令
+       2       系统调用(内核提供的函数)
+       3       库调用(程序库中的函数)
+       4       特殊文件(通常位于 /dev)
+       5       文件格式和规范，如 /etc/passwd
+       6       游戏
+       7       杂项(包括宏包和规范，如 man(7)，groff(7))
+       8       系统管理命令(通常只针对 root 用户)
+       9       内核例程 [非标准
+```
+
 `man write`是`write`命令手册，我们可以定位到`write (2)`是我们想要的库函数。可以在命令行输入`2`来查阅第二个`write`。
 ```
     man 2 write

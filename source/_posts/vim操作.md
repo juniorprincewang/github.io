@@ -128,6 +128,14 @@ categories:
 |:set nonu | 不显示行号|
 |12gg | 光标跳到12行|
 
+# 管道操作
+
+`%!Shell`命令。
+
+`%!` 符号可以将 `VIM` 当前缓冲区中的内容输出到管道中，并启动后面的 `Shell` 命令
+
+比如，`%!xxd`，将文本转换成二进制形式。
+
 
 # 参考
 [1] [Vim 常用命令总结](http://pizn.github.io/2012/03/03/vim-commonly-used-command.html)
