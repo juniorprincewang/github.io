@@ -353,7 +353,7 @@ ulimit 用于限制 shell 启动进程所占用的资源，支持以下各种类
 -v <虚拟内存大小>：指定可使用的虚拟内存上限，单位为KB。
 ```
 
-[1] (ulimit命令) [http://man.linuxde.net/ulimit]
+[1] [ulimit命令](http://man.linuxde.net/ulimit)
 
 ## find
 
@@ -399,7 +399,7 @@ find . ! -name "*.txt"
 
 
 
-详情参考：(find命令)[http://man.linuxde.net/find]
+详情参考：[find命令](http://man.linuxde.net/find)
 
 
 # 进程管理
