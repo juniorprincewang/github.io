@@ -2,6 +2,10 @@
 title: NVidia产品和微架构
 date: 2018-01-13 15:32:42
 tags:
+- GPU
+- GK110
+categories:
+- GPU
 ---
 
 本篇博客介绍NVidia显卡的产品类型和微架构。尤其NVidia的Tesla系列产品和Tesla微架构区分清楚。
@@ -48,3 +52,45 @@ GPU的微架构（micro-architecture）和GPU的计算能力（compute capabilit
 大概来说，每个系列的产品都会升级自己的计算能力，而每项计算能力都包括若干不同系列的产品。
 
 更详细的产品，计算能力参见<https://developer.nvidia.com/cuda-gpus>。
+
+# 微架构
+
+## Fermi
+
+
+[NVIDIA’s Next Generation CUDA Compute Architecture: Fermi](https://www.nvidia.com/content/pdf/fermi_white_papers/nvidia_fermi_compute_architecture_whitepaper.pdf)
+
+## Kepler
+
+`Kepler GK110` 支持 `Compute Capability 3.5`，有15个 `SMX` 和 6个 64位的内存控制器。
+
+每个 `SMX` 单元有192个单精度核，每个核有单精度和整数逻辑运算单元。
+
+
+| |FERMI GF100 | FERMI GF104 | KEPLER GK104 | KEPLER GK110|
+|-| -----------|-------------|--------------| ------------|
+|Compute Capability | 2.0 | 2.1 | 3.0 | 3.5 |
+|Threads / Warp | 32 | 32 | 32 | 32|
+|Max Warps / Multiprocessor | 48 | 48 | 64 | 64|
+|Max Threads / Multiprocessor | 1536 | 1536 | 2048 | 2048|
+|Max Thread Blocks / Multiprocessor | 8 | 8 | 16 | 16|
+|32‐bit Registers / Multiprocessor | 32768 | 32768 | 65536 | 65536|
+|Max Registers / Thread | 63 | 63 | 63 | 255|
+|Max Threads / Thread Block | 1024 | 1024 | 1024 | 1024|
+|Shared Memory Size Configurations (bytes) | 16K 48K| 16K 48K | 16K 32K 48K | 16K 32K 48K|
+|Max X Grid Dimension | 2^16‐1 | 2^16‐1 | 2^32‐1 | 2^32‐1|
+|Hyper‐Q  | No | No | No | Yes|
+|Dynamic Parallelism | No | No | No | Yes|
+
+
+
+[NVIDIA’s Next Generation CUDA Compute Architecture: Kepler GK110](https://www.nvidia.com/content/PDF/kepler/NVIDIA-Kepler-GK110-Architecture-Whitepaper.pdf)
+
+
+## Maxwell
+
+[NVIDIA GeForce GTX 980](https://international.download.nvidia.com/geforce-com/international/pdfs/GeForce_GTX_980_Whitepaper_FINAL.PDF)
+
+## Pascal
+
+[NVIDIA Tesla P100](https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf)

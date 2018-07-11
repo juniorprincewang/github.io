@@ -6,6 +6,8 @@ tags:
 - ssh
 - scp
 - ip
+categories:
+- linux
 ---
 
 对linux文件操作，网络操作，进程管理拾遗
@@ -327,7 +329,10 @@ tar xJvf filename.tar.xz
 ```
 unzip filename.zip
 ```
-
+解压缩tar包：
+```
+tar -xvf file.tar
+```
 
 ## ulimit
 
