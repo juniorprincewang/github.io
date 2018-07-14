@@ -406,6 +406,21 @@ find . ! -name "*.txt"
 
 详情参考：[find命令](http://man.linuxde.net/find)
 
+## 查看文件大小
+
+```
+ls -sh filename
+```
+其中
+> -s 表示查看文件的size 
+> -h 表示以 `human readable` 的格式显示
+
+## 查看文件夹大小
+
+```
+du -sh
+```
+参数 `-sh` 同上。
 
 # 进程管理
 
