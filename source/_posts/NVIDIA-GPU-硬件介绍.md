@@ -156,3 +156,16 @@ BAR5: 0xe000 (I/O port)
 
 
 参考[PCI Express I/O System](https://insujang.github.io/2017-04-03/pci-express-io-system/)
+
+
+
+## PFIFO
+
+`PFIFO` 用于收集用户发送的命令并将其传送到执行单元。大致分成三部分：
++ PFIFO cache： 以FIFO的队列形式存储要执行的GPU命令。
++ PFIFO pusher：搜集用户输入的命令并将其存入cache中。
+	共有两种模式：PIO和DMA模式。PIO模式中，用户直接通过USER MMIO 区域写入命令。 DMA模式中，PFIFO从内存的buffer中读命令，称为pushbuffer的内存，而USER MMIO 区域仅用于控制pushbuffer 读取。
++ PFIFO puller：从cache中取命令，并将其送往执行单元。
+
+
+[PFIFO - The command submission engine](https://github.com/pathscale/pscnv/wiki/PFIFO)
