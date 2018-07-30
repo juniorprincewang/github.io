@@ -45,3 +45,5 @@ $ lspci
 4. [Access physical memory from Linux user space](https://falsinsoft.blogspot.com/2013/10/access-physical-memory-in-linux.html)
 5. [The anatomy of a PCI/PCI Express kernel driver](http://haifux.org/lectures/256/haifux-pcie.pdf)
 6. [Linux PCI Driver Model](http://linuxkernel51.blogspot.com/2012/08/linux-pci-driver-model.html)
+7. [PCI](https://wiki.osdev.org/PCI)
+8. [PCI Express](https://wiki.osdev.org/PCI_Express)

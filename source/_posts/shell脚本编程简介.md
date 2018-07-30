@@ -3,6 +3,8 @@ title: shell脚本编程简介
 date: 2018-04-16 09:43:08
 tags:
 - shell
+categories:
+- linux
 ---
 
 本篇博客介绍shell脚本的语法知识。
@@ -57,11 +59,24 @@ tags:
 	
 这样写是合法的，但注意，第二次赋值的时候不能写 `$your_name="foo"` ，使用变量的时候才加美元符。
 
-# 注释
-以 `#` 开头的行就是注释，会被解释器忽略。
+## 特殊变量
 
-## 多行注释
-`sh` 里没有多行注释，只能每一行加一个 `#` 号。
++ `$0` - Bash 脚本的名字.
++ `$1` - `$9` - 传入 Bash 脚本的第1个到第9个参数.
++ `$#` - 传入 Bash 脚本的参数个数.
++ `$*` - 传入 Bash 脚本所有参数.
++ `$@` - 传递给脚本或函数的所有参数。被双引号(" ")包含时，与 $* 稍有不同。
++ `$?` - 上个命令的退出状态，或函数的返回值.
++ `$$` - 当前Shell进程ID。对于 Shell 脚本，就是这些脚本所在的进程ID。.
++ $USER - The username of the user running the script.
++ $HOSTNAME - The hostname of the machine the script is running on.
++ $SECONDS - The number of seconds since the script was started.
++ $RANDOM - Returns a different random number each time is it referred to.
++ $LINENO - Returns the current line number in the Bash script.
+
+# 注释
+
+`BASH` 文件，单行注释用 `#` ，多行注释可以用 `<<<COMMENT …… COMMENT` 来包裹需要注释的命令行。
 
 # 字符串
 字符串是 `shell` 编程中最常用最有用的数据类型，字符串可以用单引号，也可以用双引号，也可以不用引号。单双引号的区别跟PHP类似。
@@ -105,11 +120,51 @@ tags:
 ## 更多
 参见本文档末尾的参考资料中[Advanced Bash-Scripting Guid Chapter 10.1](http://tldp.org/LDP/abs/html/string-manipulation.html)
 
+# 测试
+
+内置命令 test 根据表达式expr 求值的结果返回 `0（真）` 或 `1（假）` 。
+也可以使用方括号： `test expr` 和 `[ expr ]` 是等价的。 可以用 `$?` 检查返回值；可以使用 `&&` 和 `||` 操作返回值；也可以用后面介绍的各种条件结构测试返回值。
+
+
+常见的测试命令选项：
+
+|操作符 |	特征|
+|-------|-------|
+|! EXPRESSION 		|	EXPRESSION 条件为假	|
+|-n STRING			|  STRING 长度大于0 		|
+|-z STRING			|  STRING 长度为0		|
+|STRING1 = STRING2  |	STRING1 与 STRING2 字符串相同 |
+|STRING1 != STRING2	| STRING1 与 STRING2 字符串不同 |
+|INTEGER1 -eq INTEGER2 |	INTEGER1 数值上与 INTEGER2相等 |
+|INTEGER1 -gt INTEGER2 |	INTEGER1 数值上比 INTEGER2 大|
+|INTEGER1 -lt INTEGER2 |	INTEGER1 数值上比 INTEGER2 小|
+|-d FILE |	FILE 目录存在|
+|-e FILE |	FILE 存在.|
+|-r FILE |	FILE 存在并且可读.|
+|-s FILE |	FILE 存在并且非空.|
+|-w FILE |	FILE 存在并且可写.|
+|-x FILE |	FILE 存在并且可执行.|
+|-f FILE|	FILE普通文件|
+|-h FILE|	FILE符号连接（也可以用 -L）|
+|-p FILE|	FILE命名管道|
+|-S FILE|	FILE套接字|
+|-N FILE|	FILE从上次读取之后已经做过修改|
+
+需要注意的是 `=` 与 `-eq` 略有不同， `=` 作字符串比较， `-eq` 作数值比较。
+```
+root@PowerEdge-R610:~/tools# test 001 = 1
+root@PowerEdge-R610:~/tools# echo $?
+1
+root@PowerEdge-R610:~/tools# test 001 -eq 1
+root@PowerEdge-R610:~/tools# echo $?
+0
+```
+
 # 条件判断
 
 ## 流程控制
 
-和Java、PHP等语言不一样，sh的流程控制不可为空，如：
+和Java、PHP等语言不一样，`bash` 的流程控制不可为空，如：
 
 	<?php
 	if (isset($_GET["q"])) {
@@ -119,14 +174,15 @@ tags:
 		//do nothing
 	}
 
-在sh/bash里可不能这么写，如果else分支没有语句执行，就不要写这个else。
+在 `bash shell` 里可不能这么写，如果else分支没有语句执行，就不要写这个else。
 
-还要注意，`sh` 里的 `if [ $foo -eq 0 ]`，这个方括号跟Java/PHP里if后面的圆括号大不相同，它是一个可执行程序（和ls, grep一样），想不到吧？在CentOS上，它在/usr/bin目录下：
+还要注意，`BASH` 里的 `if [ $foo -eq 0 ]`，这个方括号跟 `Java/PHP` 里 `if` 后面的圆括号大不相同，它是一个可执行程序（和 `ls` , `grep` 一样），想不到吧？在CentOS上，它在 `/usr/bin` 目录下：
 
 	ll /usr/bin/[
 	-rwxr-xr-x. 1 root root 33408 4月  16 2018 /usr/bin/[
 
 正因为方括号在这里是一个可执行程序，方括号后面必须加空格，不能写成 `if [$foo -eq 0]`。
+
 
 ## if else
 ### if
@@ -255,6 +311,15 @@ tags:
 
 case的语法和C family语言差别很大，它需要一个esac（就是case反过来）作为结束标记，每个case分支用右圆括号，用两个分号表示break
 
+## `&&` 和 `||`
+
+```
+#!/bin/bash
+if [ -r $1 ] && [ -s $1 ]
+then
+	echo "This file is useful."
+fi
+```
 
 # 文件包含
 可以使用source和.关键字，如：
@@ -310,3 +375,6 @@ sh脚本结合系统命令便有了强大的威力，在字符处理领域，有
 - [Advanced Bash-Scripting Guide](http://tldp.org/LDP/abs/html/)，非常详细，非常易读，大量example，既可以当入门教材，也可以当做工具书查阅
 - [Unix Shell Programming](http://www.tutorialspoint.com/unix/unix-shell.htm)
 - [Linux Shell Scripting Tutorial - A Beginner's handbook](http://bash.cyberciti.biz/guide/Main_Page)
+- [Bash Scripting Tutorial - 2. Variables](https://ryanstutorials.net/bash-scripting-tutorial/bash-variables.php)
+- [Bash Scripting Tutorial - 5. If Statements](https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php)
+- [Shell特殊变量：Shell $0, $#, $*, $@, $?, $$和命令行参数](http://c.biancheng.net/cpp/view/2739.html)

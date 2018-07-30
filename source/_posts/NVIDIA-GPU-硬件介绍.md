@@ -167,5 +167,39 @@ BAR5: 0xe000 (I/O port)
 	共有两种模式：PIO和DMA模式。PIO模式中，用户直接通过USER MMIO 区域写入命令。 DMA模式中，PFIFO从内存的buffer中读命令，称为pushbuffer的内存，而USER MMIO 区域仅用于控制pushbuffer 读取。
 + PFIFO puller：从cache中取命令，并将其送往执行单元。
 
+`channel` 是PFIFO最核心的概念，它是单独的命令流。 channel是上下文切换并且独立的。
+为了节省PFIFO每个channel上下文，使用了 `RAMFC` 内存结构体。
+PFIFO cache 每次只能对单一的channel设置。
+从NV50 开始，PFIFO上下文在做切换时候会保存到memory中。
+
+当pusher把命令插入新的channel时，channel会切换。当puller传递命令时，puller会请求channel切换。这意味着PFIFO和执行单元在不同的channel上。
+
+存储在cache中的命令是由subchannel、method、data组成的元祖。每个channel有8个subchannel，并且有对象关联它们。method是介于0和0x1ffc之间能被4整除的数字，并且选择命令来执行。可获得的method集合依赖于关联到给定subchannel的对象。
+method number如同内部硬件寄存器地址，因此能被4整除，这都是遗留问题。
+大部分method都会直接原始的传送到执行引擎，一些会特殊一点，直接被PFIFO处理。
+
++ 0x0000： 绑定对象到subchannel
++ 0x0004-0x00fc：被PFIFO保留使用的method，从不传递给执行引擎。
++ 0x0180-0x01fc：传递给执行引擎的method。
+
+数据值按照32位提交，依据method来转换。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 [PFIFO - The command submission engine](https://github.com/pathscale/pscnv/wiki/PFIFO)

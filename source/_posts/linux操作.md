@@ -422,6 +422,66 @@ du -sh
 ```
 参数 `-sh` 同上。
 
+## 比较文件夹
+
+linux中比较文件的命令为 `diff` ，`diff` 命令也可以[比较两个文件夹](https://blog.csdn.net/fengxianger/article/details/52936773)。
+```
+diff -urNa dir1 dir2
+-a  Treat  all  files  as text and compare them     
+    line-by-line, even if they do not seem to be text.
+
+-N, --new-file
+    In  directory  comparison, if a file is found in
+    only one directory, treat it as present but empty
+    in the other directory.
+
+-r  When comparing directories, recursively compare
+    any subdirectories found.
+-u  Use the unified output format.
+```
+
+这里结果的格式采用的是 `合并格式的diff` ，这里可以[读懂diff](http://www.ruanyifeng.com/blog/2012/08/how_to_read_diff.html) 。
+显示结果如下：
+    
+
+    　　--- f1    2012-08-29 16:45:41.000000000 +0800
+    　　+++ f2    2012-08-29 16:45:51.000000000 +0800
+    　　@@ -1,7 +1,7 @@
+    　　 a
+    　　 a
+    　　 a
+    　　-a
+    　　+b
+    　　 a
+    　　 a
+    　　 a
+
+它的第一部分，也是文件的基本信息。
+
+    　　--- f1    2012-08-29 16:45:41.000000000 +0800
+    　　+++ f2    2012-08-29 16:45:51.000000000 +0800
+
+"---"表示变动前的文件，"+++"表示变动后的文件。
+
+第二部分，变动的位置用两个@作为起首和结束。
+
+    　　@@ -1,7 +1,7 @@
+
+前面的"-1,7"分成三个部分：减号表示第一个文件（即f1），"1"表示第1行，"7"表示连续7行。合在一起，就表示下面是第一个文件从第1行开始的连续7行。同样的，"+1,7"表示变动后，成为第二个文件从第1行开始的连续7行。
+
+第三部分是变动的具体内容。
+
+    　　 a
+    　　 a
+    　　 a
+    　　-a
+    　　+b
+    　　 a
+    　　 a
+    　　 a
+
+除了有变动的那些行以外，也是上下文各显示3行。它将两个文件的上下文，合并显示在一起，所以叫做"合并格式"。每一行最前面的标志位，空表示无变动，减号表示第一个文件删除的行，加号表示第二个文件新增的行。
+
 # 进程管理
 
 ## 查看进程和端口
@@ -435,6 +495,83 @@ ps -ef | grep 进程名
 
 ```
 netstat -nap | grep 端口号
+```
+
+### netstat
+
+`netstat` 用来打印Linux中网络系统的状态信息，显示各种网络相关信息，如网络连接，接口状态，路由表， (Interface Statistics)，masquerade 连接，多播成员 (Multicast Memberships) 等等。Netstat用于显示与IP、TCP、UDP和ICMP协议相关的统计数据，一般用于检验本机各端口的网络连接情况。。 常用到的选项为：
+```
+-a或--all：                       显示所有连线中的Socket；
+-A<网络类型>或--<网络类型>：        列出该网络类型连线中的相关地址；
+-c或--continuous：                持续列出网络状态；
+-C或--cache：                     显示路由器配置的快取信息；
+-e或--extend：                    显示网络其他相关信息；
+-F或--fib：                       显示FIB；
+-g或--groups：                    显示多重广播功能群组组员名单；
+-h或--help：                      在线帮助；
+-i或--interfaces：                显示网络界面信息表单；
+-l或--listening：                 显示监控中的服务器的Socket；
+-n或--numeric：                   直接使用ip地址，而不通过域名服务器；
+-N或--netlink或--symbolic：       显示网络硬件外围设备的符号连接名称；
+-o或--timers：                    显示计时器；
+-p或--programs：                  显示正在使用Socket的程序识别码和程序名称；
+-r或--route：                     显示Routing Table；
+-s或--statistice：                显示网络工作信息统计表；
+-t或--tcp：                       显示TCP传输协议的连线状况；
+-u或--udp：                       显示UDP传输协议的连线状况；
+-v或--verbose：                   显示指令执行过程；
+-V或--version：                   显示版本信息；
+-x或--unix：                      此参数的效果和指定"-A unix"参数相同；
+--ip或--inet：                    此参数的效果和指定"-A inet"参数相同。
+```
++ 列出所有端口 
+```
+netstat -anp
+```
+
++ 列出所有 tcp 端口 
+```
+netstat -antp
+```
+
++ 列出所有 udp 端口 
+```
+netstat -anup
+```
++ 只显示所有监听端口 
+```
+netstat -lnp
+```
++ 只列出所有监听 tcp 端口 
+```
+netstat -ltnp
+```
+
++ 只列出所有监听 udp 端口 
+```
+netstat -lunp
+```
++ 只列出所有监听 UNIX 端口 
+```
+netstat -lxnp
+```
++ 找出程序运行的端口
+```
+netstat -anp | grep ssh
+```
+> NOTE:并不是所有的进程都能找到，没有权限的会不显示，使用 root 权限查看所有的信息。
+
++ 找出运行在指定端口的进程
+```
+netstat -anp | grep ':3306'
+```
++ 持续输出 netstat 信息(每隔一秒输出网络信息)
+```
+netstat -cnp
+```
++ 显示所有端口的统计信息 
+```
+netstat -s
 ```
 
 ## 让进程后台运行
