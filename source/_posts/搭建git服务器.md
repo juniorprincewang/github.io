@@ -120,5 +120,3 @@ readonly = test
 3. [Linux Ubuntu搭建Git服务器](https://segmentfault.com/a/1190000015020195)
 4. [7 服务器上的 Git - Gitosis](https://git-scm.com/book/zh/v1/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-Gitosis)
 5. [利用SSH的用户配置文件Config管理SSH会话](https://www.hi-linux.com/posts/14346.html)
-
-tzong1987@hotmail.com，yaojia@crypto.cn
