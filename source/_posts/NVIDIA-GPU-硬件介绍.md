@@ -11,7 +11,49 @@ categories:
 <!-- more -->
 
 
-# nVidia GPU Hardware Introduction
+# nVidia GPU Model
+
+![图片来源论文GPUvm：GPU Virtualization at the Hypervisor](../NVIDIA-GPU-硬件介绍/gpu_management_model.png)
+
+从上述图可以看出组成GPU的几个重要组成：
++ MMIO: 
+	+ CPU与GPU的交流就是通过MMIO进行的。
+	+ DMA传输大量的数据就是通过MMIO进行命令控制的
+	+ I/O端口可用于间接访问MMIO区域，像Nouveau等开源软件从来不访问它
++ GPU context
+	+ GPU context代表了GPU计算的状态
+	+ 在GPU上拥有自己的虚拟地址
+	+ 在GPU上可以共存多种context
++ GPU channel
+	+ 任何命令都是由CPU发出
+	+ 命令流（command stream）被提交到硬件单元，也就是GPU channel
+	+ 每个GPU channel关联一个context，而一个GPU context可以有多个GPU channel。
+	+ 每个GPU context 包含相关channel的 GPU channel descriptors 。 每个 descriptor 都是 GPU 内存中的一个对象。
+	+ 每个 GPU channel descriptor 存储了 channel 的设置，其中就包括 page table 。
+	+ 在每个 GPU channel 中，在GPU内存中分配了唯一的命令缓存，这通过MMIO对CPU可见。
+	+ GPU context switching 和命令执行都在GPU硬件内部调度。
++ GPU Page Table
+	+ GPU context 在虚拟基地空间由页表隔离其他的 context 。
+	+ GPU的页表隔离鱼CPU页表，位于GPU内存中。
+	+ GPU 页表的物理地址位于 GPU channel descriptor 中。
+	+ GPU 页表不仅仅将 GPU虚拟地址转换成GPU内存的物理地址，也可以转换成CPU的物理地址。因此，GPU页表可以将GPU虚拟地址和CPU内存地址统一到GPU统一虚拟地址空间来。
++ PCIe BAR
+	+ GPU 设备通过PCIe总线接入到主机上。 base address registers(BARs) 是 MMIO的窗口，在GPU启动时候配置。
+	+ GPU的控制寄存器和内存都映射到了BARs中。
+	+ GPU设备内存通过映射的MMIO窗口去配置GPU和访问GPU内存。
++ PFIFO Engine
+	+ PFIFO是GPU命令提交通过的一个特殊的部件
+	+ PFIFO维护了一些独立命令队列，也就是channel
+	+ 此命令队列是 ring buffer，有 put 和 get 的指针。
+	+ 所有访问 channel 控制区域的执行指令都被 PFIFO 拦截下来。
+	+ GPU 驱动使用 channel descriptor 来存储相关的 channel设定。
++ BO
+	+ Buffer Object (bo)，内存的一块(block)，能够用于存储 texture, a render target, shader code等等。
+	+ nouveau和gdev经常使用BO
+
+
+参考
+[GPU Architecture Overview](https://insujang.github.io/2017-04-27/gpu-architecture-overview/)
 
 ## PCIe 应用程序编程
 

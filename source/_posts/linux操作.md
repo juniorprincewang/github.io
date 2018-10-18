@@ -653,7 +653,7 @@ gcc -shared -fpic -o libpreload.so preload.c
 LD_PRELOAD=./libpreload.so ./test
 ```
 
-# 信息查看
+# 内核操作
 
 ## CPU
 
@@ -692,6 +692,26 @@ cat /proc/cpuinfo |grep MHz|uniq
 uname -a
 ```
 
+### 删除老版本的内核
+
+在安装了新内核后，旧版本的内核不会自动的删除。 它们会继续占用磁盘空间，并且占用着 Grub root menu。
+
+对于 Ubuntu 操作系统，可以利用 `purge-old-kernels` bash 脚本来执行，它位于 `byobu` 包中。
+
+```
+sudo apt-get install byobu
+```
+
+然后执行 `purge-old-kernels` 即可。
+
+它会默认保留两个最近的kernel 版本，当然也可以自己设置保留多少。
+
+```
+sudo purge-old-kernels --keep 3 -qy
+```
+
+[How to Remove Old Kernels in Debian and Ubuntu](https://www.pontikis.net/blog/remove-old-kernels-debian-ubuntu)
+
 ## 当前操作系统发行版本
 ```
 cat /etc/issue
@@ -709,6 +729,9 @@ getconf LONG_BIT
 ```
 如果是32，说明当前CPU运行在32bit模式下, 但不代表CPU不支持64bit。
 如果是64，说明当前CPU支持64bit。
+
+
+
 
 参考
 
