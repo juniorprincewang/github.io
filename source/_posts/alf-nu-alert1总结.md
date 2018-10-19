@@ -408,3 +408,4 @@ payload:
 [alf.nu/alert1 writeup(1-7)](https://blog.csdn.net/he_and/article/details/79672900)
 [escape.alf.nu XSS Challenges 8-15 之进阶的XSS](https://blog.csdn.net/u012763794/article/details/51526725)
 [XSS练习平台【a/lert(1) to win】](https://blog.csdn.net/taozijun/article/details/81004359)
+[alert(1) to win payloads](https://github.com/masazumi-github/alert-1-to-win#a020)
