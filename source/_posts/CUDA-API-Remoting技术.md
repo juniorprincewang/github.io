@@ -9,10 +9,10 @@ categories:
 - GPU虚拟化
 ---
 
-CUDA的虚拟化有一项技术为 `API Remoting`， 
+CUDA的虚拟化有一项技术为 `API Remoting`， 通俗点就是将编程API重定向，或者说远程过程调用。这是在接口层面上实现虚拟化, 采用对调用接口二次封
+装的方法。 API 重定向虽然能够达到接近原生硬件的性能, 但是需要修改客户虚拟机中程序库。本文探究CUDA runtime API的重定向细节。
 
 <!-- more -->
-
 
 
 # GPU虚拟化

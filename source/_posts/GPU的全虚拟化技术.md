@@ -27,3 +27,10 @@ NVIDIA 显卡的开源驱动
 
 # envytools
 
+
+
+# gVirt 图像渲染方案
+
+
+# GPUvm 通用计算方案
+
