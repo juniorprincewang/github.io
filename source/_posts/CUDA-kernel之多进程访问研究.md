@@ -11,7 +11,7 @@ categories:
 <!-- more -->
 
 
-[GPU 虚拟化相关技术研究综述}(http://www.c-s-a.org.cn/csa/ch/reader/create_pdf.aspx?file_no=6096&flag=1&year_id=12&quarter_id=) 里面提到今后GPU的可能的研究方向其中一点：可抢占性。
+[GPU 虚拟化相关技术研究综述](http://www.c-s-a.org.cn/csa/ch/reader/create_pdf.aspx?file_no=6096&flag=1&year_id=12&quarter_id=) 里面提到今后GPU的可能的研究方向其中一点：可抢占性。
 
 	由于 GPU 核数较多, 抢占 GPU 需要保存大量的上下文信息, 开销较大, 所以目前市场上 GPU 都不支持抢占特性. 只用当前任务完成之后, GPU 才能被下个应用程序使用。 在 GPU 虚拟化的环境中, 多用户使用的场景会导致 GPU 进行频繁的任务切换, 可抢占的 GPU 能够防止恶意用户长期占用, 并且 能够实现用户优先级权限管理。
 

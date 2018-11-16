@@ -385,6 +385,7 @@ min: $(OUTPUT:.js=.min.js)
 上面代码的意思是，将变量 `OUTPUT` 中的后缀名 `.js` 全部替换成 `.min.js` 。
 
 # 参考
+- [跟我一起写 Makefile（一）](https://blog.csdn.net/haoel/article/details/2886)
 - [Make命令教程](https://www.kancloud.cn/kancloud/make-command/45592)
 
 

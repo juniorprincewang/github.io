@@ -172,6 +172,13 @@ pre-NV40显卡限制其大小为1MB，为NV3调整了BAR0 或 BAR1 中的映射�
 
 > 01:00.0 VGA compatible controller: NVIDIA Corporation GK110B [GeForce GTX TITAN Black] (rev a1)
 
+查看此PCI设备的ID。
+
+```
+sudo lspci -s 01:00.0 -n
+```
+> 01:00.0 0300: 10de:100c (rev a1)
+即，设备ID是 `100c`，而厂商ID是 `10de`。
 查看详细的信息：
 
 ```
@@ -197,8 +204,9 @@ BAR3 and BAR4: 0xf0000000
 BAR5: 0xe000 (I/O port)
 
 
-参考[PCI Express I/O System](https://insujang.github.io/2017-04-03/pci-express-io-system/)
-
+参考
+1. [PCI Express I/O System](https://insujang.github.io/2017-04-03/pci-express-io-system/)
+2. [lspci](http://manpages.ubuntu.com/manpages/xenial/man8/lspci.8.html)
 
 
 ## PFIFO
