@@ -48,6 +48,21 @@ gitosis-init < /home/git/id_rsa.pub
 > Initialized empty Git repository in /home/git/repositories/gitosis-admin.git/
 > Reinitialized existing Git repository in /home/git/repositories/gitosis-admin.git/
 
+这里也可以采用SSH 免密码登录的操作：
+创建 `authorized_keys` 文件，如果已经存在这个文件, 跳过这条。
+```
+touch ~/.ssh/authorized_keys 
+```
+必须将 `~/.ssh/authorized_keys` 的权限改为600, 该文件用于保存ssh客户端生成的公钥，可以修改服务器的ssh服务端配置文件 `/etc/ssh/sshd_config` 来指定其他文件名。
+```
+chmod 600 ~/.ssh/authorized_keys
+```
+将 `id_rsa.pub` 的内容追加到 `authorized_keys` 中, 注意使用追加 `>>` ，不要用 `>` ，否则会清空原有的内容，使其他人无法使用原有的密钥登录。
+```
+cat /home/git/id_rsa.pub/id_rsa.pub  >> ~/.ssh/authorized_keys 
+```
+
+
 # 在Git服务器新建一个项目
 完成上一步之后，你Git服务器已经装好了。相关信息总结如下：
 

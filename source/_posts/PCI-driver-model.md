@@ -228,3 +228,4 @@ static int __init pci_module_init(void){
 9. Linux Device Driver, Third Edition
 10. [第 12 章 PCI 驱动](http://www.deansys.com/doc/ldd3/ch12.html#ThePCIInterface.sect1)
 11. [LDD之PCI设备](https://blog.csdn.net/a372048518/article/details/54143059 )
+（https://github.com/cirosantilli/linux-kernel-module-cheat/blob/6788a577c394a2fc512d8f3df0806d84dc09f355/kernel_module/pci.c）

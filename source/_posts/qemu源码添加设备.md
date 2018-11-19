@@ -331,6 +331,6 @@ QOM的对象构造分成三部分，第一部分是type的构造，这是通过T
 6. [qemu-object-model](https://github.com/Gyumeijie/qemu-object-model)
 7. [Features/QOM](https://wiki.qemu.org/Features/QOM)
 8. [Qemu之QOM（Qemu Object Module）](https://www.jianshu.com/p/20d4820f34de)
-9. [QEMU学习笔记——QOM(Qemu Object Model)]（https://www.binss.me/blog/qemu-note-of-qemu-object-model/)
+9. [QEMU学习笔记——QOM(Qemu Object Model)](https://www.binss.me/blog/qemu-note-of-qemu-object-model/)
 10. [How to debug qemu devices](https://stfpeak.github.io/2017/07/15/how-to-debug-qemu-devices/)
 11.  [QEMU漏洞挖掘](https://www.tuicool.com/articles/MzqYbia)
