@@ -64,6 +64,29 @@ PREPARE_WORK(struct work_struct work, work_func_t func);
 INIT_DELAYED_WORK(struct delayed_work work, work_func_t func); 
 PREPARE_DELAYED_WORK(struct delayed_work work, work_func_t func); 
 ```
+## 清除或取消工作队列中的work工作
+
+想清理特定的任务项目并阻塞任务， 直到任务完成为止， 可以调用 `flush_work` 来实现。 
+指定工作队列中的所有任务能够通过调用 `flush_workqueue` 来完成。 这两种情形下，调用者阻塞直到操作完成为止。 
+为了清理内核全局工作队列，可调用 `flush_scheduled_work`。
+```
+int flush_work( struct work_struct *work );
+int flush_workqueue( struct workqueue_struct *wq );
+void flush_scheduled_work( void );
+```
+还没有在处理程序当中执行的任务可以被取消。 调用 `cancel_work_sync` 将会终止队列中的任务或者阻塞任务直到回调结束（如果处理程序已经在处理该任务）。 如果任务被延迟，可以调用 `cancel_delayed_work_sync` 。
+
+```
+int cancel_work_sync( struct work_struct *work );
+int cancel_delayed_work_sync( struct delayed_work *dwork );
+```
+最后，可以通过调用 `work_pending` 或者 `delayed_work_pending` 来确定任务项目是否在进行中。
+
+```
+work_pending( work );
+delayed_work_pending( work );
+```
+
 ## 创建销毁workqueue
 
 + 用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。
@@ -135,25 +158,16 @@ void flush_workqueue(struct workqueue_struct *wq);
 ```
 /* https://github.com/cirosantilli/linux-kernel-module-cheat#workqueues */
 
-#include <linux/delay.h> /* usleep_range */
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/types.h> /* atomic_t */
 #include <linux/workqueue.h>
 
 static struct workqueue_struct *queue;
-static atomic_t run = ATOMIC_INIT(1);
+
 
 static void work_func(struct work_struct *work)
 {
-	int i = 0;
-	while (atomic_read(&run)) {
-		pr_info("%d\n", i);
-		usleep_range(1000000, 1000001);
-		i++;
-		if (i == 10)
-			i = 0;
-	}
+	printk(KERN_INFO "worker\n");
 }
 
 DECLARE_WORK(work, work_func);
@@ -167,7 +181,6 @@ static int myinit(void)
 
 static void myexit(void)
 {
-	atomic_set(&run, 0);
 	destroy_workqueue(queue);
 }
 
@@ -182,3 +195,4 @@ MODULE_LICENSE("GPL");
 3. [linux工作队列](http://www.embeddedlinux.org.cn/emb-linux/system-development/201709/30-7472.html)
 4. [Linux 的并发可管理工作队列机制探讨](https://www.ibm.com/developerworks/cn/linux/l-cn-cncrrc-mngd-wkq/index.html)
 5. [工作队列(workqueue) create_workqueue/schedule_work/queue_work](https://blog.csdn.net/angle_birds/article/details/8448070)
+6. [内核 API，第 2 部分：可延迟函数、内核微线程以及工作队列](https://www.ibm.com/developerworks/cn/linux/l-tasklets/index.html)
