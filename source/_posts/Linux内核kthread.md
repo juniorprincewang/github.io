@@ -36,6 +36,29 @@ Linux内核是调度的基本单位。内核线程是直接由内核本身启动
 ```
 include <linux/kthread.h>
 
+/**
+ * kthread_create_on_node - create a kthread.
+ * @threadfn: the function to run until signal_pending(current).
+ * @data: data ptr for @threadfn.
+ * @node: task and thread structures for the thread are allocated on this node
+ * @namefmt: printf-style name for the thread.
+ *
+ * Description: This helper function creates and names a kernel
+ * thread.  The thread will be stopped: use wake_up_process() to start
+ * it.  See also kthread_run().  The new thread has SCHED_NORMAL policy and
+ * is affine to all CPUs.
+ *
+ * If thread is going to be bound on a particular cpu, give its node
+ * in @node, to get NUMA affinity for kthread stack, or else give NUMA_NO_NODE.
+ * When woken, the thread will run @threadfn() with @data as its
+ * argument. @threadfn() can either call do_exit() directly if it is a
+ * standalone thread for which no one will call kthread_stop(), or
+ * return when 'kthread_should_stop()' is true (which means
+ * kthread_stop() has been called).  The return value should be zero
+ * or a negative error number; it will be passed to kthread_stop().
+ *
+ * Returns a task_struct or ERR_PTR(-ENOMEM) or ERR_PTR(-EINTR).
+ */
 struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
 					   void *data,
 					   int node,
@@ -84,6 +107,12 @@ int wake_up_process(struct task_struct *tsk);
 ```
 # 终止线程
 线程一旦启动起来后，会一直运行，除非该线程主动调用do_exit函数，或者其他的进程调用kthread_stop函数，结束线程的运行。
+
+> @threadfn() can either call do_exit() directly if it is a
+> * standalone thread for which no one will call kthread_stop(), or
+> * return when 'kthread_should_stop()' is true (which means
+> * kthread_stop() has been called).
+
 ## kthread_stop
 ```
 int kthread_stop(struct task_struct *k);
@@ -100,6 +129,7 @@ int kthread_stop(struct task_struct *k);
 ```
 #include <linux/sched.h>
 void schedule(void)
+void schedule_timeout()
 ```
 
 阻塞线程一段指定的时间。
@@ -153,3 +183,6 @@ module_exit(myexit);
 # 参考
 1. [Kernel threads made easy](https://lwn.net/Articles/65178/)
 1. [Linux内核线程kernel thread详解--Linux进程的管理与调度（十）](https://blog.csdn.net/gatieme/article/details/51589205 )
+3. [Proper way of handling threads in kernel?](https://stackoverflow.com/questions/10177641/proper-way-of-handling-threads-in-kernel)
+4. [How to wait for a linux kernel thread (kthread)to exit?](https://stackoverflow.com/questions/4084708/how-to-wait-for-a-linux-kernel-thread-kthreadto-exit)
+4. https://github.com/cirosantilli/linux-kernel-module-cheat/blob/6788a577c394a2fc512d8f3df0806d84dc09f355/kernel_module/kthreads.c

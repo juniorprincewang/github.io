@@ -198,6 +198,57 @@ PCIDeviceClass *c = PCI_DEVICE_CLASS(kclass);
         OBJECT_CHECK(PCIDevice, obj, TYPE_PCI_DEVICE)
 ```
 
+其中 `OBJECT_CHECK` 、 `OBJECT_CLASS_CHECK` 、 `OBJECT_GET_CLASS` 的定义如下：
+
+`OBJECT_CHECK` 用于转换`Object`，`OBJECT_CLASS_CHECK` 用于转换 `ObjcetClass` ， `OBJECT_GET_CLASS` 用于从`Object` 获取 `Class`。
+```
+/**
+ * OBJECT_CHECK:
+ * @type: The C type to use for the return value.
+ * @obj: A derivative of @type to cast.
+ * @name: The QOM typename of @type
+ *
+ * A type safe version of @object_dynamic_cast_assert.  Typically each class
+ * will define a macro based on this type to perform type safe dynamic_casts to
+ * this object type.
+ *
+ * If an invalid object is passed to this function, a run time assert will be
+ * generated.
+ */
+#define OBJECT_CHECK(type, obj, name) \
+    ((type *)object_dynamic_cast_assert(OBJECT(obj), (name), \
+                                        __FILE__, __LINE__, __func__))
+```
+```
+/**
+ * OBJECT_CLASS_CHECK:
+ * @class_type: The C type to use for the return value.
+ * @class: A derivative class of @class_type to cast.
+ * @name: the QOM typename of @class_type.
+ *
+ * A type safe version of @object_class_dynamic_cast_assert.  This macro is
+ * typically wrapped by each type to perform type safe casts of a class to a
+ * specific class type.
+ */
+#define OBJECT_CLASS_CHECK(class_type, class, name) \
+    ((class_type *)object_class_dynamic_cast_assert(OBJECT_CLASS(class), (name), \
+                                               __FILE__, __LINE__, __func__))
+```
+```
+/**
+ * OBJECT_GET_CLASS:
+ * @class: The C type to use for the return value.
+ * @obj: The object to obtain the class for.
+ * @name: The QOM typename of @obj.
+ *
+ * This function will return a specific class for a given object.  Its generally
+ * used by each type to provide a type safe macro to get a specific class type
+ * from an object.
+ */
+#define OBJECT_GET_CLASS(class, obj, name) \
+    OBJECT_CLASS_CHECK(class, object_get_class(OBJECT(obj)), name)
+```
+
 在 `PCI_DEVICE_CLASS` 这个宏定义中，最终会进入 `object_class_dynamic_cast` 函数，在该函数中，根据class对应的type以及typename对应的type，判断是否能够转换，判断的主要依据就是type_is_ancestor， 这个判断target_type是否是type的一个祖先，如果是当然可以进行转换，否则就不行。
 
 总之，就是从最开始的 `TypeImpl` 初始化了每一个type对应的 `ObjectClass *class` ，并且构建好了各个Class的继承关系。
