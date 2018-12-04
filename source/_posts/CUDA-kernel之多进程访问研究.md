@@ -2,8 +2,8 @@
 title: CUDA kernel之多进程访问研究
 date: 2018-10-19 14:40:13
 tags:
-- cuda
-- gpu
+- CUDA
+- GPU
 categories:
 - GPU
 ---

@@ -94,3 +94,4 @@ GPU 寄存器提供了快速存取地址。但是寄存器数量有限
 
 # 参考
 
+1. [Why does cudaMalloc() use pointer to pointer?](https://stackoverflow.com/questions/12936986/why-does-cudamalloc-use-pointer-to-pointer)

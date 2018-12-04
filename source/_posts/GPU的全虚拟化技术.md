@@ -2,7 +2,8 @@
 title: GPU的全虚拟化技术
 date: 2018-06-18 16:56:05
 tags:
-- cuda
+- CUDA
+- GPU
 categories:
 - GPU
 - GPU虚拟化

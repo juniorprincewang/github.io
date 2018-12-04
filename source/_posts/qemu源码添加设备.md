@@ -1,14 +1,14 @@
 ---
-title: qemu源码添加设备
+title: QEMU源码添加设备
 date: 2018-07-23 15:21:39
 tags:
-- qemu
-- emulate
-- virtio
+- QEMU
+- QOM
 categories:
-- qemu
+- QEMU
 ---
-本篇博客记录在qemu源码中添加新的设备文件，以添加virtio设备为例子。
+本篇博客记录在QEMU源码中添加新的设备文件，主要介绍QEMU对象模型`QOM`，以`hw/misc/pci-testdev.c` 和 `hw/misc/edu.c`设备为例子。
+
 <!-- more -->
 
 qemu中需要模拟出设备与总线的关系。因为
@@ -88,9 +88,11 @@ TypeInfo中定义了如下几类信息：
 	1. Name
 		包括自己的Name，Parent的Name。
 	2. Class
-		ObjectClass的信息包括，class_size，class_data，class相关函数：class_base_init，class_init，class_finalize。这些函数都是为了初始化，释放结构体ObjectClass。
+		ObjectClass的信息包括，class_size，class_data，class相关函数：class_base_init，class_init，class_finalize。
+		这些函数都是为了初始化，释放结构体ObjectClass。
 	3. Instance
-		对象Object信息包括：instance_size，instance相关函数：instance_post_init，instance_init，instance_finalize。这些函数都是为了初始化，释放结构体Object。
+		对象Object信息包括：instance_size，instance相关函数：instance_post_init，instance_init，instance_finalize。
+		这些函数都是为了初始化，释放结构体Object。
 	4. 其他信息
 		abstract是否为抽象。interface数组。
 
@@ -103,7 +105,7 @@ TypeInfo的属性与TypeImpl的属性对应，实际上qemu就是通过用户提
 ## 模块注册
 
 向QOM模块注册自己，类似于Linux驱动的注册，通过 `type_init` 宏注册，它在 `include/qemu/module.h` 中。
-这个宏调用发生在 qemu main 函数之前。
+这个宏调用发生在 `qemu main` 函数之前。
 ```
 static const TypeInfo pci_testdev_info = {
     .name          = TYPE_PCI_TEST_DEV,	/*类型的名字*/
@@ -385,3 +387,4 @@ QOM的对象构造分成三部分，第一部分是type的构造，这是通过T
 9. [QEMU学习笔记——QOM(Qemu Object Model)](https://www.binss.me/blog/qemu-note-of-qemu-object-model/)
 10. [How to debug qemu devices](https://stfpeak.github.io/2017/07/15/how-to-debug-qemu-devices/)
 11.  [QEMU漏洞挖掘](https://www.tuicool.com/articles/MzqYbia)
+12. [Documentation/QOMConventions QOM编程规范](https://wiki.qemu.org/Documentation/QOMConventions)

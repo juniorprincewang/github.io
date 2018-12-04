@@ -63,7 +63,7 @@ dd bs=4 status=none if=/dev/pci_dev count=1 skip=0 | od -An -t x1
 ```
 + 写入pci设备文件中指定位置
 ```
-printf `\xFF\xFF\xFF\xFF` | dd bs=4 status=none of=/dev/pci_dev count=1 seek=2
+printf '\xFF\xFF\xFF\xFF' | dd bs=4 status=none of=/dev/pci_dev count=1 seek=2
 ```
 
 # 参考

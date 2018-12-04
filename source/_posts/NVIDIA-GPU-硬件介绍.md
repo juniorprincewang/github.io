@@ -3,7 +3,7 @@ title: NVIDIA GPU 硬件介绍
 date: 2018-07-14 16:52:26
 tags:
 - hardware
-- gpu
+- GPU
 categories:
 - GPU
 ---

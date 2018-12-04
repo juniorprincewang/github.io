@@ -455,7 +455,110 @@ name "virtio-net-pci", bus PCI, alias "virtio-net"
                 use 'vhostfds=x:y:...:z to connect to multiple already opened vhost net devices
                 use 'queues=n' to specify the number of queues to be created for multiqueue TAP
 ```
+### virtio Serial
 
+串口通信的样例代码是：
+```
+-device virtio-serial-pci \
+-chardev socket,path=/tmp/foo,server,nowait,id=foo \
+-device virtserialport,chardev=foo,name=org.fedoraproject.port.0
+```
+
+QEMU的chardev分为backend和frontend。这会向guest创建设备并暴露出串口端口。 `-device virtio-serial` 选项向虚拟机添加了 `virtio-serial-pci` 设备，`-chardev socket,path=/tmp/foo,server,nowait,id=foo` 创建了backend，以 `/tmp/foo` 为path的 UNIX SOCKET用于通信，id为 foo。  `-device virtserialport,chardev=foo,name=org.fedoraproject.port.0` 创建了frontend，它打开了为此设备打开了一个端口，端口名称为“org.fedoraproject.port.0”，并且将foo的chardev 添加到那个port。 来自[QEMU (简体中文) #Copy and paste](https://wiki.archlinux.org/index.php/QEMU_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))
+
+客户端需要载入 `virtio_console.ko` 内核模块并将端口 `/dev/vport0p1` 提供给用户态程序。
+文件系统属性的位置在 `/sys/class/virtio-ports/vport0p1/name` ，它包含了文本 “org.fedoraproject.port.0”。
+添加udev规则，在 `/dev/virtio-ports` 中添加一条链接，`/dev/virtio-ports/org.fedoraproject.port.0 -> /dev/vport0p1` ，写入主机 `/tmp/foo` 的数据会被转发到虚拟机，虚拟机中的应用程序就能够从 `/dev/vport0p1` 或者 `/dev/virtio-ports/org.fedoraproject.port.0` 中读数据。 `/dev/vportNp0` 为首个 `virtio console` 预留。
+
+从[kvm -chardev](https://www.cleancss.com/explain-command/kvm/108550)中可以得到`-chardev` 的选项。 或者从`help` 选项获取，如下
+```
+-chardev socket,id=id[,host=host],port=port[,to=to][,ipv4][,ipv6][,nodelay][,reconnect=seconds]
+         [,server][,nowait][,telnet][,reconnect=seconds][,mux=on|off]
+         [,logfile=PATH][,logappend=on|off][,tls-creds=ID] (tcp)
+-chardev socket,id=id,path=path[,server][,nowait][,telnet][,reconnect=seconds]
+         [,mux=on|off][,logfile=PATH][,logappend=on|off] (unix)
+```
+创建双向socket流，可以是TCP或者UNIX socket，这取决与 `path` 路径是否设置。
+
+
+### 检查客户端是否启用 virtio_console.ko
+
+检查内核模块是否包含virtio。
+```
+grep -i virtio /boot/config-$(uname -r)
+```
+
+	CONFIG_NET_9P_VIRTIO=m
+	CONFIG_VIRTIO_BLK=y
+	CONFIG_SCSI_VIRTIO=m
+	CONFIG_VIRTIO_NET=y
+	CONFIG_CAIF_VIRTIO=m
+	CONFIG_VIRTIO_CONSOLE=y
+	CONFIG_HW_RANDOM_VIRTIO=m
+	CONFIG_DRM_VIRTIO_GPU=m
+	CONFIG_VIRTIO=y
+	# Virtio drivers
+	CONFIG_VIRTIO_PCI=y
+	CONFIG_VIRTIO_PCI_LEGACY=y
+	CONFIG_VIRTIO_BALLOON=y
+	CONFIG_VIRTIO_INPUT=m
+	CONFIG_VIRTIO_MMIO=y
+	CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES=y
+
+`CONFIG_VIRTIO_CONSOLE=y` 表示 `virtio_console.ko` 已经编译到内核中，默认启动，不用作为可加载模块载入。
+
+### QEMU客户端模式的 UNIX chardev
+
+启动的参数为：
+```
+...
+-chardev socket,path=/tmp/foo,id=foo \
+-device virtio-serial-pci 
+-device virtserialport,chardev=foo,name=maxwell,nr=2 \
+```
+
+需要先在host上启动监听进程：
+```
+socat UNIX-LISTEN:/tmp/foo  -
+```
+否则会报错
+> qemu-system-x86_64: -chardev socket,path=/tmp/foo,id=foo: Failed to connect socket /tmp/foo: No such file or directory
+
+启动guest之后，在guest中向设备输入字符串：
+```
+echo foo > /dev/virtio-ports/maxwell
+```
+host上会得到消息“foo”。
+
+
+### QEMU服务器模式的 UNIX chardev
+
+```
+...
+-chardev socket,path=/tmp/foo,server,nowait,id=foo \
+-device virtio-serial-pci 
+-device virtserialport,chardev=foo,name=maxwell,nr=2 \
+```
+
+需要先在host上启动监听进程，这里使用 `ipython` 交互程序：
+```
+import socket
+ 
+sock = socket.socket(socket.AF_UNIX)
+sock.connect("/tmp/foo")
+print sock.recv(1024) 
+```
+在guest中，向virtio-serial port写数据：
+```
+printf 'abcd' | dd bs=4 status=none of=/dev/virtio-ports/maxwell count=1 seek=0
+```
+这样即可在host上收到消息“abcd”。
+
+[这里](https://wiki.qemu.org/Features/ChardevFlowControl)还提到用管道的方式传输数据，我就不在这里实验了。
+
+[Features/VirtioSerial](https://fedoraproject.org/wiki/Features/VirtioSerial#How_To_Test)
+[Features/ChardevFlowControl 字符设备控制流](https://wiki.qemu.org/Features/ChardevFlowControl)
+[KVM中Virtio-serial_API](https://www.linux-kvm.org/page/Virtio-serial_API)
 
 ## qemu创建虚拟机
 
@@ -504,6 +607,8 @@ qemu-system-x86_64 -m 2048 -enable-kvm ubuntu.qcow2
 QEMU 监控器是终端窗口，可以执行一些命令来查看当前启动的操作系统一些配置和运行状况。
 可以通过 `-monitor stdio` 参数启动。
 或者在QEMU窗口中使用快捷键 `Ctrl+Alt+2`， 使用 `Ctrl+Alt+1` 切换回普通的客户机。
+
+
 
 # 参考
 [1] [Virtio](http://www.linux-kvm.org/page/Virtio)

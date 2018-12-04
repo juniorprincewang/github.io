@@ -2,10 +2,10 @@
 title: qemu-kvm内存虚拟化
 date: 2018-07-20 16:59:26
 tags:
-- qemu
+- QEMU
 - vm
 categories:
-- qemu
+- QEMU
 ---
 qemu-kvm的内存虚拟化方案，是由qemu和kvm共同完成的，所以可以分为两部分。qemu完成内存的申请，kvm实现内存的管理。内部实现及其复杂，本篇博客尽量整理搜集相关资料，目的是分析出如何将 `GPA` 转换成 `HVA` 。
 <!-- more -->
