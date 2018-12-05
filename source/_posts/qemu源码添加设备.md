@@ -102,6 +102,7 @@ TypeInfo中定义了如下几类信息：
 TypeInfo的属性与TypeImpl的属性对应，实际上qemu就是通过用户提供的TypeInfo创建的TypeImpl的对象。
 
 
+
 ## 模块注册
 
 向QOM模块注册自己，类似于Linux驱动的注册，通过 `type_init` 宏注册，它在 `include/qemu/module.h` 中。
@@ -388,3 +389,6 @@ QOM的对象构造分成三部分，第一部分是type的构造，这是通过T
 10. [How to debug qemu devices](https://stfpeak.github.io/2017/07/15/how-to-debug-qemu-devices/)
 11.  [QEMU漏洞挖掘](https://www.tuicool.com/articles/MzqYbia)
 12. [Documentation/QOMConventions QOM编程规范](https://wiki.qemu.org/Documentation/QOMConventions)
+13. [QEMU's instance_init() vs. realize()](http://people.redhat.com/~thuth/blog/qemu/2018/09/10/instance-init-realize.html)
+14. [QEMU/KVM VM Execution Basics](https://dev.goodwu.net/post/2018-03-25-qemu-kvm-exec-basics/)
+15. [QOM说明文档](https://lists.gnu.org/archive/html/qemu-devel/2012-08/msg02271.html)
