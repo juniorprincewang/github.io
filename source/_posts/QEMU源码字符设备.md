@@ -1,6 +1,6 @@
 ---
 title: QEMU源码字符设备
-date: 2018-12-04 15:59:03
+date: 2018-12-05 15:59:03
 tags:
 - QEMU
 - virtio
@@ -34,6 +34,50 @@ QEMU字符设备有host和guest部分，在当前版本中，使用命令参数 
 + 枚举类型名和函数类型名称也是CamelCase。
 + 标量类型名称是lower_case_with_underscores_ending_with_a_t，就像POSIX的uint64_t。
 + 以qemu_作前缀的函数是包装标准库函数。
+
+# 结构体
+串口端口结构体
++ VirtIOSerialPort
+	+ DeviceState dev; 这是一个Object结构体
+	+ QTAILQ_ENTRY(VirtIOSerialPort) next; 
+	+ VirtIOSerial \*vser;	此变量可以得到 virtio device 和 qdev bus
+	+ VirtQueue \*ivq, \*ovq; 一个输入virtqueue，用于从guest读数据，一个输出virtqueue，用于向guest写数据
+	+ char \*name; 此名称将发送给guest虚拟机并通过sysfs导出。 guest可以根据此信息创建符号链接。 \
+	名称采用反向fqdn格式，如org.qemu.console.0
+	+ uint32_t id; 此ID有助于识别guest和host之间的端口。客户端发送带有此ID的"tag"，其中包含它发送的每个数据包，然后host可以找出将此数据发送到哪个关联设备
+	+ VirtQueueElement \*elem; 这是我们从virtqueue中弹出的元素。 消耗guest数据的慢速后端（例如qemu chardevs的文件后端）可能导致guest阻塞，直到所有输出被刷新。 这是我们不希望的，所以我们记下弹出的最后一个元素，并在后端再次写入后继续使用它。
+	+ uint32_t iov_idx;	弹出的elem在iov buffer的索引
+    + uint64_t iov_offset;	弹出的elem在iov buffer的偏移量
+    + QEMUBH \*bh; 	在非节流时，我们使用下半部分来调用flush_queued_data。
+    + bool guest_connected;	 相关的guest设备是否open
+    + bool host_connected;	host上的设备是否为IO打开
+    + bool throttled;	应用是否向要接受数据
+
+串口端口结构体类
++ VirtIOSerialPortClass
+	+ DeviceClass parent_class;	这是个DeviceClass结构体
+    + bool is_console;	此设备是否和guest中的hvc绑定， hvc是啥？
+    + DeviceRealize realize函数;	每个port新设备被bus发现后调用的回调函数
+    + DeviceUnrealize unrealize函数; 当一个port被热拔出或移除后调用的函数
+    + set_guest_connected函数;	对于guest event的回调函数，guest打开设备或关闭设备。
+    + enable_backend函数;	启用或关闭virtio serial port的backend；
+    + guest_ready函数;	 Guest准备好接受数据
+	+ have_data函数; guest向端口写入数据，数据在此函数中处理；
+	+ guest_writable; 每次guest将buffer入队列后，这依赖于guest端和host端已连接。
+
+串口，包含了设备和BUS
++ struct VirtIOSerial
+	+ VirtIODevice parent_obj;
+	+ VirtQueue \*c_ivq, \*c_ovq;
+    + VirtQueue \*\*ivqs, \*\*ovqs;
+    + VirtIOSerialBus bus;
+    + QTAILQ_HEAD(, VirtIOSerialPort) ports;
+    + QLIST_ENTRY(VirtIOSerial) next;
+    + uint32_t \*ports_map;
+    + struct VirtIOSerialPostLoad \*post_load;
+    + virtio_serial_conf serial;
+    + uint64_t host_features;
+};
 
 # virtconsole
 
@@ -111,6 +155,45 @@ static Property virtserialport_properties[] = {
     DEFINE_PROP_END_OF_LIST(),
 };
 ```
+
+### virtio-serial bus的接口
+
+
+```
+/* Interface to the virtio-serial bus */
+
+/*
+ * Open a connection to the port
+ *   Returns 0 on success (always).
+ */
+
+int virtio_serial_open(VirtIOSerialPort *port);
+
+/*
+ * Close the connection to the port
+ *   Returns 0 on success (always).
+ */
+int virtio_serial_close(VirtIOSerialPort *port);
+
+/*
+ * Send data to Guest
+ */
+ssize_t virtio_serial_write(VirtIOSerialPort *port, const uint8_t *buf,
+                            size_t size);
+
+/*
+ * Query whether a guest is ready to receive data.
+ */
+size_t virtio_serial_guest_ready(VirtIOSerialPort *port);
+
+/*
+ * Flow control: Ports can signal to the virtio-serial core to stop
+ * sending data or re-start sending data, depending on the 'throttle'
+ * value here.
+ */
+void virtio_serial_throttle_port(VirtIOSerialPort *port, bool throttle);
+```
+
 
 ### `VirtConsole` 结构体的继承关系是
 
@@ -283,6 +366,67 @@ static void virtio_serial_port_class_init(ObjectClass *klass, void *data)
 }
 ```
 
+在类初始化函数中，设置了DeviceClass中总线类型bus_type为前文提到的另一设备 `TYPE_VIRTIO_SERIAL_BUS` 。设置了静态属性，并实现了虚函数 realize 与 unrealize。
+
+## virtio_device_info
+`virtio_device_info ` 实现的是virtio串口设备。
+```
+static const TypeInfo virtio_device_info = {
+    .name = TYPE_VIRTIO_SERIAL,
+    .parent = TYPE_VIRTIO_DEVICE,
+    .instance_size = sizeof(VirtIOSerial),
+    .class_init = virtio_serial_class_init,
+    .interfaces = (InterfaceInfo[]) {
+        { TYPE_HOTPLUG_HANDLER },
+        { }
+    }
+};
+
+\include\hw\virtio\virtio-serial.h
+#define TYPE_VIRTIO_SERIAL "virtio-serial-device"
+#define VIRTIO_SERIAL(obj) \
+        OBJECT_CHECK(VirtIOSerial, (obj), TYPE_VIRTIO_SERIAL)
+```
+
+`virtio-serial-device` 的父类是virtio 设备，该对象是 `VirtIOSerial`。 在类对象初始化中，实现了类 `DeviceClass` 、 `VirtioDeviceClass` 、 `HotplugHandlerClass` 中的属性和虚函数。
+
+```
+static void virtio_serial_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+    VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
+    HotplugHandlerClass *hc = HOTPLUG_HANDLER_CLASS(klass);
+
+    QLIST_INIT(&vserdevices.devices);
+
+    dc->props = virtio_serial_properties;
+    dc->vmsd = &vmstate_virtio_console;
+    set_bit(DEVICE_CATEGORY_INPUT, dc->categories);
+    vdc->realize = virtio_serial_device_realize;
+    vdc->unrealize = virtio_serial_device_unrealize;
+    vdc->get_features = get_features;
+    vdc->get_config = get_config;
+    vdc->set_config = set_config;
+    vdc->set_status = set_status;
+    vdc->reset = vser_reset;
+    vdc->save = virtio_serial_save_device;
+    vdc->load = virtio_serial_load_device;
+    hc->plug = virtser_port_device_plug;
+    hc->unplug = qdev_simple_device_unplug_cb;
+}
+```
+此设备貌似在当前文件中与总线串口端口没有任何关系，它在virtio_serial_pci中得到引用。
+
+```
+hw\virtio\virtio-pci.c
+static void virtio_serial_pci_instance_init(Object *obj)
+{
+    VirtIOSerialPCI *dev = VIRTIO_SERIAL_PCI(obj);
+
+    virtio_instance_init_common(obj, &dev->vdev, sizeof(dev->vdev),
+                                TYPE_VIRTIO_SERIAL);
+}
+```
 # virtio-serial-pci
 
 
@@ -296,3 +440,4 @@ static void virtio_serial_port_class_init(ObjectClass *klass, void *data)
 4. [Documentation/QOMConventions](https://wiki.qemu.org/Documentation/QOMConventions)
 5. [[Qemu-devel] qdev for programmers writeup](https://lists.nongnu.org/archive/html/qemu-devel/2011-07/msg00842.html)
 6. [QEMU/Devices/Virtio](https://en.wikibooks.org/wiki/QEMU/Devices/Virtio)
+7. [Virtio-serial_API 包括Guest API 和 Host API](http://www.linux-kvm.org/page/Virtio-serial_API)

@@ -1,5 +1,5 @@
 ---
-title: QEMU源码添加设备
+title: QEMU设备的对象模型QOM
 date: 2018-07-23 15:21:39
 tags:
 - QEMU
@@ -101,7 +101,7 @@ TypeInfo中定义了如下几类信息：
 用户定义了一个TypeInfo，然后调用 `type_register(TypeInfo)` 或者 `type_register_static(TypeInfo)` 函数，就会生成相应的TypeImpl实例，将这个TypeInfo注册到全局的TypeImpl的hash表中。
 TypeInfo的属性与TypeImpl的属性对应，实际上qemu就是通过用户提供的TypeInfo创建的TypeImpl的对象。
 
-
+TYPE_DEVICE has a pure virtual method 'init' which is a bit of a misnomer.  The 'init' method is called after construction but before the guest is started for the first time.  In QOM nomenclature, we call this realize.
 
 ## 模块注册
 
