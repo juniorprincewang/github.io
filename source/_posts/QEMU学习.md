@@ -97,6 +97,19 @@ configure脚本检测所有依赖的库
 
 进入QEMU命令行控制界面，可以通过在QEMU 启动的时候指定 `-monitor` 参数；也可以在 QEMU 窗口激活的时候按住 `Ctrl+Alt+2` 进入，切换回工作界面需要按 `Ctrl+Alt+1` 。
 
+QEMU monitor的用途：
++ 删除或插入可移除的媒体镜像（如CD-ROM或软盘）。
++ 冻结/解冻虚拟机（VM）并从磁盘文件保存或恢复其状态。
++ 在没有外部调试器的情况下检查VM状态。
+
+# info
+
+```
+info mem  // 展示虚拟内存映射
+info mtree [-f] [-d] // 展示内存树 
+info qom-tree [path]  // 展示 QOM组成树
+info qtree // 以树形的结构展示设备
+```
 
 
 # 参考
@@ -107,4 +120,6 @@ configure脚本检测所有依赖的库
 5. [QEMU Internals: Big picture overview](http://blog.vmsplice.net/2011/03/qemu-internals-big-picture-overview.html)
 6. [QEMU Internals: Overall architecture and threading model](http://blog.vmsplice.net/2011/03/qemu-internals-overall-architecture-and.html) 
 
-[使用 monitor command 监控 QEMU 运行状态](https://www.ibm.com/developerworks/cn/linux/l-cn-qemu-monitor/index.html)
+7. [使用 monitor command 监控 QEMU 运行状态](https://www.ibm.com/developerworks/cn/linux/l-cn-qemu-monitor/index.html)
+8. [qemu monitor mode - DRAFT](https://wiki.illumos.org/display/illumos/qemu+monitor+mode+-+DRAFT)
+9. [QEMU Monitor](http://people.redhat.com/pbonzini/qemu-test-doc/_build/topics/pcsys_005fmonitor.html)

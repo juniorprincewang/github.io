@@ -4,6 +4,7 @@ date: 2018-03-01 10:51:38
 tags:
 - virtio
 - libvirt
+- QEMU
 categories:
 - 虚拟化
 ---

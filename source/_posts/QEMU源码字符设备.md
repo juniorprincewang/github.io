@@ -427,9 +427,25 @@ static void virtio_serial_pci_instance_init(Object *obj)
                                 TYPE_VIRTIO_SERIAL);
 }
 ```
+
+
+
 # virtio-serial-pci
 
 
+
+=> virtio_serial_port_class_init
+=> virtserialport_class_init
+=> virtconsole_class_init
+=> virtser_bus_class_init
+=> virtio_serial_class_init
+=> virtio_serial_pci_class_init
+启动
+=> virtio_serial_pci_instance_init
+=> virtio_serial_pci_realize
+=> virtio_serial_device_realize
+=> virtser_port_device_realize
+=> virtconsole_realize
 
 
 # 参考文献

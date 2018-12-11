@@ -392,3 +392,5 @@ QOM的对象构造分成三部分，第一部分是type的构造，这是通过T
 13. [QEMU's instance_init() vs. realize()](http://people.redhat.com/~thuth/blog/qemu/2018/09/10/instance-init-realize.html)
 14. [QEMU/KVM VM Execution Basics](https://dev.goodwu.net/post/2018-03-25-qemu-kvm-exec-basics/)
 15. [QOM说明文档](https://lists.gnu.org/archive/html/qemu-devel/2012-08/msg02271.html)
+16. [
+QEMU学习笔记——QOM(Qemu Object Model)](https://www.binss.me/blog/qemu-note-of-qemu-object-model/)

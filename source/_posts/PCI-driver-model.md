@@ -47,6 +47,9 @@ $ lspci
 
 
 Linux 将配置空间中的 `venderId`, `deviceId`, `classcode`, `subvendorId`, `subdeviceId`, `class_mask`, `driver_data`(kernel_ulong_t，不是必须的)抽象为 `struct pci_device_id` 结构体，PCI驱动程序用该结构体告诉内核，本身支持什么样的PCI设备列表；
+
+这个结构包含不同的成员:`__u32 vendor` ; `__u32 device` 。这些指定一个设备的 PCI 供应商和设备 ID. 如果驱动可处理任何供应商或者设备
+ID, 这些成员取值 `PCI_ANY_ID`。
 ```
 MODULE_DEVICE_TABLE(pci,ids); 
 ```
