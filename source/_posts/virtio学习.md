@@ -585,6 +585,17 @@ lsmod | grep kvm
 	kvm                   4443141 kvm_intel
 如果kvm_intel/kvm_amd、kvm模块被显示出来，则kvm模块已经加载。最好要确保qemu在编译的时候使能了KVM，即在执行configure脚本的时候加入了–enable-kvm选项。
 
+如果没有 `kvm_intel` 模块，再使用kvm功能启动QEMU客户端会报错：
+> Could not access KVM kernel module: No such file or directory
+> qemu-system-x86_64: failed to initialize KVM: No such file or directory
+
+安装模块 `modprobe kvm-intel` 得到错误信息：
+> modprobe: ERROR: could not insert 'kvm_intel': Operation not supported
+对于内核错误，通过查看日志文件找问题。 `dmesg`
+> kvm: disabled by bios
+那么好，关机，启动后设置BIOS，设置完成后一定要关机，再启动。万万不可重启。
+
+
 ### 安装操作系统。
 准备好虚拟机操作系统ISO镜像。执行下面的命令启动带有cdrom的虚拟机：
 ```

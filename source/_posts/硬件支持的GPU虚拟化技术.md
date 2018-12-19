@@ -1,8 +1,8 @@
 ---
-title: GPU硬件支持的虚拟化技术
+title: 硬件支持的GPU虚拟化技术
 date: 2018-06-18 16:55:38
 tags:
-- cuda
+- CUDA
 categories:
 - GPU
 - GPU虚拟化

@@ -3,9 +3,10 @@ title: 解决cuda程序执行出错
 date: 2018-04-25 14:01:38
 tags:
 - linux
-- cuda
+- CUDA
 categories:
 - solutions
+- CUDA
 ---
 
 `error while loading shared libraries: libcudart.so.8.0: cannot open shared object file: No such file or directory`

@@ -91,6 +91,125 @@ GPU 寄存器提供了快速存取地址。但是寄存器数量有限
 |3.x|63|
 |3.5|255|
 
+# driver API
+
+不同于运行时 runtime API , Driver API 提供了GPU更底层的访问控制，用于后向兼容GPU驱动。Driver API实现在动态库 cuda.so中，函数名称以 `cu` 开头。
+
+CUDA中能够访问到的对象如下表。
+
+|Object 	|Handle 	|Description|
+|-----------|-----------|-----------|
+|Device 	|   CUdevice 	| 	CUDA-enabled device|
+|Context 	|	CUcontext	| 	Roughly equivalent to a CPU process|
+|Module		|	CUmodule	| 	Roughly equivalent to a dynamic library|
+|Function 	|	CUfunction	| 	Kernel|
+|Heap memory| 	CUdeviceptr	|Pointer to device memory|
+|CUDA array |	CUarray		|	Opaque container for one-dimensional or two-dimensional data on the device, readable via texture or surface references|
+|Texture reference|	CUtexref 	|	Object that describes how to interpret texture memory data|
+|Surface reference|	CUsurfref 	|	Object that describes how to read or write CUDA arrays|
+|Event 		|	CUevent		|Object that describes a CUDA event|
+
+在调用Driver API 前需要调用 `cuInit()` 来初始化。然后必须创建一个CUDA上下文 Context，该Context附加到特定设备并使其成为当前调用主机线程的当前上下文。
+
+在CUDA Context内部，内核通过主机代码显式加载为PTX或二进制对象。 因此，用C编写的内核必须单独编译为PTX或二进制对象。 但是
+任何想要在未来的设备架构上兼容运行的应用程序都必须加载PTX，而不是二进制代码。 这是因为二进制代码是体系结构特定的，因此可能与未来的体系结构存在着不兼容性，而PTX代码在加载时由设备驱动程序编译为二进制代码。
+
+Driver API的例子：
+```
+int main()
+{
+    int N = ...;
+    size_t size = N * sizeof(float);
+
+    // Allocate input vectors h_A and h_B in host memory
+    float* h_A = (float*)malloc(size);
+    float* h_B = (float*)malloc(size);
+
+    // Initialize input vectors
+    ...
+
+    // Initialize
+    cuInit(0);
+
+    // Get number of devices supporting CUDA
+    int deviceCount = 0;
+    cuDeviceGetCount(&deviceCount);
+    if (deviceCount == 0) {
+        printf("There is no device supporting CUDA.\n");
+        exit (0);
+    }
+
+    // Get handle for device 0
+    CUdevice cuDevice;
+    cuDeviceGet(&cuDevice, 0);
+
+    // Create context
+    CUcontext cuContext;
+    cuCtxCreate(&cuContext, 0, cuDevice);
+
+    // Create module from binary file
+    CUmodule cuModule;
+    cuModuleLoad(&cuModule, "VecAdd.ptx");
+
+    // Allocate vectors in device memory
+    CUdeviceptr d_A;
+    cuMemAlloc(&d_A, size);
+    CUdeviceptr d_B;
+    cuMemAlloc(&d_B, size);
+    CUdeviceptr d_C;
+    cuMemAlloc(&d_C, size);
+
+    // Copy vectors from host memory to device memory
+    cuMemcpyHtoD(d_A, h_A, size);
+    cuMemcpyHtoD(d_B, h_B, size);
+
+    // Get function handle from module
+    CUfunction vecAdd;
+    cuModuleGetFunction(&vecAdd, cuModule, "VecAdd");
+
+    // Invoke kernel
+    int threadsPerBlock = 256;
+    int blocksPerGrid =
+            (N + threadsPerBlock - 1) / threadsPerBlock;
+    void* args[] = { &d_A, &d_B, &d_C, &N };
+    cuLaunchKernel(vecAdd,
+                   blocksPerGrid, 1, 1, threadsPerBlock, 1, 1,
+                   0, 0, args, 0);
+
+    ...
+}
+```
+## Context
+
+CUDA 的上下文也类似于CPU 进程的上下文，一般情况下，它是管理CUDA程序中所有对象生命周期的容器。这些对象包括：
+	
+	所有分配内存（线性设备内存，host内存，和CUDA arrays）
+	Modules，类似于动态链接库，以.cubin和.ptx结尾
+	CUDA streams，管理执行单元的并发性
+	CUDA events
+	texture和surface引用
+	kernel里面使用到的本地内存（设备内存）
+	用于调试、分析和同步的内部资源
+	用于分页复制的固定缓冲区
+
+CUDA runtime（软件层的库）不提供API直接访问CUDA context，而是通过延迟初始化（deferred initialization）来创建context。
+具体意思是，不涉及到context内容的API，Driver不会主动创建context，比如cudaGetDeviceCount等函数。否则，例如申请内存等API就可以显式的控制初始化，即调用cudaFree(0)。尤其是在第一次调用一个改变驱动状态的函数时会自动默认创建一个上下文环境，如cudaMalloc() 默认在 GPU 0 上创建上下文。
+CUDA runtime将context和device的概念合并了，即在一个GPU上操作可看成在一个context下。因而cuda runtime提供的函数如cudaDeviceSynchronize()对应于Driver API的cuCtxSynchronize()。
+
+应用可以通过驱动API来访问当前context的栈。与context相关的操作，都是以cuCtxXXXX()的形式作为driver API实现。
+
+GPU设备驱动通过设备驱动程序为应用程序提供多个上下文环境，就可以使单个CUDA应用程序使用多个设备。 但同一时刻只能有一个上下文环境处于活动状态，如果需要操作多个设备时，需要用cudaSetDevice()切换上下文环境。
+
+
+上下文中包含的关键抽象是其地址空间：即可用于分配线性设备内存或映射锁页主机内存的私有虚拟内存地址集。这些地址是在每个上下文中唯一的。不同上下文的相同地址可能有效也可能无效，并且当然不会解析到相同的内存位置，除非做出特殊规定。 CUDA上下文的地址空间是独立的，与CUDA主机代码使用的CPU地址空间不同。
+
+当context被销毁，里面分配的资源也都被销毁，一个context内分配的资源不能被其他的context使用。在Driver API中，每一个cpu线程都有一个current context的栈，新建的context就入栈。
+针对每一个线程只能有一个出栈变成可使用的current context，而这个游离的context可以转移到另一个cpu线程，通过函数cuCtxPushCurrent/cuCtxPopCurrent来实现。
+current context堆栈的另一个好处是能够从不同的CPU线程驱动给定的CUDA上下文。 使用驱动程序API的应用程序可以通过使用cuCtxPopCurrent（）弹出上下文，然后从另一个线程调用cuCtxPushCurrent（），将CUDA上下文“迁移”到其他CPU线程。 
+
+## Module
+
+
 
 # 参考
 

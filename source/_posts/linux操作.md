@@ -513,12 +513,46 @@ diff -urNa dir1 dir2
 ```
 ps -ef | grep 进程名
 ```
+结果：
+```
+UID        PID  PPID  C STIME TTY          TIME CMD
 
+root         1     0  0 Nov02 ?        00:00:00 init [3]       
+```
 查看端口占用情况
 
 ```
 netstat -nap | grep 端口号
 ```
+
+### 列出目前所有的正在内存当中的程序
+
+```
+ps aux
+```
+得到的结果展示
+```
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+
+root         1  0.0  0.0  10368   676 ?        Ss   Nov02   0:00 init [3]
+```
+说明：
+
++ USER：使用者账号名
++ PID ：进程ID号，可以根据此来kill掉进程， `kill -9 PID`
++ %CPU：使用掉的 CPU 资源百分比
++ %MEM：占用的物理内存百分比
++ VSZ ：使用掉的虚拟内存量 (Kbytes)
++ RSS ：占用的固定的内存量 (Kbytes)
++ TTY ：该 process 是在那个终端机上面运作，若与终端机无关，则显示 ?，另外， tty1-tty6 是本机上面的登入者程序，若为 pts/0 等等的，则表示为由网络连接进主机的程序。
++ STAT：该程序目前的状态，主要的状态有
+    + R ：该程序目前正在运作，或者是可被运作
+    + S ：该程序目前正在睡眠当中 (可说是 idle 状态)，但可被某些讯号 (signal) 唤醒。
+    + T ：该程序目前正在侦测或者是停止了
+    + Z ：该程序应该已经终止，但是其父程序却无法正常的终止他，造成 zombie (疆尸) 程序的状态
++ START：被触发启动的时间
++ TIME ：实际使用 CPU 运作的时间
++ COMMAND：该程序的实际指令
 
 ### netstat
 
