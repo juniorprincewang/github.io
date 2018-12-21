@@ -8,6 +8,8 @@ tags:
 
 利用服务商Vultr的海外专用虚拟网络主机(VPS)搭建Shadowsocks的服务，利用VPN技术实现访问代理。
 
+增加了利用IPv6访问谷歌学术的方法。
+
 <!-- more -->
 
 # 购买云主机
@@ -127,7 +129,24 @@ nohup ssserver -c /etc/shadowsocks.json &
 
 到此，就可以访问[油管](www.youtube.com)啦。
 
+# 访问谷歌学术
+
+你是否有这样的烦恼，访问谷歌学术就得到 "We're sorry..." 的页面。尤其最近2018-12月份IPv6科学上外网方法又被过滤掉后，这种情况一度让人头疼。
+按照以上的方法在vultr服务器上配置的SS服务不能成功访问谷歌学术 <https://scholar.google.com> 。
+
+服务器启用IPv6，利用IPv6访问谷歌学术。
+具体方法是，这里<https://raw.githubusercontent.com/lennylxx/ipv6-hosts/master/hosts> 有一直维护的IPv6网址，找到谷歌学术这一栏。
+```
+## Scholar 学术搜索
+2404:6800:4008:c06::be scholar.google.com
+2404:6800:4008:c06::be scholar.google.com.hk
+2404:6800:4008:c06::be scholar.google.com.tw
+2404:6800:4005:805::200e scholar.google.cn #www.google.cn
+```
+并将其添加到 `/etc/hosts` 中，再重启ss，这样就能够在墙内科学上谷歌学术了。
+
 # 参考资料
 
 [1] http://blog.csdn.net/zwc591822491/article/details/52802692
 [2] https://www.vultrclub.com/174.html
+[3] [通过VPS使用VPN或ShadowSocks访问Google或Google Schoolar出现验证码等的解决方法](https://www.polarxiong.com/archives/%E9%80%9A%E8%BF%87VPS%E4%BD%BF%E7%94%A8VPN%E6%88%96ShadowSocks%E8%AE%BF%E9%97%AEGoogle%E6%88%96Google-Schoolar%E5%87%BA%E7%8E%B0%E9%AA%8C%E8%AF%81%E7%A0%81%E7%AD%89%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95.html)

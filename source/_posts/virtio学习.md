@@ -591,8 +591,10 @@ lsmod | grep kvm
 
 安装模块 `modprobe kvm-intel` 得到错误信息：
 > modprobe: ERROR: could not insert 'kvm_intel': Operation not supported
+
 对于内核错误，通过查看日志文件找问题。 `dmesg`
 > kvm: disabled by bios
+
 那么好，关机，启动后设置BIOS，设置完成后一定要关机，再启动。万万不可重启。
 
 
