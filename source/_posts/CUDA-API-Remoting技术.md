@@ -100,7 +100,12 @@ GPU$ nvcc --verbose thread.cu -o staticthread
 > #$ g++ -m64 -o "staticthread" -Wl,--start-group "/tmp/tmpxft_0000286a_00000000-18_staticthread_dlink.o" "/tmp/tmpxft_0000286a_00000000-16_thread.o"   "-L/usr/local/cuda-8.0/bin/..//lib64/stubs" "-L/usr/local/cuda-8.0/bin/..//lib64" -lcudadevrt  -lcudart_static  -lrt -lpthread  -ldl  -Wl,--end-group
 
 
-注意最后一行 `#$ g++ -m64 -o "staticthread" -Wl,--start-group "/tmp/tmpxft_0000286a_00000000-18_staticthread_dlink.o" "/tmp/tmpxft_0000286a_00000000-16_thread.o"   "-L/usr/local/cuda-8.0/bin/..//lib64/stubs" "-L/usr/local/cuda-8.0/bin/..//lib64" -lcudadevrt  -lcudart_static  -lrt -lpthread  -ldl  -Wl,--end-group`，这里的链接的库 `cudadevrt`和 `cudart_static` 是位于 `/usr/local/cuda/lib64` 中的 `libcudadevrt.a` 和 `libcudart_static.a` 。
+注意最后一行 
+> #$ g++ -m64 -o "staticthread" -Wl,--start-group "/tmp/tmpxft_0000286a_00000000-18_staticthread_dlink.o" 
+> "/tmp/tmpxft_0000286a_00000000-16_thread.o"   "-L/usr/local/cuda-8.0/bin/..//lib64/stubs" "-L/usr/local/cuda-8.0/bin/..//lib64" 
+> -lcudadevrt  -lcudart_static  -lrt -lpthread  -ldl  -Wl,--end-group
+
+这里的链接的库 `cudadevrt`和 `cudart_static` 是位于 `/usr/local/cuda/lib64` 中的 `libcudadevrt.a` 和 `libcudart_static.a` 。
 
 
 通过设置 cuda 的编译选项，使其调用库为动态调用： `--cudart=shared` 。 这样编译出来的二进制文件小很多。
@@ -162,8 +167,9 @@ cudaMemcpy
 
 最关键的部分就是如何将包含 `kernel` 的 `GPU` 代码从二进制中找到并剥离出来。
 
-还是在[what are the parameters for __cudaRegisterFatBinary and __cudaRegisterFunction functions?
-](https://stackoverflow.com/questions/6392407/what-are-the-parameters-for-cudaregisterfatbinary-and-cudaregisterfunction-f/39453201)此问题下，良心答主给出了建设性意见。
+还是在[what are the parameters for \__cudaRegisterFatBinary and \__cudaRegisterFunction functions?
+](https://stackoverflow.com/questions/6392407/what-are-the-parameters-for-cudaregisterfatbinary-and-cudaregisterfunction-f/39453201)
+此问题下，良心答主给出了建设性意见。
 
 答主提到： `__cuRegisterFatBinary ` 函数的唯一一个 `void *` 的指针参数，指向的是一个结构体：
 
@@ -185,9 +191,9 @@ struct {
 struct __align__(8) fatBinaryHeader        
 {
 	unsigned int 			magic;
-	unsigned short         version;
-	unsigned short         headerSize;
-	unsigned long long int fatSize;
+	unsigned short         	version;
+	unsigned short         	headerSize;
+	unsigned long long int 	fatSize;
 };
 ```
 
@@ -216,19 +222,41 @@ typedef struct {
 ```
 `__fatBinC_Wrapper_t` 第三个参数就是指向的真是的 fatCubin，而 fatCubin 的最开始的元数据是结构体 `struct fatBinaryHeader` 。
 
-通过代码来验证：[空白]
 
-```
-
-```
-可以通过 `nvcc` 编译生成 `fatbin` 文件，与 截获的文件比较。
+可以通过 `nvcc` 编译生成 `fatbin` 文件，与 截获的文件比较，完全一致。
 ```
 nvcc --cudart=shared --fatbin -o test.fatbin test.cu
 diff test.fatbin cut.fatbin
 ```
 
 
+## CUDA CUBIN/PTX文件动态加载
 
+在获取了GPU的代码后，如何在其他进程中动态加载呢？这就要用到Driver API的 [Module Management的API了](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__MODULE.html)。
+其中，涉及到Module的API如下：
+```
+CUresult cuModuleGetFunction ( CUfunction* hfunc, CUmodule hmod, const char* name )
+	Returns a function handle.
+CUresult cuModuleGetGlobal ( CUdeviceptr* dptr, size_t* bytes, CUmodule hmod, const char* name )
+	Returns a global pointer from a module.
+CUresult cuModuleGetSurfRef ( CUsurfref* pSurfRef, CUmodule hmod, const char* name )
+	Returns a handle to a surface reference.
+CUresult cuModuleGetTexRef ( CUtexref* pTexRef, CUmodule hmod, const char* name )
+	Returns a handle to a texture reference.
+CUresult cuModuleLoad ( CUmodule* module, const char* fname )
+	Loads a compute module.
+CUresult cuModuleLoadData ( CUmodule* module, const void* image )
+	Load a module's data.
+CUresult cuModuleLoadDataEx ( CUmodule* module, const void* image, unsigned int  numOptions, CUjit_option* options, void** optionValues )
+	Load a module's data with options.
+CUresult cuModuleLoadFatBinary ( CUmodule* module, const void* fatCubin )
+	Load a module's data.
+CUresult cuModuleUnload ( CUmodule hmod )
+	Unloads a module.
+```
+
+可以使用 `cuModuleLoad` 将 fatbinary image从文件读入。而 `cuModuleLoadData` 将 fatbinary image从字符串读入。
+`cuModuleGetFunction` 可以从 module `hmod` 当中返回函数名为 `name` 的函数指针 `hfunc`。
 
 ## 注意事项
 
@@ -300,6 +328,9 @@ cudaError_t cudaMemcpy(
 参考：[error: conflicting types for 错误原因及解决办法](http://blog.51cto.com/10901086/1903340)
 
 
+
+
 # 参考
 [1] [what are the parameters for __cudaRegisterFatBinary and __cudaRegisterFunction functions?](https://stackoverflow.com/questions/6392407/what-are-the-parameters-for-cudaregisterfatbinary-and-cudaregisterfunction-f)
 [2] [cudahook](https://github.com/nchong/cudahook)
+[3] [CUDA CUBIN/PTX文件动态加载](https://blog.csdn.net/qq_20487945/article/details/51023664)

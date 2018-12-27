@@ -58,7 +58,9 @@ gdb命令很多，这是gdb按照类别列出的命令。help命令只是例出g
 (gdb) enable b 1 # 允许使用第一个断点
 ```
 
-
+## 程序运行参数
+`set args `可指定运行时参数。（如：set args 10 20 30 40 50） 
+`show args `命令可以查看设置好的运行参数。 
 
 ## run
 
@@ -138,3 +140,4 @@ x/FMT ADDRESS
 [1] [GDB十分钟教程](http://blog.csdn.net/liigo/article/details/582231)
 [2] [Using GDB to Develop Exploits - A Basic Run Through](https://www.exploit-db.com/papers/13205/)
 [3] [比较全面的gdb调试命令](http://blog.csdn.net/dadalan/article/details/3758025)
+[4] [1.gdb 调试利器](https://linuxtools-rst.readthedocs.io/zh_CN/latest/tool/gdb.html)

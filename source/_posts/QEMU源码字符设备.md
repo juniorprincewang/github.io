@@ -434,9 +434,16 @@ static void virtio_serial_pci_instance_init(Object *obj)
 
 
 
+
+	"virtconsole" 
+	==> TYPE_VIRTIO_CONSOLE_SERIAL_PORT("virtserialport") 
+	==> TYPE_VIRTIO_SERIAL_PORT("virtio-serial-port") 
+	==> TYPE_DEVICE("device")
+
 => virtio_serial_port_class_init
 => virtserialport_class_init
 => virtconsole_class_init
+
 => virtser_bus_class_init
 => virtio_serial_class_init
 => virtio_serial_pci_class_init
