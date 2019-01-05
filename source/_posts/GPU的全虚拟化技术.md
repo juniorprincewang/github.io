@@ -35,3 +35,5 @@ NVIDIA 显卡的开源驱动
 
 # GPUvm 通用计算方案
 
+# 参考
+[NVIDIA, AMD, and Intel: How they do their GPU virtualization](https://www.brianmadden.com/opinion/NVIDIA-AMD-and-Intel-How-they-do-their-GPU-virtualization)

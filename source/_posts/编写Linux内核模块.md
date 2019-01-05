@@ -201,6 +201,106 @@ retpoline:      Y
 vermagic:       4.4.0-139-generic SMP mod_unload modversions retpoline 
 ```
 
+# 宏 EXPORT_SYMBOL
+
+Linux-2.4之前，默认的非static 函数和变量都会自动导入到kernel 空间， 而Linux-2.6之后默认不导出所有的符号，所以使用 `EXPORT_SYMBOL()` 做标记。
+
+## EXPORT_SYMBOL宏的作用
+
+`EXPORT_SYMBOL` 标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用。
+即使用 `EXPORT_SYMBOL` 可以将一个函数以符号的方式导出给其他模块使用。
+符号的意思就是函数的入口地址，或者说是把这些符号和对应的地址保存起来的，在内核运行的过程中，可以找到这些符号对应的地址的。
+
+这里要和System.map做一下对比：
+System.map 中的是连接时的函数地址。连接完成以后，在2.6内核运行过程中，是不知道哪个符号在哪个地址的。
+EXPORT_SYMBOL 的符号， 是把这些符号和对应的地址保存起来，在内核运行的过程中，可以找到这些符号对应的地址。
+在模块加载中，其本质就是动态链接到内核。
+如果在模块中引用了内核或其它模块的符号，就要 `EXPORT_SYMBOL` 这些符号，这样才能找到对应的地址连接。
+
+## EXPORT_SYMBOL使用方法
+	1.在模块函数定义之后使用 `EXPORT_SYMBOL(函数名)`
+	2.在调用该函数的模块中使用 `extern` 对要使用的符号或者函数进行声明
+	3.首先加载定义该函数的模块，再加载调用该函数的模块
+
+## EXPORT_SYMBOL示范
+比如有两个驱动模块：Module A和Module B，其中Module B使用了Module A中的export的函数，因此在Module B的Makefile文件中必须添加：
+```
+KBUILD_EXTRA_SYMBOLS += /path/to/ModuleA/Module.symvers
+export KBUILD_EXTRA_SYMBOLS
+```
+
+这样在编译Module B时，才不会出现Warning，提示说func1这个符号找不到，而导致编译得到的ko加载时也会出错。
+```
+// Module A (mod_a.c)
+#include<linux/init.h>
+#include<linux/module.h>
+#include<linux/kernel.h>
+ 
+static int func1(void)
+{
+       printk("In Func: %s...\n",__func__);
+       return 0;
+}
+ 
+// Export symbol func1
+EXPORT_SYMBOL(func1);
+ 
+static int __init hello_init(void)
+{
+       printk("Module 1，say hello world!\n");
+       return 0;
+}
+ 
+static void __exit hello_exit(void)
+{
+       printk("Module 1,Exit!\n");
+}
+ 
+module_init(hello_init);
+module_exit(hello_exit);
+
+```
+
+```
+// Module B (mod_b.c)
+#include<linux/init.h>
+#include<linux/kernel.h>
+#include<linux/module.h>
+extern int functl(void);
+static int func2(void)
+{
+       func1();
+       printk("In Func: %s...\n",__func__);
+       return 0;
+}
+ 
+static int __init hello_init(void)
+{
+       printk("Module 2,is used Module 1 function!\n");
+       func2();
+       return 0;
+}
+ 
+static void __exit hello_exit(void)
+{
+       printk("Module 2,Exit!\n");
+}
+ 
+module_init(hello_init);
+module_exit(hello_exit);
+
+```
+在驱动加载的时候，一定要先加载定义function1的Module A模块，然后再加载调用function1的Module B的驱动模块。
+```
+insmod Module_A.ko
+insmod Module_B.ko
+
+```
+
+
+
+[Linux内核—EXPORT_SYMBOL宏的使用](https://blog.csdn.net/zengxianyang/article/details/50611828)
+
 # 参考
 1. [Writing a Linux Kernel Module — Part 1: Introduction](http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/)
 2. [编写Linux内核模块——第一部分：前言](http://www.infoq.com/cn/articles/linux-kernel-module-part01)
