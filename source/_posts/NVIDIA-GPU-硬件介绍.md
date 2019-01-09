@@ -34,8 +34,8 @@ categories:
 	+ GPU context switching 和命令执行都在GPU硬件内部调度。
 + GPU Page Table
 	+ GPU context 在虚拟基地空间由页表隔离其他的 context 。
-	+ GPU的页表隔离鱼CPU页表，位于GPU内存中。
-	+ GPU 页表的物理地址位于 GPU channel descriptor 中。
+	+ GPU的页表隔离CPU页表，位于GPU内存中。
+	+ GPU 页表的物理地址位于 GPU `channel descriptor` 中。
 	+ GPU 页表不仅仅将 GPU虚拟地址转换成GPU内存的物理地址，也可以转换成CPU的物理地址。因此，GPU页表可以将GPU虚拟地址和CPU内存地址统一到GPU统一虚拟地址空间来。
 + PCIe BAR
 	+ GPU 设备通过PCIe总线接入到主机上。 base address registers(BARs) 是 MMIO的窗口，在GPU启动时候配置。
@@ -43,14 +43,22 @@ categories:
 	+ GPU设备内存通过映射的MMIO窗口去配置GPU和访问GPU内存。
 + PFIFO Engine
 	+ PFIFO是GPU命令提交通过的一个特殊的部件
-	+ PFIFO维护了一些独立命令队列，也就是channel
-	+ 此命令队列是 ring buffer，有 put 和 get 的指针。
-	+ 所有访问 channel 控制区域的执行指令都被 PFIFO 拦截下来。
-	+ GPU 驱动使用 channel descriptor 来存储相关的 channel设定。
+	+ PFIFO维护了一些独立命令队列，也就是 `channel`
+	+ 此命令队列是 `ring buffer`，有 `PUT` 和 `GET` 的指针。
+	+ 所有访问 `channel` 控制区域的执行指令都被 PFIFO 拦截下来。
+	+ GPU 驱动使用 `channel descriptor` 来存储相关的 `channel` 设定。
+	+ PFIFO 将读取的命令转交给 PGRAPH engine
 + BO
 	+ Buffer Object (bo)，内存的一块(block)，能够用于存储 texture, a render target, shader code等等。
 	+ nouveau和gdev经常使用BO
 
+其他概念：  
++ **VRAM** - Video RAM
++ **fence** - Piece of memory which is updated by GPU when it reaches some step in command stream  
++ **PCI memory** - An area of system memory that can be accessed by direct-memory access from the GPU  
++ **PGRAPH engine** - The engine of the GPU that actually performs graphics operations like blitting and drawing triangles. It can be programmed by directly writing to its registers in MMIO space or by feeding commands through the PFIFO engine.  
++ **PRAMIN** - instance memory area  
++ **GART** - *Graphics address remapping table* or *graphics aperture remapping table* ,或者 *graphics translation table (GTT)* ，是 Accelerated Graphics Port (AGP) 和 PCIe显卡 使用的 `I/O memory management unit（IOMMU）` 。
 
 参考
 [GPU Architecture Overview](https://insujang.github.io/2017-04-27/gpu-architecture-overview/)
@@ -161,10 +169,7 @@ RAMIN是在pre-G80显卡上VRAM末端特殊的区域，保存着各种控制结�
 
 pre-NV40显卡限制其大小为1MB，为NV3调整了BAR0 或 BAR1 中的映射。 NV40+ 允许更大的 RAMIN 地址。
 
-
 - BAR 5: G80非直接内存访问
-
-
 
 ### 查看方法
 
@@ -211,10 +216,11 @@ BAR5: 0xe000 (I/O port)
 
 ## PFIFO
 
-`PFIFO` 用于收集用户发送的命令并将其传送到执行单元。大致分成三部分：
+`PFIFO` 用于收集用户发送的命令并将其传送到执行单元。大致分成三部分：  
 + PFIFO cache： 以FIFO的队列形式存储要执行的GPU命令。
 + PFIFO pusher：搜集用户输入的命令并将其存入cache中。
-	共有两种模式：PIO和DMA模式。PIO模式中，用户直接通过USER MMIO 区域写入命令。 DMA模式中，PFIFO从内存的buffer中读命令，称为pushbuffer的内存，而USER MMIO 区域仅用于控制pushbuffer 读取。
+	共有两种模式：PIO和DMA模式。
+	PIO模式中，用户直接通过USER MMIO 区域写入命令。   DMA模式中，PFIFO从内存的buffer中读命令，称为pushbuffer的内存，而USER MMIO 区域仅用于控制pushbuffer 读取。  
 + PFIFO puller：从cache中取命令，并将其送往执行单元。
 
 `channel` 是PFIFO最核心的概念，它是单独的命令流。 channel是上下文切换并且独立的。

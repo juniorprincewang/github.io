@@ -241,8 +241,9 @@ int main(){
 
 \# 这样输出一级标题
 
-## 锚点
+## 段落与换行
 
+当一个段落需要包含多个文本行时，需要先在行末敲入 `两个或以上空格` 再 `回车` 。
 
 ## LaTeX 公式
 
@@ -254,3 +255,4 @@ int main(){
 [2] [Hexo基础操作和Markdown语法](https://yuxishe.github.io/2016/11/15/Hexo/)
 [3] [Hexo doc 资源文件夹](https://hexo.io/zh-cn/docs/asset-folders.html)
 [4] [Markdown语法介绍](https://coding.net/help/doc/project/markdown.html#section-2)
+[5] [少为人知的Markdown基础知识](https://sspai.com/post/37273)  
