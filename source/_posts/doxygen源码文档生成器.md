@@ -17,15 +17,43 @@ Doxygen是一个适用于C++、C、Java、Objective-C、Python、IDL（CORBA和M
 
 # 安装 doxygen
 
-Ubuntu/Debian
+这里需要注意，Doxygen版本低于 **1.8.14** 的话 函数调用图会出现问题，详见
+[Wrong call/caller graph with Doxygen and GraphViz in C++
+](https://stackoverflow.com/questions/47778485/wrong-call-caller-graph-with-doxygen-and-graphviz-in-c)。
+**不能**用 `apt-get install doxygen` 安装Doxygen，安装的版本是 **1.8.11**。  
+去官网 <http://www.doxygen.nl/download.html>  下载新版本 *1.8.15* 的源码包或者从 github上下载最新版本的。
+
+## Ubuntu/Debian
+先安装视图工具 `graphviz`。
 ```
-sudo apt-get install doxygen
 sudo apt-get install graphviz
 ```
+下载并安装最新版本的Doxygen
+```
+git clone https://github.com/doxygen/doxygen.git
+// or 下载 doxygen-1.8.15.src.tar.gz (4.9MB)
+// 		tar -zxvf doxygen-1.8.15.src.tar.gz
+// 		cd doxygen-1.8.15
+cd doxygen
+mkdir build
+cd build
+cmake -G "Unix Makefiles" ..
+make
+sudo make install
+```
+
+## Windows
+
+先在 <https://graphviz.gitlab.io/download/> 下载 Graphviz的Windows版本，并安装。  
+在 <http://www.doxygen.nl/download.html> 下载`doxygen-1.8.15-setup.exe (45.2MB) ` ，并安装。
+
+把doxygen的安装路径写入环境变量PATH中。
 
 # 使用 doxygen 生成文档
 
 ## 生成配置文件  
+
+此方法适用于无图形界面操作的Ubuntu和Windows。
 
 ```
 doxygen -g
@@ -44,7 +72,7 @@ doxygen -g
 |PROJECT_NAME | Project 的名字，以一个单词为主，多个单词请使用双引号括住。|
 | OUTPUT_DIRECTORY | 输出路径。产生的文件会放在这个路径之下。如果没有填这个路径，将会以目前所在路径作为输出路径。 |
 | OUTPUT_LANGUAGE | 输出语言, 默认为English 。 |
-| EXTRACT_ALL | 为NO，只解释有doxygen格式注释的代码；为YES，解析所有代码，即使没有注释 |  
+| `EXTRACT_ALL` | 默认为NO，只解释有doxygen格式注释的代码；为YES，解析所有代码，即使没有注释 |  
 | EXTRACT_PRIVATE | 是否解析类的私有成员 | 
 | EXTRACT_STATIC | 是否解析静态项 |
 | EXTRACT\_LOCAL_CLASSES | 是否解析源文件（cpp文件）中定义的类 |
@@ -79,8 +107,11 @@ doxygen -g
 
 ```shell
 CALL_GRAPH = YES
+CALLER_GRAPH = YES
 HAVE_DOT = YES
 RECURSIVE = YES  （递归检索文件）
+EXTRACT_ALL = YES (把源文件，注释都解析出来)
+GENERATE_LATEX = NO (不生成Latex)
 ```
 过滤不必要的目录
 
@@ -89,6 +120,13 @@ EXCLUDE_PATTERNS = */.git/*
 EXCLUDE_PATTERNS += */docs/*
 EXCLUDE_PATTERNS += */test/*
 ```
+
+## Windows
+
+对于从图形界面操作，运行 `path_to/doxygen/bin/doxywizard.exe` 可执行文件。
+逐一按照要求去完成配置，可以参考 <https://blog.csdn.net/u013354805/article/details/51866991> ，注意 `DOT_PATH` 填写 Graphviz的可执行文件所在文件夹路径，比如 `D:/Graphviz/bin` 。
+
+如果已经保存了配置文件Doxygen，可以从 `File->Open` 来打开。
 
 ## 运行 doxygen
 
@@ -101,4 +139,5 @@ doxygen Doxyfile
 # 参考
 1. [Doxygen 的使用](https://www.jianshu.com/p/4e4ce6d6c666)
 2. [学习用 doxygen 生成源码文档](https://www.ibm.com/developerworks/cn/aix/library/au-learningdoxygen/index.html)
-3. 
+3. <http://www.doxygen.nl/download.html>
+4. <https://graphviz.gitlab.io/download/>

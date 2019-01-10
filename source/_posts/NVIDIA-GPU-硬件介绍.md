@@ -58,7 +58,8 @@ categories:
 + **PCI memory** - An area of system memory that can be accessed by direct-memory access from the GPU  
 + **PGRAPH engine** - The engine of the GPU that actually performs graphics operations like blitting and drawing triangles. It can be programmed by directly writing to its registers in MMIO space or by feeding commands through the PFIFO engine.  
 + **PRAMIN** - instance memory area  
-+ **GART** - *Graphics address remapping table* or *graphics aperture remapping table* ,或者 *graphics translation table (GTT)* ，是 Accelerated Graphics Port (AGP) 和 PCIe显卡 使用的 `I/O memory management unit（IOMMU）` 。
++ **GART** - *Graphics address remapping table* or *graphics aperture remapping table* ,或者 *graphics translation table (GTT)* ，是 Accelerated Graphics Port (AGP) 和 PCIe显卡 使用的 `I/O memory management unit（IOMMU）` 。 `GART` 允许显卡通过 `textures`, `polygon meshes` 和其他载入的数据 DMA到主机内存。  
+
 
 参考
 [GPU Architecture Overview](https://insujang.github.io/2017-04-27/gpu-architecture-overview/)
