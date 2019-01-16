@@ -429,7 +429,9 @@ find . ! -name "*.txt"
 
 详情参考：[find命令](http://man.linuxde.net/find)
 
-## 查看文件大小
+## 查看文件系统大小
+
++ 产看文件大小  
 
 ```
 ls -sh filename
@@ -438,12 +440,25 @@ ls -sh filename
 > -s 表示查看文件的size 
 > -h 表示以 `human readable` 的格式显示
 
-## 查看文件夹大小
++ 查看文件夹大小
+
+返回该目录的大小  
 
 ```
 du -sh
 ```
-参数 `-sh` 同上。
+参数 `-sh` 同上。  
+
++  查看磁盘空间大小  
+
+```
+df -hl
+```
++ 查看硬盘的分区  
+
+```
+fdisk -l
+```
 
 ## 比较文件夹
 
