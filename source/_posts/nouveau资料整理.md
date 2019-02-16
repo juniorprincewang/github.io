@@ -113,8 +113,9 @@ naming to ease collaboration with them.
 
 此频道所有的日志文件存放在了 <https://people.freedesktop.org/~cbrill/dri-log/index.php> 中。
 
-<http://webchat.freenode.net/> 频道为 #nouveau
+<http://webchat.freenode.net/> 频道为 `#nouveau`  
 
+如果要发言，需要提前注册下，[IRC 账号注册](https://freenode.net/kb/answer/registration) 。  
 
 
 # 参考

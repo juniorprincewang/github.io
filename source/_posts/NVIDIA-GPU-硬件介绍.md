@@ -127,6 +127,10 @@ lrwxrwxrwx  1 root root         0 7月   3 16:19 subsystem -> ../../../../bus/pc
 -rw-r--r--  1 root root      4096 7月   3 16:19 uevent
 -r--r--r--  1 root root      4096 7月   3 16:19 vendor
 ```
+或者
+```
+ll /sys/class/drm/card0/device
+```
 
 此显卡为 `GeForce GTX TITAN Black`, 设备ID为
 
@@ -143,13 +147,26 @@ $ cat device
 
 ###  PCI BARs and other means of accessing the GPU
 
+GPU的当前形式是PCI express设备。除PCI配置空间和VGA兼容I/O端口外，NVIDIA GPU还通过PCI向系统公开以下基址寄存器（BAR）。  
+
++ BAR0  
+	Memory-mapped I/O (MMIO) registers
++ BAR1  
+	Device memory windows.
++ BAR2/3  
+	Complementary space of BAR1.
++ BAR5  
+	I/O port.
++ BAR6  
+	PCI ROM.
+
 ####  Nvidia GPU BARs, IO ports, and memory areas
 
 nvidia GPU通过PCI对外暴露了下面区域：
 
 - PCI 配置空间 / PCIe 扩展配置空间
 - MMIO 寄存器： BAR0 - 内存范围  0x1000000 字节或更多
-通过MMIO寄存器控制所有引擎。
+通过MMIO寄存器控制所有引擎。  
 地址通过PCI BAR 0 来设置。 BAR使用32位地址，是非预取内存。
 
 其中寄存器是32位的，读取时需要32位对齐。  在 NV1A+ 系列显卡中，寄存器的字节序列由PMC中的 开关（switch）控制。从显卡内部访问总是小端序列。

@@ -145,8 +145,64 @@ nohup ssserver -c /etc/shadowsocks.json &
 ```
 并将其添加到 `/etc/hosts` 中，再重启ss，这样就能够在墙内科学上谷歌学术了。
 
+# 后续问题：用了一段时间无法使用
+
+切换服务器，由于vultr按时间收费，可以尝试下不同的位置节点。操作系统我选用 centos6，启用IPv6。  
+这里布置服务我选用网上的脚本，安装shadowsocks-libev。
+
+```
+wget --no-check-certificate https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks-libev.sh
+chmod +x shadowsocks-libev.sh
+./shadowsocks-libev.sh 2>&1 | tee shadowsocks-libev.log
+```
+
+此加速教程为谷歌BBR加速，Vultr的服务器框架可以装BBR加速，加速后对速度的提升很明显，所以推荐部署加速脚本。该加速方法是开机自动启动，部署一次就可以了。
+
+```
+wget --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh
+chmod +x bbr.sh
+./bbr.sh
+```
+
+安装按成后会提示重启，重启完成后：
+
+查看内核：` uname -r `
+结果为：
+> 4.18.12-041812-generic
+
+包含4.18就说明内核替换成功。
+
+3.检查是否开启BBR
+
+```
+sysctl net.ipv4.tcp_available_congestion_control
+# 返回值一般为：net.ipv4.tcp_available_congestion_control = bbr cubic reno
+
+sysctl net.ipv4.tcp_congestion_control
+# 返回值一般为：net.ipv4.tcp_congestion_control = bbr
+
+sysctl net.core.default_qdisc
+# 返回值一般为：net.core.default_qdisc = fq
+
+lsmod | grep bbr
+# 返回值有tcp_bbr则说明已经启动
+```
+
+这里启动的是 `ss-server` 进程。
+重启的话可以采用
+
+```
+ps aux | grep ss-server
+kill [$PID of ss-server]
+/usr/local/bin/ss-server -v -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+```
+
+其中，默认的配置文件在 */etc/shadowsocks-libev/config.json* 。
+
 # 参考资料
 
 [1] http://blog.csdn.net/zwc591822491/article/details/52802692
 [2] https://www.vultrclub.com/174.html
 [3] [通过VPS使用VPN或ShadowSocks访问Google或Google Schoolar出现验证码等的解决方法](https://www.polarxiong.com/archives/%E9%80%9A%E8%BF%87VPS%E4%BD%BF%E7%94%A8VPN%E6%88%96ShadowSocks%E8%AE%BF%E9%97%AEGoogle%E6%88%96Google-Schoolar%E5%87%BA%E7%8E%B0%E9%AA%8C%E8%AF%81%E7%A0%81%E7%AD%89%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95.html)
+[4] [vultr搭建ss/ssr教程(个人学习专用)](https://segmentfault.com/a/1190000016601413?utm_source=tag-newest)
+[5] [用Vultr自己搭建ss/ssr服务器教程](https://www.vpscn.net/40.html)
