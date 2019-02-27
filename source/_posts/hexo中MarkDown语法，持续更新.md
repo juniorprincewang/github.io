@@ -60,10 +60,16 @@ tags:
 这也是_斜体_， 这也是__粗体__
 
 
-## 分割线
+## 分割线和删除线
 
 在单独的一行使用 *** 或者 --- 表示分割线。
 使用 ~~ 表示删除线。
+```
+1~~23456~~78
+```
+
+1~~23456~~78
+
 ## 超链接
 
 ### 文字链接
@@ -83,6 +89,12 @@ tags:
 ```
 	![图片alt属性](图片链接或路径 "图片标题")，也可以使用html语句<img src="图片地址" width="200" height="200">来自定义图片的大小。
 ```
+
+如
+```
+![Logo](/images/logo.png)
+```
+
 #### hexo的文章资源文件夹[3]
 
 通过将 config.yml 文件中的 post_asset_folder 选项设为 true 来打开。
@@ -150,13 +162,15 @@ post_asset_folder: true
 
 ## 序列
 
+如果要有子级序列，只需要再符号前面添加两个空格。
+
 ### 无序列表
 
 无序列表使用 `*`，`+`，`-` 表示。例如
 ```
 + 无序列表项 一
-	- 子无序列表 一
-		* 子无序列表 三
+  + 子无序列表 一
+    + 子无序列表 三
 + 无序列表项 二
 + 无序列表项 三
 ```
@@ -249,6 +263,9 @@ int main(){
 
 待续。。。
 
+
+
+
 # 参考网站
 
 [1] [Hexo Markdown 简明语法手册](https://hyxxsfwy.github.io/2016/01/15/Hexo-Markdown-%E7%AE%80%E6%98%8E%E8%AF%AD%E6%B3%95%E6%89%8B%E5%86%8C/)
@@ -256,3 +273,4 @@ int main(){
 [3] [Hexo doc 资源文件夹](https://hexo.io/zh-cn/docs/asset-folders.html)
 [4] [Markdown语法介绍](https://coding.net/help/doc/project/markdown.html#section-2)
 [5] [少为人知的Markdown基础知识](https://sspai.com/post/37273)  
+[6] [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)
