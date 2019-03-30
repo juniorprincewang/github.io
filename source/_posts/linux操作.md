@@ -779,6 +779,19 @@ getconf LONG_BIT
 如果是32，说明当前CPU运行在32bit模式下, 但不代表CPU不支持64bit。
 如果是64，说明当前CPU支持64bit。
 
+## 内核编译选项查看
+
+ubuntu 操作系统下的查看方式为：
+
+### 文件下查看
+```
+cat /usr/src/linux-headers-$(uname -r)/.config | grep NOUVEAU
+```
+
+### 从系统/boot目录下获取
+```
+cat /boot/config-$(uname -r) | grep NOUVEAU
+```
 
 
 

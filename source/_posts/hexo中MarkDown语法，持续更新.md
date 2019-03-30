@@ -264,7 +264,64 @@ int main(){
 待续。。。
 
 
+## 支持markdown公式编辑
 
+在在主题配置文件 *blog\themes\next\_config.yml* 中定位到如下片段:
+
+```
+# MathJax Support
+mathjax:
+  enable: true
+  per_page: false
+  cdn: //cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML
+```
+
+并在博客文件夹下执行：
+```
+npm install hexo-math --save
+```
+
+### 插入公式
+行中公式可以用如下方法表示
+```
+ $ 数学公式 $
+```
+
+独立公式可以用如下方法表示：
+```
+ $$ 数学公式 $$
+```
+
+
+```
+$$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
+```
+$$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
+
+### 输入上下标
+
+`^` 表示上标,  `_` 表示下标。如果上下标的内容多于一个字符，需要用 `{}` 将这些内容括成一个整体。上下标可以嵌套，也可以同时使用。
+
+```
+$$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
+```
+$$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
+
+### 输入括号和分隔符
+
+`()` 、 `[]` 和 `|` 表示符号本身，使用 `\{\}` 来表示 `{}` 。当要显示大号的括号或分隔符时，要用 `\left` 和 `\right` 命令。
+
+一些特殊的括号：
+
+|输入|		显示 |		输入| 	显示|
+|----|-----------|---------|-------|
+|	`\langle` | $\langle$	|	`\rangle`	|	$\rangle$ |
+|	`\lceil` |	$\lceil$	|	`\rceil`	|	$\rceil$	|
+|	`\lfloor`	|	$\lfloor$	|	`\rfloor`	|	$\rfloor$	|
+|	`\lbrace`	|	$\lbrace$	|	`\rbrace`	|	$\rbrace$	|
+
+
+更多的去参考 [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)
 
 # 参考网站
 

@@ -402,6 +402,177 @@ C = M**e mod n
 M = C**d mod n
 ```
 
+# 离散对数体系（Discrete Logarithm）
+
+实现离散对数体制的最常用的群是有限域的乘法群的循环子群和椭圆曲线群的循环子群。
+
+## D-H
+
+第一个离散对数体制是Diffie-Hellman于1976年提出的密钥协商协议。1984年，ElGamal提出了离散对数公钥加密方案和离散对数签名方案。以后，人们相机提出了离散对数公钥密码的各种变种。
+下面介绍基本的ElGamal公钥加密方案和密钥签名方案（DSA）。
+
+### 原根
+
+`模除`（又称模数、取模操作、取模运算等，英语： `modulo` 有时也称作 `modulus`）得到的是一个数除以另一个数的余数。
+
+
+## ElGamal加密算法
+
+定义可以参见<https://ctf-wiki.github.io/ctf-wiki/crypto/signature/elgamal/>
+
+非常详细的ElGamal加密的教程，给了循环组的例子。
+<https://ritter.vg/security_adventures_elgamal.html>
+
+ElGamal加密算法是一个基于 Diffie-Hellman 密钥交换的非对称加密算法。
+ElGamal加密算法由三部分组成：密钥生成、加密和解密。
+
+### 密钥生成
+密钥生成的步骤如下：
+
++ Alice利用生成元  ${g}$ 产生一个大素数 $q$,即$g$是$q$的本原根，阶循环群 $G$的有效描述，该循环群的阶为 $q-1$。该循环群需要满足一定的安全性质。[ [本原根的概念对应模q乘法群(需循环群)中的生成元。]]
++ Alice从 $\lbrace1,\ldots ,q-1\rbrace$中随机选择一个 $x$。
++ Alice计算 $h:=g^{x}$。
++ Alice公开 $h$,以及 $G,q,g$的描述作为其公钥，并保留 $x$ 作为其私钥。私钥必须保密。
+
+### 加密
+
+使用Alice的公钥 $(G,q,g,h)$向她加密一条消息 $m$ 的加密算法工作方式如下：
+
++ Bob从 $\lbrace1,\ldots ,q-1\rbrace$ 随机选择一个 $y$，然后计算 $c_{1}:=g^{y}$。
++ Bob计算共享秘密 $s:=h^{y}$。
++ Bob把他要发送的秘密消息 $m$ 映射为 $G$ 上的一个元素 $m'$。
++ Bob计算 $c_{2}:=m'\cdot s$。
++ Bob将密文 $(c\_{1},c_{2})=(g^{y},m'\cdot h^{y})=(g^{y},m'\cdot (g^{x})^{y})$发送给Alice。
+
+值得注意的是，如果一个人知道了 $m'$，那么它很容易就能知道 $h^{y}$的值。因此对每一条信息都产生一个新的 $y$ 可以提高安全性。所以 $y$ 也被称作临时密钥。
+
+### 解密
+
+利用私钥 $x$ 对密文 $(c\_{1},c_{2})$进行解密的算法工作方式如下：
+
++ Alice计算共享秘密 $s:=c\_{1}{}^{x}$
+然后计算 $m':=c\_{2}\cdot s^{-1}$，并将其映射回明文 $m$，其中 $s^{-1}$ 是 $s$ 在群 $G$ 上的逆元。（例如：如果 $G$ 是整数模n乘法群的一个子群，那么逆元就是模逆元）。
+解密算法是能够正确解密出明文的，因为
+$c\_{2}\cdot s^{-1}=m'\cdot h^{y}\cdot (g^{xy})^{-1}=m'\cdot g^{xy}\cdot g^{-xy}=m'.$
+
+同样参考 [ElGamal加密算法](https://www.jianshu.com/p/cd36ae7dca47)
+
+## ElGamal签名算法
+
+ElGamal 来说，其签名方案与相应的加密方案具有很大区别。
+
+**补充**： 在同余理论中，模 n 的互质同余类组成一个乘法群，称为整数模 n 乘法群。
+> In modular arithmetic, the integers coprime (relatively prime) to n from the set {0,1,... ,n-1} of n non-negative integers form a group under multiplication modulo n, called the multiplicative group of integers modulo n.
+
+**补充**：
+扩展欧几里得算法（英语：Extended Euclidean algorithm）是欧几里得算法（又叫辗转相除法）的扩展。已知整数a、b，扩展欧几里得算法可以在求得a、b的最大公约数的同时，能找到整数x、y（其中一个很可能是负数），使它们满足贝祖等式
+
+$ ax + by = \gcd(a, b)$
+
+### 密钥生成
+
+1. 选取一个足够大的素数 $p$（十进制位数不低于 160），以便于在$Z_p$上求解离散对数问题是困难的。
+2. 选取整数模 $p$ 乘法群$Z_{p}^{*}$ 的生成元 $g$。
+3. 随机选取密钥 $x$，满足 $1 < x < p − 2$，计算 $y = g^x mod p$ 。
+
+其中私钥为 ${d}$，公钥为 ${p,g,y}$ 。
+
+### 签名
+
+如果A 要对消息 $m$ 进行签名 $sig_d(m,k)=(r,s)$ ，过程为：
+1.  选取随机数 $k$ ，满足 $1 < k < p − 1$ ，并且 $gcd(k,p-1)=1$。
+2. 计算  $r\,\equiv \,g^{k}{\pmod {p}}$
+3. 利用扩展欧几里得公式 $m \, \equiv \, x r + s k \pmod{p-1}$，计算 $s\,\equiv \,(m-xr)k^{-1}{\pmod {p-1}}$ 。
+4. 如果 $s=0$ ， 重新计算。
+
+对 $m$ 的签名结果为 $(r,s)$ 。
+
+### 验证
+B拿到消息和消息的签名结果验证阶段：
+如果 $g^m\, \equiv \, y^{r}r^{s} {\pmod {p}}$ ，那么验证成功，否则验证失败。
+
+由于 $m \, \equiv \, x r + s k \pmod{p-1}$
+$$
+\begin{align}
+g^{m} & \equiv g^{xr} g^{ks} \\
+& \equiv (g^{x})^r (g^{k})^s \\
+& \equiv (y)^r (r)^s \pmod p.\\
+\end{align}$$
+
+
+
+## DSA -Digital Signature Algorithm
+Digital Signature Algorithm (DSA)是Schnorr和ElGamal签名算法的变种，被美国NIST作为DSS(DigitalSignature Standard)。 专门用于签名和验签。
+DSA是基于整数有限域离散对数难题的，其安全性与RSA相比差不多。
+
+### 密钥生成 
+
+密钥生成有两个阶段。  
+第一阶段，是公开的参数信息。
+1. 选择一个合适的哈希函数 $H$，目前一般选择 SHA1，当前也可以选择强度更高的哈希函数 如 SHA2。
+2. 选择密钥的长度 $L$ 和 $N$，这两个值决定了签名的安全程度。在最初的 DSS（Digital Signature Standard ）中建议 $L$ 必须为 64 的倍数，并且 $512 ≤ L ≤ 1024$，当然，也可以更大。 $N$ 必须不大于哈希函数 $H$ 输出的长度。FIPS 186-3 给出了一些建议的 L 和 N 的取值例子：(1024, 160)， (2048, 224)， (2048, 256)，以及 (3,072, 256)。
+3. 选择 $N$ 比特的素数 $q$ , $N$ 长度小于或等于哈希函数输出长度。
+4. 选择 $L$ 比特的素数 $p$，使得 $p-1$ 是 $q$ 的倍数。
+5. 选择 $g$ ，其模$p$ 的乘阶为 $q$ ，意味着 $q$ 是满足  $g^q=1\pmod p$ 最小的正整数，即 $ord_p(g)=p$。 即 $g$ 在模 $p$ 的意义下，其指数次幂可以生成具有 $q$ 个元素的子群。这里，我们可以通过计算 $g = h^ {\frac {p − 1} {q} }\pmod {p}$ 来得到 $g$，其中 $1 < h < p − 1$ 。 大部分的 $h$ 选择会导致可使用的 $g$ ，通常 $h=2$ 。
+
+$(p, g, q)$会在不同的系统间公开。
+第二阶段，计算公钥和私钥。
+选择私钥 $x$，使其满足 $0 < x < q$ ，计算 $y ≡ g^x mod p$ 。  
+公钥为 $(p, q, g, y)$ 。
+
+### 签名
+
+1. 选择随机整数数 k 作为*临时密钥*， $ 0 < k < q $。 
+2. 计算 $r ≡ (g^k \pmod {p} ) \pmod {q} $
+3. 计算 $s ≡ (H(m) + x r ) k^{−1} \pmod {q}$ 。
+
+签名结果为 $(r,s)$。**需要注意的是，这里与 Elgamal 很重要的不同是这里使用了哈希函数对消息进行了哈希处理**。
+
+可以利用扩展欧几里得算法计算 模逆 $k^{−1} \pmod {q}$ ，或者使用费马小定理。
+
+由于签名者 既不知道 私钥 $x$ ，又不知道随机数 $k$ ，在验证 $s ≡ (H(m) + x r ) k^{−1} \pmod {q}$ 时，需要将其转换成 $ k ≡ (H(m) + x r ) s^{−1} \pmod {q} $ 。  
+两边作 $g$ 的幂指数，得到 $ g^k ≡ g^{H(m)k^{-1}}y^{rs^{-1}} \pmod {p}$ 。 所以，验签者可以计算等式右边，等式左边是 $r$ ，那么可以判断等式是否成立。
+
+### 验证
+
+1. 先判断 $ 0 < r <q $ 或者 $ 0 < s < q $ 是否满足条件，如果不满足，则不验签。
+2. 计算 $w=s^{-1}{\bmod {\,}}q $
+3. 计算 $ u_{1}=H\left(m\right)\cdot w\,{\bmod {\,}}q $
+4. 计算 $ u_{2}=r\cdot w\,{\bmod {\,}}q $
+5. 计算 $ v=\left(g^{u\_{1}}y^{u\_{2}}{\bmod {\,}}p\right){\bmod {\,}}q $
+
+如果 $ v = r $ ， 那么签名有效。
+
+### 正确性证明
+
+
+
+签名者计算 $$ s ≡ (H(m) + x r ) k^{−1} \pmod {q}$$ ，
+可得
+$$
+\begin{align}
+k & \equiv H(m)s^{-1}+xrs^{-1}\\
+  & \equiv H(m)w + xrw \pmod{q}
+\end{align}
+$$
+
+费马小定理 $ g^q ≡ h^{p − 1} ≡ 1 \pmod {p} $ ，且 $ g >1 $ , $q$ 是质数， 因此 $g$ 有 $q \pmod{p}$ 阶。  
+$$
+\begin{align}
+g^{k}&\equiv g^{H(m)w}g^{xrw}\\
+	&\equiv g^{H(m)w}y^{rw}\\
+	&\equiv g^{u\_{1}}y^{u\_{2}}{\pmod {p}}
+\end{align}
+$$
+
+DSA的正确性可从下式得出：
+$$
+\begin{align}
+r&=(g^{k}{\bmod {\,}}p){\bmod {\,}}q\\
+&=(g^{u\_{1}}y^{u\_{2}}{\bmod {\,}}p){\bmod {\,}}q\\
+&=v
+\end{align}
+$$
 
 # 国产密码算法
 

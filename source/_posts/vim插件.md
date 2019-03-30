@@ -31,7 +31,8 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 ## 配置Vundle
 
-将下面的配置信息写入`~/.vimrc`文件中，可以把`Plugin 'file:///home/gmarik/path/to/plugin'`用`"`注释掉，因为这是配置本机路径，很明显此文件在我的机器本地路径不存在。
+将下面官网给出的配置信息写入`~/.vimrc`文件中，可以把`Plugin 'file:///home/gmarik/path/to/plugin'`用`"`注释掉，因为这是配置本机路径，很明显此文件在我的机器本地路径不存在。否则会报错。
+
 
     set nocompatible              " be iMproved, required
     filetype off                  " required
@@ -77,13 +78,70 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
     " see :h vundle for more details or wiki for FAQ
     " Put your non-Plugin stuff after this line
 
+
+
 ## 安装插件
 
-启动Vim，执行`:PluginInstall`即可安装。
+将想要安装的插件，按照地址填写方法，将地址填写在`~/.vimrc` 中的 **vundle#begin** 和 **vundle#end** 之间就可以。  
+添加完 启动Vim，执行`:PluginInstall`即可安装。
 可以通过`:PluginUpdate`一键更新所有插件。
 
 参考：
 1. [VundleVim/Vundle.vim](https://github.com/VundleVim/Vundle.vim#quick-start)
+
+## 移除插件
+
+1. 编辑.vimrc文件移除的你要移除的插件所对应的plugin那一行。
+2. 保存退出当前的vim
+3. 重新打开vim，输入命令BundleClean。
+
+## 其他常用命令
+
++ 更新插件 `BundleUpdate` 
++ 列出所有插件 `BundleList`
++ 查找插件 `BundleSearch`
+
+# 一些常用的插件
+
+通过github repos来定义的插件 
+
+
+    Bundle 'christoomey/vim-run-interactive'
+    Bundle 'Valloric/YouCompleteMe'
+    Bundle 'croaky/vim-colors-github'
+    Bundle 'danro/rename.vim'
+    Bundle 'majutsushi/tagbar'
+    Bundle 'kchmck/vim-coffee-script'
+    Bundle 'kien/ctrlp.vim'
+    Bundle 'pbrisbin/vim-mkdir'
+    Bundle 'scrooloose/syntastic'
+    Bundle 'slim-template/vim-slim'
+    Bundle 'thoughtbot/vim-rspec'
+    Bundle 'tpope/vim-bundler'
+    Bundle 'tpope/vim-endwise'
+    Bundle 'tpope/vim-fugitive'
+    Bundle 'tpope/vim-rails'
+    Bundle 'tpope/vim-surround'
+    Bundle 'vim-ruby/vim-ruby'
+    Bundle 'vim-scripts/ctags.vim'
+    Bundle 'vim-scripts/matchit.zip'
+    Bundle 'vim-scripts/tComment'
+    Bundle "mattn/emmet-vim"
+    Bundle "scrooloose/nerdtree"
+    Bundle "Lokaltog/vim-powerline"
+    Bundle "godlygeek/tabular"
+    Bundle "msanders/snipmate.vim"
+    Bundle "jelera/vim-javascript-syntax"
+    Bundle "altercation/vim-colors-solarized"
+    Bundle "othree/html5.vim"
+    Bundle "xsbeats/vim-blade"
+    Bundle "Raimondi/delimitMate"
+    Bundle "groenewege/vim-less"
+    Bundle "Lokaltog/vim-easymotion"
+    Bundle "tomasr/molokai"
+    Bundle "klen/python-mode"
+
+其中主要用到的是 *YouCompleteMe* 和 *nerdtree*，需要注意的是安装好后需要添加配置信息。
 
 # YouCompleteMe
 
@@ -257,6 +315,70 @@ let NERDTreeShowBookmarks=1
     cmd+{   前一个 tab
     cmd+}   后一个 tab
 
-参考：
+
+# 安装 vim-airline 插件
+
+这个插件没有很大的实用性，但能增加逼格，增加vim的有趣性。
+
+第一步，我们先把下面的需要配置的文件添加到 ~/.vimrc 中
+
+    " ------------------------安装 vim-airline------------------
+
+    set laststatus=2   " 永远显示状态栏
+    set t_Co=256       " 在windows中用xshell连接打开vim可以显示色彩
+
+    "Vim 在与屏幕/键盘交互时使用的编码(取决于实际的终端的设定)        
+    :set encoding=utf-8
+    :set langmenu=zh_CN.UTF-8
+    :set fileencodings=utf-8
+    :set fileencoding=utf-8
+    :set termencoding=utf-8
+
+    Plugin 'vim-airline'    
+    let g:airline_theme="molokai"
+
+    "这个是安装字体后 必须设置此项" 
+    let g:airline_powerline_fonts = 1  
+    "打开tabline功能,方便查看Buffer和切换,省去了minibufexpl插件
+    let g:airline#extensions#tabline#enabled = 1
+    let g:airline#extensions#tabline#buffer_nr_show = 1
+
+    "设置切换Buffer快捷键"
+    nnoremap <F4> :bn<CR>
+    " 关闭状态显示空白符号计数
+    let g:airline#extensions#whitespace#enabled = 0
+    let g:airline#extensions#whitespace#symbol = '!'
+    " 设置consolas字体"前面已经设置过
+    "set guifont=Consolas\ for\ Powerline\ FixedD:h11
+    if !exists('g:airline_symbols')
+    let g:airline_symbols = {}
+    endif
+    " old vim-powerline symbols
+    let g:airline_left_sep = '⮀'
+    let g:airline_left_alt_sep = '⮁'
+    let g:airline_right_sep = '⮂'
+    let g:airline_right_alt_sep = '⮃'
+    let g:airline_symbols.branch = '⭠'
+    let g:airline_symbols.readonly = '⭤'
+
+第二步：要安装字体，如果没有安装字体的话，vim-airline的效果就没法正确的显示
+
+字体安装GitHub地址：<https://github.com/powerline/fonts>
+
+在终端上一步步输入下面的内容即可：
+
+```
+# clone
+git clone https://github.com/powerline/fonts --depth=1
+# install
+cd fonts
+./install.sh
+# clean-up a bit
+cd ..
+rm -rf fonts
+```
+
+
+# 参考：
 1. [NERDTree 快捷键辑录](http://yang3wei.github.io/blog/2013/01/29/nerdtree-kuai-jie-jian-ji-lu/)
 2. [NERDTree插件（vim笔记三）](https://www.jianshu.com/p/eXMxGx)
