@@ -48,7 +48,10 @@ index:
   excerpt_link: Read More  
 
 close_aside: false  #close sidebar in post page if true
-mathjax: false      #enable mathjax if true
+mathjax:       #enable mathjax if true
+  enable: true
+  per_page: false
+  cdn: //cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML
 
 ### Creative Commons License Support, see http://creativecommons.org/ 
 ### you can choose: by , by-nc , by-nc-nd , by-nc-sa , by-nd , by-sa , zero
@@ -56,16 +59,16 @@ creative_commons: none
 
 #### Author information
 author:
-  intro_line1:  "Hello ,I'm Larry Page in Google."    ## your introduction on the bottom of the page
-  intro_line2:  "This is my blog,believe it or not."  ## the 2nd line
-  weibo: 2176287895     ## e.g. wuchong1014 or 2176287895 for http://weibo.com/2176287895
-  weibo_verifier: b3593ceb    ## e.g. b3593ceb Your weibo-show widget verifier ,if you use weibo-show it is needed.
+  intro_line1:  ""    ## your introduction on the bottom of the page
+  intro_line2:  "上网不涉密，涉密不上网。"  ## the 2nd line
+  weibo:     ## e.g. wuchong1014 or 2176287895 for http://weibo.com/2176287895
+  weibo_verifier:     ## e.g. b3593ceb Your weibo-show widget verifier ,if you use weibo-show it is needed.
   tsina:      ## e.g. 2176287895  Your weibo ID,It will be used in share button.
   douban:     ## e.g. wuchong1014 or your id for https://www.douban.com/people/wuchong1014
   zhihu:      ## e.g. jark  for http://www.zhihu.com/people/jark
-  email:      ## e.g. imjark@gmail.com
+  email: little0prince@163.com     ## e.g. imjark@gmail.com
   twitter:    ## e.g. jarkwu for https://twitter.com/jarkwu
-  github:     ## e.g. wuchong for https://github.com/wuchong
+  github: juniorprincewang    ## e.g. wuchong for https://github.com/wuchong
   facebook:   ## e.g. imjark for https://facebook.com/imjark
   linkedin:   ## e.g. wuchong1014 for https://www.linkedin.com/in/wuchong1014
   google_plus:    ## e.g. "111190881341800841449" for https://plus.google.com/u/0/111190881341800841449, the "" is needed!
@@ -81,8 +84,6 @@ toc:
 
 #### Links
 links:
-  码农圈: https://coderq.com,一个面向程序员交流分享的新一代社区
-  Jark's Blog: http://wuchong.me
 
 
 
@@ -90,8 +91,6 @@ links:
 duoshuo_shortname:    ## e.g. wuchong   your duoshuo short name.
 disqus_shortname:     ## e.g. wuchong   your disqus short name.
 gentie_key:           ## your 163 gentie key, see https://gentie.163.com/
-changyan_appid:       ## changyan app id, see http://changyan.kuaizhan.com/
-changyan_appkey:      ## changyan app key, see http://changyan.kuaizhan.com/
 
 
 #### Share button
