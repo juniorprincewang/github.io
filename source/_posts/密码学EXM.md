@@ -401,26 +401,34 @@ byte Mul_0e[256] = {
 
 # RSA
 
-给定一个正整数m，以及两个整数a,b，如果a-b被m整除，则称a与b模m同余，记作a=b(mod m)，否则称a与b模m不同余，记作a!=b(mod m)。
+给定一个正整数m，以及两个整数a,b，如果a-b被m整除，则称a与b模m同余，记作 $ a=b \pmod {m} $，否则称a与b模m不同余，记作 $ a \neq b \pmod {m} $。
+
+**欧拉函数**
+意义是求跟某个数互素，且小于这个数的元素的个数。设数n，那么 $\phi(n)=|Z_n^*|$ 。  
+与n互素且小于n的任意一个数，在计算模n的幂次的时候，等于1的那个最小的幂次。  
+即 $ gcd(a,n)=1 $，那么$ a^{\phi(n)}=1 \pmod {n} $。
 
 ## RSA算法流程
 
-1. 随机生成两个素数: p、q；
-2. 计算 m=(p-1)\*(q-1)，n=p\*q；
-3. 随机取值e，使e与m互素；
-4. 计算e对m的模逆，e*d=1(mod m)；
+1. 随机生成等二进制长度的两个素数: p、q；
+2. 计算 $\phi(n)=(p-1)\*(q-1)$，$n=p\*q$；
+3. 随机取值e，使e与 $\phi(n)$ 互素；
+4. 计算e对 $\phi(n)$ 的模逆，$e*d=1\pmod {\phi(n)}$；
 5. (e, n)为公钥，(d, n)为私钥。
 
 ## 公钥加密
 
-```
-C = M**e mod n
-```
+$$ C = M^e mod n $$
+
 
 ## 私钥解密
-```
-M = C**d mod n
-```
+
+$$ M = C^d mod n $$
+
+
+# Paillier同态加密算法(Paillier Homomorphic Encryption)
+
+Paillier加密系统是概率公钥加密系统。基于复合剩余类的困难问题。该加密算法是一种同态加密，满足加法和数乘同态。
 
 # 离散对数体系（Discrete Logarithm）
 
@@ -594,6 +602,16 @@ r&=(g^{k}{\bmod {\,}}p){\bmod {\,}}q\\
 \end{align}
 $$
 
+## ECDSA
+
+随机数很重要！
+> The ECDSA digital signature has a drawback compared to RSA in that it requires a good source of entropy.   
+Without proper randomness, the private key could be revealed.  
+A flaw in the random number generator on Android allowed hackers to find the ECDSA private key used to protect the bitcoin wallets of several people in early 2013.   
+Sony's Playstation implementation of ECDSA had a similar vulnerability.   
+A good source of random numbers is needed on the machine making the signatures. Dual_EC_DRBG is not recommended.
+
+from [A (Relatively Easy To Understand) Primer on Elliptic Curve Cryptography](https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/)
 # 国产密码算法
 
 国产密码算法（国密算法）是指国家密码局认定的`国产商用密码算法`，在金融领域目前主要使用公开的SM2、SM3、SM4三类算法，分别是非对称算法、哈希算法和对称算法。 其中`SM`代表“商密”，即用于商用的、不涉及国家秘密的密码技术。
