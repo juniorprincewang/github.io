@@ -50,7 +50,7 @@ index:
 close_aside: false  #close sidebar in post page if true
 mathjax:       #enable mathjax if true
   enable: true
-  per_page: false
+  per_page: true
   cdn: //cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML
 
 ### Creative Commons License Support, see http://creativecommons.org/ 
