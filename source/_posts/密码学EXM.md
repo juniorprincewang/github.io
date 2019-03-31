@@ -6,6 +6,7 @@ tags:
 - 国产密码
 categories:
 - security
+- crypto
 ---
 
 
@@ -81,7 +82,10 @@ AES包括加解密(encrypt/decrypt)和轮密钥生成(key shedule)。
 加解密涉及四个操作：SubBytes(字节替换)、ShiftRows(行移位)、MixColumns(列混淆)、AddRoundKey(轮密钥加)。在最后一轮不进行MixColumns。
 
 可以参考 [FIPS 197，AES](https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf)。里面有详实的标准介绍。
-算法流程为：
+
+## AES 加密
+
+加密算法流程为：
 ```
 Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
 begin
@@ -111,6 +115,8 @@ end
 |AES-192 	| 6				| 4				| 12	|
 |AES-256 	| 8 			|4 				| 	14	|
 
+### SubBytes
+
 SubBytes，将原 State中的每个字符转换成S-Box中对应下标的元素。 即 `State[i,j] = s_box[State[i,j]]` 。
 ```
 uint8_t s_box[256] = {
@@ -132,6 +138,9 @@ uint8_t s_box[256] = {
 	0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, // e
 	0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16};// f
 ```
+
+### ShiftRows 
+
 ShiftRows，将State数组按照行 依次向左移位0字节，1字节，2字节，3字节。
 ```
 Row0: s0  s4  s8  s12   <<< 0 byte
@@ -139,6 +148,8 @@ Row1: s1  s5  s9  s13   <<< 1 byte
 Row2: s2  s6  s10 s14   <<< 2 bytes
 Row3: s3  s7  s11 s15   <<< 3 bytes
 ```
+### MixColumns
+
 MixColumns: 利用GF(2^8)域上算术特性的一个代替，同样用于提供算法的扩散性。
 ```
 [02 03 01 01]   [s0  s4  s8  s12]
@@ -189,6 +200,7 @@ byte Mul_03[256] = {
 	0x0b,0x08,0x0d,0x0e,0x07,0x04,0x01,0x02,0x13,0x10,0x15,0x16,0x1f,0x1c,0x19,0x1a
 };
 ```
+### AddRoundKey
 
 AddRoundKey, 将State和密钥进行XOR。
 
@@ -234,6 +246,7 @@ end
 
 AES加密算法的动态演示
 <https://coolshell.cn/wp-content/uploads/2010/10/rijndael_ingles2004.swf>
+## AES 解密
 
 解密的话也需要四个步骤：InvShiftRows(逆行移位), InvSubBytes(逆字节替换),InvMixColumns(逆列混淆),和 AddRoundKey(轮密钥加)。
 但是解密的顺序略有不同。 `w` 为轮密钥。
@@ -257,6 +270,7 @@ begin
 	out = state
 end
 ```
+### InvShiftRows
 
 InvShiftRows 只是将 State序列按照 行号， 进行逆向向右依次移动0个字节、1个字节、2个字节、3个字节。
 ```
@@ -266,6 +280,9 @@ Row1: s1  s5  s9  s13   >>> 1 byte
 Row2: s2  s6  s10 s14   >>> 2 bytes
 Row3: s3  s7  s11 s15   >>> 3 bytes
 ```
+
+### InvSubBytes
+
 InvSubBytes 字节替换用到的逆序S-Box为：
 ```
 	// 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
@@ -286,6 +303,8 @@ InvSubBytes 字节替换用到的逆序S-Box为：
 	0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61, // e
 	0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d};// f
 ```
+
+### InvMixColumns
 
 InvMixColumns 是 MixColumns的逆序，需要用到的矩阵相乘系数为
 ```
@@ -379,6 +398,7 @@ byte Mul_0e[256] = {
 ## 参考
 [aes算法实现](https://github.com/openluopworld/aes_128/blob/master/aes.c)
 [aes算法实现](https://github.com/dhuertas/AES/blob/master/aes.c)
+
 # RSA
 
 给定一个正整数m，以及两个整数a,b，如果a-b被m整除，则称a与b模m同余，记作a=b(mod m)，否则称a与b模m不同余，记作a!=b(mod m)。
