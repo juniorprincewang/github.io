@@ -94,3 +94,5 @@ GPU的微架构（micro-architecture）和GPU的计算能力（compute capabilit
 ## Pascal
 
 [NVIDIA Tesla P100](https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf)
+
+更多 Nvidia GPU 可以参考 [The nVidia card range in Wikipedia](https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units)

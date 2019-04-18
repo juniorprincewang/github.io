@@ -39,21 +39,9 @@ print base64.b64decode(t)
 
 RC4
 
+# 填充模式
 
-## Diffie–Hellman key exchange [[2]](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B)
-
-Diffie–Hellman key exchange，迪菲-赫尔曼密钥交换，是一种安全协议。它能够让通信双方在没有对方任何预先信息的前提下通过不安全信道进行密钥交换。它是无认证的密钥交换协议。目的是创建一个可以用于公共信道上安全通信的共享秘密（shared secret）。
-
-![Diffie-Hellman流程图](../密码学EXM/Diffie-Hellman-Schlüsselaustausch.svg)
-
-1. 通信双方爱丽丝A和鲍勃B两人，再通信前约定好生成元g和质数p。（此g可以被攻击者捕获）
-2. 爱丽丝A随机选择一个自然数a并且将g^a mod p发送给鲍勃B。
-3. 鲍勃B随机选择一个自然数b并且将g^b mod p 发送给爱丽丝A。
-4. 爱丽丝A计算(g^b mod p)^a mod p。
-5. 鲍勃B计算(g^a mod p)^b mod p。
-6. 爱丽丝A和鲍勃B最终得到了相同的值，协商出的群元素g^(ab)作为共享密钥。
-
-
+# KDF
 
 ## 分组密码工作模式
 
@@ -496,6 +484,25 @@ $$ D(E(m\_{2},r\_{2})^{m\_{1}}{\bmod  n}^{2})=m\_{1}m\_{2}{\bmod  n}$$
 更一般地，
 $$ D(E(m\_{1},r\_{1})^{k}{\bmod  n}^{2})=km\_{1}{\bmod  n}$$
 
+参考：
+[Paillier cryptosystem](https://en.wikipedia.org/wiki/Paillier_cryptosystem#Key_generation)  
+[Paillier算法详解及Java实现](https://blog.csdn.net/qq_41199831/article/details/81096625)  
+[Paillier Cryptosystem](https://blog.csdn.net/caorui_nk/article/details/83305709)  
+
+# 零知识证明 Zero-knowledge proof
+
+
+零知识证明(Zero—Knowledge Proof)，指的是证明者能够在不向验证者提供任何有用的信息的情况下，使验证者相信某个论断是正确的。零知识证明实质上是一种涉及两方或更多方的协议。证明者向验证者证明并使其相信自己知道或拥有某一消息，但证明过程不能向验证者泄漏任何关于被证明消息的信息。大量事实证明，零知识证明在密码学中非常有用。如果能够将零知识证明用于验证，将可以有效解决许多问题。
+
+在密码应用中，Peggy想要向Victor证明她知道在给定群中的给定值的离散对数。比如，对于给定值 $y$ ，素数 $p$ ，生成元 $g$ ，她想证明她知道满足 $g^{x}{\bmod {p}}=y$ 的 $x$ ，而不泄露 $x$ 。 Victor想要确定她是否知道 $x$ 的过程如下。 
+
+1. Peggy第一次计算 $g^{x}{\bmod {p}}=y$ 并将 $y$ 传给 Victor。
+2. Peggy选择随机数 $r$ ，并计算 $ C=g^{r}{\bmod {p}} $ 再将计算结果传给 Victor。
+3. Victor 向 Peggy请求 $ (x+r){\bmod {(p-1)}} $ ，并且验证 $ (C\cdot y){\bmod {p}}\equiv g^{(x+r){\bmod {(p-1)}}}{\bmod {p}} $ 。
+4. Victor 重复向Peggy 请求随机数并作验证。
+
+<https://en.wikipedia.org/wiki/Zero-knowledge_proof>
+
 # 离散对数体系（Discrete Logarithm）
 
 实现离散对数体制的最常用的群是有限域的乘法群的循环子群和椭圆曲线群的循环子群。
@@ -508,6 +515,17 @@ $$ D(E(m\_{1},r\_{1})^{k}{\bmod  n}^{2})=km\_{1}{\bmod  n}$$
 ### 原根
 
 `模除`（又称模数、取模操作、取模运算等，英语： `modulo` 有时也称作 `modulus`）得到的是一个数除以另一个数的余数。
+
+Diffie–Hellman key exchange[[2]](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B)，迪菲-赫尔曼密钥交换，是一种安全协议。它能够让通信双方在没有对方任何预先信息的前提下通过不安全信道进行密钥交换。它是无认证的密钥交换协议。目的是创建一个可以用于公共信道上安全通信的共享秘密（shared secret）。
+
+![Diffie-Hellman流程图](../密码学EXM/Diffie-Hellman-Schlüsselaustausch.svg)
+
+1. 通信双方爱丽丝A和鲍勃B两人，再通信前约定好生成元g和质数p。（此g可以被攻击者捕获）
+2. 爱丽丝A随机选择一个自然数a并且将g^a mod p发送给鲍勃B。
+3. 鲍勃B随机选择一个自然数b并且将g^b mod p 发送给爱丽丝A。
+4. 爱丽丝A计算(g^b mod p)^a mod p。
+5. 鲍勃B计算(g^a mod p)^b mod p。
+6. 爱丽丝A和鲍勃B最终得到了相同的值，协商出的群元素g^(ab)作为共享密钥。
 
 
 ## ElGamal加密算法
@@ -567,9 +585,9 @@ $ ax + by = \gcd(a, b)$
 
 1. 选取一个足够大的素数 $p$（十进制位数不低于 160），以便于在$Z_p$上求解离散对数问题是困难的。
 2. 选取整数模 $p$ 乘法群$Z_{p}^{*}$ 的生成元 $g$。
-3. 随机选取密钥 $x$，满足 $1 < x < p − 2$，计算 $y = g^x mod p$ 。
+3. 随机选取密钥 $x$，满足 $1 < x < p − 2$，计算 $y = g^x \bmod p$ 。
 
-其中私钥为 ${d}$，公钥为 ${p,g,y}$ 。
+其中私钥为 ${x}$，公钥为 ${p,g,y}$ 。
 
 ### 签名
 
