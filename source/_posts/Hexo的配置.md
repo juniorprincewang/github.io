@@ -27,6 +27,33 @@ npm install -g hexo-cli
 
 ## 发布到github
 
+### Permission denied (publickey).  
+
+在使用 `git push`  时候报以下错误。
+
+	Permission denied (publickey).
+	fatal: Could not read from remote repository.
+
+	Please make sure you have the correct access rights
+	and the repository exists.
+
+原因：电脑公钥（publickey）未添加至github,所以无法识别。 因而需要获取本地电脑公钥，然后登录github账号，添加公钥至github就OK了。  
+设置Git的user name和email  
+
+> git config --global user.name "yourname"
+> git config --global user.email "youremail" 
+
+生成密钥 
+```
+生存密钥：
+ssh-keygen -t rsa -C "youremail" -f your_file
+```
+
+然后再登录github，进入个人设置settings--->ssh and gpg keys-->new ssh key 添加新生成的公钥即可。
+
+### hexo Error: Host key verification failed.   
+
+
 今天电脑重装系统，我决定将这个hexo文件夹整个拷贝到新电脑，配置好本地环境后，再部署的时候遇到了问题。
 
     hexo Error: Host key verification failed. 
