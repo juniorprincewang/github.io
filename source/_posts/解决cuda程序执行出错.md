@@ -5,8 +5,8 @@ tags:
 - linux
 - CUDA
 categories:
-- solutions
-- CUDA
+- [solutions]
+- [GPU,CUDA]
 ---
 
 `error while loading shared libraries: libcudart.so.8.0: cannot open shared object file: No such file or directory`

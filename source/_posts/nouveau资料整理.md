@@ -7,7 +7,7 @@ tags:
 - linux
 - CUDA
 categories:
-- GPU
+- [GPU,nouveau]
 ---
 nouveau是LINUX内核中NVIDIA显卡的开源驱动，但是它不对CUDA支持，熟悉nouveau对于加强掌握NVIDIA GPU显卡有极大的帮助。本文整理了阅读到的nouveau资料。
 <!-- more -->

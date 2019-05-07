@@ -5,7 +5,7 @@ tags:
 - virtual memory
 - GPU
 categories:
-- GPU
+- [GPU]
 ---
 本文分析 `NVIDIA GPU` 的虚拟内存（virtual memory），由 `envytools` 工具和文档提供。
 <!-- more -->

@@ -4,7 +4,7 @@ date: 2018-08-14 14:21:38
 tags:
 - git
 catogeries:
-- linux
+- [linux]
 ---
 本篇博客介绍在ubuntu 16.04中搭建git服务器的过程，操作平台是windows 10。
 <!-- more -->

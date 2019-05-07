@@ -4,7 +4,7 @@ date: 2018-04-11 17:30:30
 tags:
 - CUDA
 categories:
-- CUDA
+- [GPU,CUDA]
 ---
 
 经过无数次的折腾，终于成功在C文件中调用了cu文件里面定义的函数。

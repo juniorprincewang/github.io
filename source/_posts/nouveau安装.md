@@ -4,7 +4,7 @@ date: 2019-01-25 09:58:32
 tags:
 - nouveau
 categories:
-- GPU
+- [GPU,nouveau]
 ---
 
 本篇博客介绍了nouveau安装以及卸载nouveau遇到的*Error: Module nouveau is in use* 问题。

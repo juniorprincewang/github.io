@@ -5,7 +5,7 @@ tags:
 - linux
 - virtual memory
 categories:
-- solutions
+- [solutions]
 ---
 
 在1GB内存的阿里云主机中，编译cmake时候报错，`virtual memory exhausted: Cannot allocate memory` 。 

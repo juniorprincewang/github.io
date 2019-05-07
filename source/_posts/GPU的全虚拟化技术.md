@@ -5,8 +5,7 @@ tags:
 - CUDA
 - GPU
 categories:
-- GPU
-- GPU虚拟化
+- [GPU,GPU虚拟化]
 ---
 
 GPU的全虚拟化需要模拟GPU driver，而各大GPU厂商对driver闭源，这只能通过网上公开的逆向工作来解开driver的面具。

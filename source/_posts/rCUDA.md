@@ -5,7 +5,7 @@ tags:
 - GPU
 - rCUDA
 categories:
-- GPU
+- [GPU,CUDA]
 ---
 
 本篇博客讲述rCUDA、rCUDA的安装。

@@ -4,7 +4,7 @@ date: 2018-08-21 17:10:34
 tags:
 - ubuntu
 categories:
-- solutions
+- [solutions]
 ---
 本篇博客解决 `ubuntu` 系统升级中断后无法正常登录的问题。
 <!-- more -->

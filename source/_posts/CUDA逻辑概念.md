@@ -7,8 +7,7 @@ tags:
 - SIMT
 - mmap
 categories:
-- GPU
-
+- [GPU,CUDA]
 ---
 本篇博客介绍CUDA的实现，包括物理和逻辑，内存结构等。
 <!--more-->

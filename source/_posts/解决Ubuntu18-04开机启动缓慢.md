@@ -4,7 +4,7 @@ date: 2019-02-27 14:12:14
 tags:
 - ubuntu
 categories:
-- solutions
+- [solutions]
 ---
 本篇博客解决了Ubuntu18.04开机启动过程中，长时间停留在Ubuntu LOGO，再进入桌面系统的登录界面。
 <!-- more -->

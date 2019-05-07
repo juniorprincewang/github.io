@@ -5,7 +5,7 @@ tags:
 - GPU
 - GK110
 categories:
-- GPU
+- [GPU]
 ---
 
 本篇博客介绍NVidia显卡的产品类型和微架构。尤其NVidia的Tesla系列产品和Tesla微架构区分清楚。

@@ -5,7 +5,7 @@ tags:
 - git bash
 - windows
 categories:
-- solutions
+- [solutions]
 ---
 本篇博客解决了，在windows中使用Git Bash时，中文总是以`linux\346\223\215\346\226\207\344\273\266\346\223\215\344\275\234`乱码形式出现的问题。
 <!-- more -->

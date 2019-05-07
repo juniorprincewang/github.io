@@ -5,7 +5,7 @@ tags:
 - hardware
 - GPU
 categories:
-- GPU
+- [GPU]
 ---
 本文介绍NVIDIA GPU的硬件组成，为全面了解GPU的架构和逆向GPU结构，全虚拟化GPU提供硬件背景知识。
 <!-- more -->

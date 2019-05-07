@@ -5,8 +5,8 @@ tags:
 - CUDA
 - GPU
 categories:
-- GPU
-- GPU虚拟化
+- [GPU,CUDA]
+- [GPU,GPU虚拟化]
 ---
 
 CUDA的虚拟化有一项技术为 `API Remoting`， 通俗点就是将编程API重定向，或者说远程过程调用。这是在接口层面上实现虚拟化, 采用对调用接口二次封
@@ -257,6 +257,32 @@ CUresult cuModuleUnload ( CUmodule hmod )
 
 可以使用 `cuModuleLoad` 将 fatbinary image从文件读入。而 `cuModuleLoadData` 将 fatbinary image从字符串读入。
 `cuModuleGetFunction` 可以从 module `hmod` 当中返回函数名为 `name` 的函数指针 `hfunc`。
+
+## cudaLaunchKernel  
+
+通过 `nvprof` 工具获得简单的 *vectorAdd* 程序的profile，可以获得一些额外的信息。
+
+
+	==16486== Profiling application: ./vectorAdd
+	==16486== Profiling result:
+	            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+	 GPU activities:   65.79%  67.266us         2  33.633us  32.737us  34.529us  [CUDA memcpy HtoD]
+	                   30.52%  31.200us         1  31.200us  31.200us  31.200us  [CUDA memcpy DtoH]
+	                    3.69%  3.7760us         1  3.7760us  3.7760us  3.7760us  vectorAdd(float const *, float const *, float*, int)
+	      API calls:   99.23%  127.05ms         3  42.351ms  3.4780us  127.05ms  cudaMalloc
+	                    0.34%  430.20us        96  4.4810us      98ns  170.55us  cuDeviceGetAttribute
+	                    0.21%  263.80us         3  87.934us  49.895us  120.54us  cudaMemcpy
+	                    0.11%  141.99us         1  141.99us  141.99us  141.99us  cuDeviceTotalMem
+	                    0.07%  91.916us         3  30.638us  3.8710us  80.965us  cudaFree
+	                    0.03%  38.155us         1  38.155us  38.155us  38.155us  cuDeviceGetName
+	                    0.01%  18.698us         1  18.698us  18.698us  18.698us  cudaLaunchKernel
+	                    0.00%  1.8070us         1  1.8070us  1.8070us  1.8070us  cuDeviceGetPCIBusId
+	                    0.00%     959ns         3     319ns      82ns     545ns  cuDeviceGetCount
+	                    0.00%     794ns         2     397ns     139ns     655ns  cuDeviceGet
+	                    0.00%     193ns         1     193ns     193ns     193ns  cuDeviceGetUuid
+	                    0.00%     186ns         1     186ns     186ns     186ns  cudaGetLastError
+
+*vectorAdd*源码只有 `cudaMemcpy` 、 `cudaFree` 、 `cudaMalloc`，这莫名多出了很多函数。说明再载入二进制的时候又默认启动了其他相关的函数。
 
 ## 注意事项
 

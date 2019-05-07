@@ -5,7 +5,7 @@ tags:
 - markdown
 - hexo
 categories:
-- hexo
+- [hexo]
 ---
 
 本篇博客介绍了Markdown最常见命令的语法，有代码有效果。持续更新
@@ -33,6 +33,16 @@ tags:
 - markdown
 - hexo
 ```
+
++ categories
+将其分类到 Sports/Baseball 和 Play 两个不同的目录下
+```
+categories:
+  - [Sports,Baseball]
+  - [Play]
+```
+
+
 ## 分级标题
 
 这个很简单，就是在文字前添加个`#`和空格。`#`表示标签h1，`##` 表示标签h2。
@@ -139,6 +149,18 @@ post_asset_folder: true
 中国
 	1. 北京
 	2. 天津
+
+### 交叉引用  
+
+在需要引用的分级标题后设置一个 id。  
+```
+#入门-基本语法 {#start}
+```
+
+然后在其它任何地方使用这个唯一的标识符来进行引用以方便**文章内**的跳转。  
+```
+[入门-基本语法](#start)
+```
 
 ## 表格
 
@@ -331,3 +353,4 @@ $$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
 [4] [Markdown语法介绍](https://coding.net/help/doc/project/markdown.html#section-2)
 [5] [少为人知的Markdown基础知识](https://sspai.com/post/37273)  
 [6] [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)
+[7] [Hexo 一篇文章多个 categories](http://aiellochan.com/2018/02/13/hexo/Hexo-%E4%B8%80%E7%AF%87%E6%96%87%E7%AB%A0%E5%A4%9A%E4%B8%AA-categories/)

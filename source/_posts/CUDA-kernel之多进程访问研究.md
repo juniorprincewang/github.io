@@ -5,7 +5,7 @@ tags:
 - CUDA
 - GPU
 categories:
-- GPU
+- [GPU,CUDA]
 ---
 探究多进程或者多线程并发执行多个CUDA Kernel。
 <!-- more -->
