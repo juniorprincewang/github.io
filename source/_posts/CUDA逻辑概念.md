@@ -58,16 +58,68 @@ CUDA为了方便编程，提出了 `kernel` 、 `thread` 、 `block` 、 `grid` 
 `warp` 包含32个线程，用以协调把指令分发到执行单元，是调度和运行的基本单位。 `warp` 中的所有 `threads` 并行执行相同的指令。
 一个 `warp` 只能分配到一个 `SM` 运行， 一个 `SM` 可以同时允许多个 `warp` 执行。
 
-`thread` 、 `block` 、 `grid` 、 `kernel` 的关系图：
-![逻辑关系图](../CUDA-硬件实现/CUDA逻辑图.jpg)
+`thread` 、 `block` 、 `grid` 、 `kernel` 的关系图：  
 
+![逻辑关系图](../CUDA逻辑概念/CUDA逻辑图.jpg) 
 
 
 # 内存层次
 
-## global memory
+## register
+
+GPU 寄存器提供了线程快速存取地址，每个寄存器大小为32位，寄存器数量有限。
+
+|Compute capability| #registers per thread|
+|------------------|----------------------|
+|1.x|128|
+|2.x|63|
+|3.x|63|
+|3.5|255|
+
+Kernel中的局部(简单类型)变量第一选择是被分配到寄存器中。 
+
+比如， `kernel1` 中的变量 `a[ARRAY_SIZE]` 优化为寄存器。  
+[代码出处:CUDA之编程中线程分配的数组在register中还是local memory中？](https://blog.csdn.net/Bruce_0712/article/details/65664840)  
+```c++
+__global__ void kernel1(float *buf) {  
+    float a[ARRAY_SIZE];  
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;  
+  
+    #pragma unroll  
+    for (int i = 0; i < 5; ++i) {  
+        a[i] = buf[tid];  
+    }  
+  
+    float sum = 0.f;  
+    #pragma unroll  
+    for (int i = 0; i < 5; ++i) {  
+        //static indexing  
+        sum += a[i];  
+    }  
+  
+    buf[tid] = sum;  
+}  
+```
 
 ## local memory
+
+local memory 或者称为 “thread-local global memory”，属于片下内存，因此访问速度慢，带宽小。  
+由于寄存器数量有限，当寄存器耗尽后，线程中数据将被存储到local memory。  
+如果每个线程中使用了过多的寄存器（known as *register spilling*），或声明了大型结构体或大数组，或编译器无法确定数组大小（Dynamic Indexing），线程的私有数据就会被分配到local memory中。  
+local memory 是每个线程私有。  
+
+*tips*：  在声明局部变量时，尽量使变量可以分配到register。如：  
+```
+unsigned int mt[3];
+```
+改为：　
+```
+unsigned int mt0, mt1, mt2;
+```
+
+编译器会将自动变量存放入local memory中。 
+更多内容参考 <https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#device-memory-accesses>  
+[In a CUDA kernel, how do I store an array in “local thread memory”?](https://stackoverflow.com/questions/10297067/in-a-cuda-kernel-how-do-i-store-an-array-in-local-thread-memory)  
 
 ## shared memory
 
@@ -78,17 +130,24 @@ CUDA为了方便编程，提出了 `kernel` 、 `thread` 、 `block` 、 `grid` 
 同一个线程块中的线程可以通过共享内存互相通信，在逻辑上同一个线程块中的所有线程同时执行，但是在物理上，同一个线程块中的所有线程并不是同时执行的，所以同一个线程块中的线程并不是同时执行结束的。
 共享内存可能会导致线程之间的竞争：多个线程同时访问某个数据。CUDA提供了线程块内的同步，保证同一个线程块中的线程在下一步执行前都完成了上一步的执行。但是**线程块**之间无法同步。
 
+## global memory
 
-## register
 
-GPU 寄存器提供了快速存取地址。但是寄存器数量有限
 
-|Compute capability| #registers per thread|
-|------------------|----------------------|
-|1.x|128|
-|2.x|63|
-|3.x|63|
-|3.5|255|
+存储器和编程逻辑之间的关系如下表：
+
+| 存储器 | 位置 |  访问权限  |  生存周期 |
+|--------|------|-----------|-----------|
+| register  |       GPU 片内 | Device 读写  |  thread  |
+| local memory |   板载显存  |     Device 读写 |  thread |
+| shared memory |  GPU 片内   |     Device 读写  | block |
+| Constant memory | 板载显存  |  host 读写, Device 读  |  host分配释放 |
+| Texture memory | 板载显存  |  host 读写, Device 读  |  host分配释放 |
+| Global memory  | 板载显存  |  host 读写, Device 读写 |  host分配释放 |
+| Host memory    | host 内存 | host 读写        |  host分配释放 |
+| Pinened memory | host 内存  | host 读写       | host分配释放 |
+
+
 
 # driver API
 

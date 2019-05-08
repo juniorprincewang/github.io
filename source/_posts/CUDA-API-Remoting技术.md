@@ -15,9 +15,7 @@ CUDA的虚拟化有一项技术为 `API Remoting`， 通俗点就是将编程API
 <!-- more -->
 
 
-# GPU虚拟化
-
-# API Remoting
+# Runtime API 
 
 `nvcc` 对CUDA库的默认的链接方式是静态链接。可以通过 `ldd` 查询，未发现关于 `libcudart.so`的动态链接库。
 其实可以通过 `nvcc` 编译过程来发现端倪。
@@ -114,7 +112,6 @@ GPU$ nvcc --verbose thread.cu -o staticthread
 -rwxrwxr-x  1 max max 569848 5月  15 09:39 staticthread*
 -rwxrwxr-x  1 max max  19552 5月  14 14:19 thread*
 ```
-
 
 
 ## cuda kernel
@@ -284,6 +281,66 @@ CUresult cuModuleUnload ( CUmodule hmod )
 
 *vectorAdd*源码只有 `cudaMemcpy` 、 `cudaFree` 、 `cudaMalloc`，这莫名多出了很多函数。说明再载入二进制的时候又默认启动了其他相关的函数。
 
+# GPGPU-SIM
+
+经过了上面艰难的探索，今天偶然发现一篇对CUDA程序编译和调用过程的探索，这篇[GPGPU-SIM Code Study (version: 3.1.2)](http://people.cs.pitt.edu/~yongli/notes/gpgpu/GPGPUSIMNotes.html) 里面讲解了源码编译模拟过程，其中设计到我们这里探究的隐藏API。同时[cudaErrorCudartUnloading问题排查及建议方案](http://galoisplusplus.coding.me/blog/2018/05/22/cudaErrorCudartUnloading/)也做了讨论。
+
+编译器将 `__cudaRegisterFatBinary()` 
+
+总结一下：
+
+`nvcc` 使用 *--cuda* 选项来查看 编译的执行配置语法（ECS）和管理kernel代码，生成 *.cu.cpp.ii* 文件，此文件可以不需要NVIDIA编译工具就能够被编译和链接。深入阅读此文件，就可以发现端倪。  
+1. 设备代码被作为 fat binary 对象嵌入到可执行文件的 *.rodata* 区间。
+2. 对于kernel代码，源码中都有对应的与每个kernel函数名相同的host函数。
+3. 在 `main` 函数调用前，`cudaRegisterAll` 函数做以下工作。
+	- 调用入口函数 `__cudaRegisterFatBinary`，参数是指向 fat binary 的指针，此指针可以直接访问kernel代码。
+	- 为每个kernel，调用kernel注册函数`cudaRegisterFunction`，指针指向在上述步骤2中源码中的函数。
+4. 对于执行配置语法被以下函数取代：
+	+ `cudaConfigureCall` 用于设置kernel调用的配置选项，如grid，block等。
+	+ `cudaSetupArgument` 用于设置kernel调用的参数。
+	+ `cudaLaunch` 调用kernel，参数是指向步骤2中的函数的函数指针。
+5. Fat binary注销函数`cudaUnregisterBinaryUtil`，在程序退出的时候调用。
+
+函数定义在 */usr/local/cuda/include/crt/host_runtime.h* 。
+
+```
+extern void** CUDARTAPI __cudaRegisterFatBinary(
+  void *fatCubin
+);
+
+extern void CUDARTAPI __cudaUnregisterFatBinary(
+  void **fatCubinHandle
+);
+
+extern void CUDARTAPI __cudaRegisterFunction(
+        void   **fatCubinHandle,
+  const char    *hostFun,
+        char    *deviceFun,
+  const char    *deviceName,
+        int      thread_limit,
+        uint3   *tid,
+        uint3   *bid,
+        dim3    *bDim,
+        dim3    *gDim,
+        int     *wSize
+);
+
+static void **__cudaFatCubinHandle;
+
+static void __cdecl __cudaUnregisterBinaryUtil(void)
+{ 
+  ____nv_dummy_param_ref((void *)&__cudaFatCubinHandle);
+  __cudaUnregisterFatBinary(__cudaFatCubinHandle);
+}
+```
+
+函数定义在 */usr/local/cuda/include/crt/host_runtime_api.h* 。
+```
+extern __host__ cudaError_t CUDARTAPI cudaConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem __dv(0), cudaStream_t stream __dv(0));
+extern __host__ cudaError_t CUDARTAPI cudaSetupArgument(const void *arg, size_t size, size_t offset);
+extern __host__ cudaError_t CUDARTAPI cudaLaunch(const void *func);
+```
+
 ## 注意事项
 
 ### 编译问题
@@ -360,3 +417,4 @@ cudaError_t cudaMemcpy(
 [1] [what are the parameters for __cudaRegisterFatBinary and __cudaRegisterFunction functions?](https://stackoverflow.com/questions/6392407/what-are-the-parameters-for-cudaregisterfatbinary-and-cudaregisterfunction-f)
 [2] [cudahook](https://github.com/nchong/cudahook)
 [3] [CUDA CUBIN/PTX文件动态加载](https://blog.csdn.net/qq_20487945/article/details/51023664)
+[4] [cudaErrorCudartUnloading问题排查及建议方案](http://galoisplusplus.coding.me/blog/2018/05/22/cudaErrorCudartUnloading/)
