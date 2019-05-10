@@ -3,6 +3,8 @@ title: 搭建vps
 date: 2017-08-04 16:47:02
 tags:
 - vps
+categories:
+- [vps]
 ---
 
 本篇讲述了自己动手翻墙访问谷歌的过程。

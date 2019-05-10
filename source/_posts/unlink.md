@@ -5,8 +5,8 @@ tags:
 - pwn
 - heap
 categories:
-- pwnable.kr
-- security
+- [pwnable.kr]
+- [security]
 ---
 pwnable.kr 中简单的堆溢出利用。
 堆溢出的原理：用精心构造的数据去溢出下一个堆块的块首，改写堆块的前向指针和后向指针，然后再分配、释放、合并等操作发生时伺机获取一次向内存任意地址写入任意数据的机会。

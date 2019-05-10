@@ -6,7 +6,7 @@ tags:
 - libvirt
 - QEMU
 categories:
-- 虚拟化
+- [虚拟化,virtio]
 ---
 
 涉及到virtio的使用和原理学习。

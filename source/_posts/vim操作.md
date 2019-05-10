@@ -5,7 +5,7 @@ tags:
 - vim
 - linux
 categories:
-- vim
+- [linux,vim]
 ---
 
 平时操作vim有些命令经常查，索性都记录在这篇博客里。包括搜索替换，行操作。
@@ -160,6 +160,27 @@ categories:
 :set fileformat=unix
 ```
 
+# 会话和viminfo
+
+使用会话(session)和viminfo，可以把你编辑环境保存下来，然后你在下次启动vim后，可以再恢复回这个环境。
+
++ 会话信息中保存了所有窗口的视图，外加全局设置。
++ viminfo信息中保存了命令行历史(history)、搜索字符串历史(search)、输入行历史、非空的寄存器内容(register)、文件的位置标记(mark)、最近搜索/替换的模式、缓冲区列表、全局变量等信息。
+
+保存：
+```
+:mksession project.vim               "创建一个会话文件
+:wviminfo project.viminfo            "创建一个viminfo文件
+:qa    
+```
+
+恢复：
+```
+:source path/to/project.vim  '载入会话文件
+:rviminfo project.viminfo            '读入viminfo文件
+```
+
+更详细的要参考[vi/vim使用进阶: 使用会话和viminfo](https://blog.easwy.com/archives/advanced-vim-skills-session-file-and-viminfo/)。
 
 # 参考
 [1] [Vim 常用命令总结](http://pizn.github.io/2012/03/03/vim-commonly-used-command.html)

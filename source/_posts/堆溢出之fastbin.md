@@ -6,7 +6,7 @@ tags:
 - pwn
 - heap
 categories:
-- security
+- [pwn]
 ---
 
 简单的fastbin堆溢出漏洞利用。

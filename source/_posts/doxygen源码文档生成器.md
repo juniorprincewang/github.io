@@ -2,10 +2,9 @@
 title: doxygen源码文档生成器
 date: 2019-01-09 19:02:25
 tags:
-- vim
-- linux
+- doxgen
 categories:
-- vim
+- [tools]
 ---
 
 苦于看内核驱动源码的烦恼，Doxygen工具很好的解决了此问题。  Doxygen可以很好的构建出类层次结构和全局变量，不同的用户定义类型，以及函数调用图分析等等。

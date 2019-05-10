@@ -17,6 +17,10 @@ CUDA的虚拟化有一项技术为 `API Remoting`， 通俗点就是将编程API
 
 # Runtime API 
 
+CUDA 应用程序可以调用CUDA Library，CUDA Runtime API和CUDA Driver API。 其中 CUDA Runtime API 还调用了 Driver API。Runtime API以动态库 *libcuda.so* 提供，使用 `ioctl` 通过 */dev/nvidia0*，*/dev/nvidia-uvm*，*/dev/nvidiactl* 与Driver(kernel mode)交互。
+![CUDA API call process](../CUDA-API-Remoting技术/CUDA-software-layers.png)
+
+
 `nvcc` 对CUDA库的默认的链接方式是静态链接。可以通过 `ldd` 查询，未发现关于 `libcudart.so`的动态链接库。
 其实可以通过 `nvcc` 编译过程来发现端倪。
 
@@ -225,6 +229,8 @@ typedef struct {
 nvcc --cudart=shared --fatbin -o test.fatbin test.cu
 diff test.fatbin cut.fatbin
 ```
+
+[Trouble launching CUDA kernels from static initialization code](https://stackoverflow.com/questions/24869167/trouble-launching-cuda-kernels-from-static-initialization-code/24883665#24883665)提到了CUDA runtime程序采取lazy初始化Context，直到调用了第一个CUDA runtime API，Context才正式初始化。这个初始化的函数入口就是 `__cudaRegisterFatBinary` ，它负责载入和注册fat binary中的kernels，textures和静态定义的设备符号。 验证办法就是在用gdb调试时，添加断点 `break __cudaRegisterFatBinary` 。
 
 
 ## CUDA CUBIN/PTX文件动态加载
