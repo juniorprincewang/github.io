@@ -4,9 +4,9 @@ date: 2017-08-20 23:55:21
 tags:
 - pwn
 - got
-categories:
 - pwnable.kr
-- security
+categories:
+- [security,pwn]
 ---
 
 多种想法，运来GOT表这么覆盖！

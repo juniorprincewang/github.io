@@ -4,7 +4,7 @@ date: 2018-04-18 19:03:31
 tags:
 - sql
 categories:
-- [sql,sql注入]
+- [sql注入]
 ---
 本篇博客连续更新实验吧的web篇解题思路。
 <!--more -->

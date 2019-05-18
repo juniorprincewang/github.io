@@ -4,7 +4,7 @@ date: 2017-09-01 15:11:42
 tags:
 - 堆溢出
 categories:
-- [pwn]
+- [security,pwn]
 ---
 
 堆溢出small bin的unlink利用

@@ -4,7 +4,7 @@ date: 2018-04-16 09:43:08
 tags:
 - shell
 categories:
-- linux
+- [linux,shell]
 ---
 
 本篇博客介绍shell脚本的语法知识。
@@ -76,7 +76,14 @@ categories:
 
 # 注释
 
-`BASH` 文件，单行注释用 `#` ，多行注释可以用 `<<<COMMENT …… COMMENT` 来包裹需要注释的命令行。
+`BASH` 文件，单行注释用 `#` ，多行注释可以用 `<<COMMENT ……   COMMENT` 来包裹需要注释的命令行。
+```
+<<COMMENT
+
+something else.
+
+COMMENT
+```
 
 # 字符串
 字符串是 `shell` 编程中最常用最有用的数据类型，字符串可以用单引号，也可以用双引号，也可以不用引号。单双引号的区别跟PHP类似。
@@ -369,6 +376,72 @@ sh脚本结合系统命令便有了强大的威力，在字符处理领域，有
 
 ## xargs
 ## curl
+
+# 实战
+
+
++ set environment variables in existing shell
+
+```
+export PATH="/home/path/to/bin/:$PATH"
+```
+
+直接运行脚本只会在子进程 subshell 里面执行，不会对当前shell设置环境变量。  
+
+在当前shell中设置环境变量有两种办法： `source` or `.` 。
+```
+source ./myscript.sh
+```
+或者
+```
+. ./myscript.sh
+```
+
+[Shell script to set environment variables](https://stackoverflow.com/a/18548047)
+
++ 单独以root执行某一命令
+
+```
+sudo -u <username> <command>
+su <otheruser> -c <command >
+# 例如： su root -c 'echo  "hello from $USER"'
+```
+[How can I execute a script as root, execute some commands in it as a specific user and just one command as root](https://unix.stackexchange.com/a/264239)  
+[Run a shell script as another user that has no password](https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password)  
+[How to write a shell script that runs some commands as superuser and some commands not as superuser, without having to babysit it?](https://stackoverflow.com/a/10220200)  
+
++ 比较版本
+
+[How to compare a program's version in a shell script?](https://unix.stackexchange.com/a/285928)
+[How to compare two strings in dot separated version format in Bash?](https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash)
+
+比较gcc得版本
+
+```
+#!/bin/bash
+currentver="$(gcc -dumpversion)"
+requiredver="5.0.0"
+ if [ "$(printf '%s\n' "$requiredver" "$currentver" | sort -V | head -n1)" = "$requiredver" ]; then 
+        echo "Greater than or equal to 5.0.0"
+ else
+        echo "Less than 5.0.0"
+ fi
+```
+
+使用[通配符匹配](https://unix.stackexchange.com/users/135943/wildcard)  
+
+
++ 判断文件是否存在
+
+[Check if a directory exists in a shell script](https://stackoverflow.com/a/59839)  
+```
+if [ -d "$DIRECTORY" ]; then
+  # Control will enter here if $DIRECTORY exists.
+fi
+```
+
+
+
 
 # 参考
 - [Shell脚本编程30分钟入门](https://github.com/qinjx/30min_guides/blob/master/shell.md)

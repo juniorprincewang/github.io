@@ -4,9 +4,7 @@ date: 2018-04-04 08:52:34
 tags:
 - sql注入
 categories:
-- web安全
-- sql
-- sql注入
+- [sql注入]
 ---
 
 网上很多关于RedTiger的writeup已失效，所以重新整理下，算是小白入门。

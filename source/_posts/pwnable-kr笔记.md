@@ -4,8 +4,8 @@ date: 2017-08-13 15:23:28
 tags:
 - pwnable.kr
 categories:
-- ctf
-- pwn
+- [ctf]
+- [security,pwn]
 ---
 
 pwnable.kr算是pwn入门级别的题目，做一遍记录下大概的知识点。

@@ -4,7 +4,7 @@ date: 2019-01-16 08:40:38
 tags:
 - gitlab
 categories:
-- git
+- [git]
 ---
 
 

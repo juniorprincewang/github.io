@@ -10,7 +10,7 @@ categories:
 - linux
 ---
 
-对linux文件操作，网络操作，进程管理拾遗
+对linux网络操作，文件操作，进程管理拾遗。针对发行版本为Ubuntu 16.04，间或有 Ubuntu 18.04。
 
 <!-- more -->
 
@@ -125,7 +125,9 @@ apt-cache search gd | grep php
 /etc/init.d/networking restart #重启
 ```
 
-配置静态IP
++ 配置静态IP  
+
+**Ubuntu16.04使用**
 
 ```
 sudo gedit /etc/network/interfaces # 打开配置文件
@@ -161,6 +163,32 @@ nameserver dns的ip地址,如8.8.8.8
 #重启服务
 sudo /etc/init.d/networking restart
 ```
+
+在**Ubuntu 18.04**中通过 */etc/resolv.conf* 设置DNS后，重启不起作用。这是一个自动生成文件，来自于进程 *systemd-resolved*。  
+> # This file is managed by man:systemd-resolved(8). Do not edit.
+
+通过修改配置文件 */etc/systemd/resolved.conf* 可以修改 DNS。  
+
+```
+sudo vim /etc/systemd/resolved.conf
+```
+
+> [Resolve]
+> DNS=8.8.8.8
+
+重启服务：
+```
+sudo systemctl restart systemd-resolved
+```
+查看DNS配置信息
+```
+sudo systemd-resolve --status
+```
+
+> Global
+> DNS Servers: 8.8.8.8
+
+参考 [Ubuntu-18.04 DNS 配置](https://vqiu.cn/ubuntu-18-04-dns-config/)  
 
 ## 通过IPv6访问Google等
 
@@ -519,6 +547,55 @@ diff -urNa dir1 dir2
     　　 a
 
 除了有变动的那些行以外，也是上下文各显示3行。它将两个文件的上下文，合并显示在一起，所以叫做"合并格式"。每一行最前面的标志位，空表示无变动，减号表示第一个文件删除的行，加号表示第二个文件新增的行。
+
+## patch打补丁
+
+通常对 `diff` 的结果，可以使用 `patch` 命令来自动补齐变动的内容。 `patch` 通过读入 `patch` 命令文件（可以从标准输入），对目标文件进行修改。
+
+`patch` 的标准格式为
+
+```
+patch [options] [originalfile] [patchfile]
+```
+
+patch文件的样子：
+
+    diff -Nur linux-2.4.15/Makefile linux/Makefile
+    --- linux-2.4.15/Makefile       Thu Nov 22 17:22:58 2001
+    +++ linux/Makefile      Sat Nov 24 16:21:53 2001
+    @@ -1,7 +1,7 @@
+     VERSION = 2
+     PATCHLEVEL = 4
+    -SUBLEVEL = 15
+    -EXTRAVERSION =-greased-turkey
+    +SUBLEVEL = 16
+    +EXTRAVERSION =
+     KERNELRELEASE=$(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
+
+
+绝大多数情况下，`patch` 都用以下这种简单的方式使用：
+
+```
+patch -p[num] <patchfile
+```
+
+`-p` 参数决定了是否使用读出的源文件名的前缀目录信息，不提供-p参数，则忽略所有目录信息。  
+`-p0`（或者 `-p 0`）表示使用全部的路径信息，`-p1` 将忽略第一个"/"以前的目录，依此类推。 如 */usr/src/linux-2.4.15/Makefile* 这样的文件名，在提供 `-p3` 参数时将使用 *linux-2.4.15/Makefile* 作为所要patch的文件。
+
+使用 `-R` 选项可以取消补丁。  
+
+```
+patch -p[num] <patchfile -R
+```
+
+需要留意以下几点：
+
+1. 一次打多个patch的话，一般这些patch有先后顺序，得按次序打才行。
+2. 在patch之前不要对原文件进行任何修改。
+3. 如果patch中记录的原始文件和你得到的原始文件版本不匹配(很容易出现)，那么你可以尝试使用patch, 如果幸运的话，可以成功。大部分情况下，会有不匹配的情况，此时patch会生成rej文件，记录失败的地方，你可以手工修改。
+
+[用Diff和Patch工具维护源码](https://www.ibm.com/developerworks/cn/linux/l-diffp/index.html)  
+[diff和patch用法](https://www.cnblogs.com/tobeprogramer/archive/2013/04/28/3049561.html)
 
 # 进程管理
 

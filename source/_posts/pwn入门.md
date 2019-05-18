@@ -3,10 +3,8 @@ title: 安全入门
 date: 2017-08-01 22:13:00
 tags:
 - pwn
-- security
 categories:
-- pwn
-- security
+- [security,pwn]
 ---
 
 这里有关于pwn、web、逆向的资料整理。

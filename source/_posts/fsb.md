@@ -4,9 +4,9 @@ date: 2017-08-22 09:55:21
 tags:
 - pwn
 - heap
-categories:
 - pwnable.kr
-- security
+categories:
+- [security,pwn]
 ---
 
 pwnable.kr fsb，本题目重点在栈上被调函数的ebp指向了调用函数的ebp。

@@ -14,14 +14,17 @@ categories:
 ---
 
 
-搞安全怎么能离开密码学。武功再高，也怕菜刀。密码学还得一口一口的啃啊。
+搞安全怎么能离开密码学。武功再高，也怕菜刀。  
+骐骥一跃，不能十步。
 <!-- more -->
 
 ![](../密码学EXM/exm.jpg)
 
 凯撒和栅栏密码
 
-Cipher Block
+`Cipher Block` ： 分组密码
+`nonce` : [Nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce) 是一个在加密通信只能使用一次的数字。在认证协议中，它往往是一个随机或伪随机数，以避免重放攻击。  
+Nonce也用于 *流密码* 以确保安全。如果需要使用相同的密钥加密一个以上的消息，就需要Nonce来确保不同的消息与该密钥加密的密钥流不同。
 
 # base64/32/16编码
 
@@ -40,7 +43,7 @@ print base64.b64decode(t)
 ```
 
 
-RC4
+RC4 (arch4)流密码
 
 # 填充模式
 
@@ -53,6 +56,17 @@ RC4
 
 ### 电子密码本（Electronic codebook，ECB）
 
+讲消息分成组，每组单独加密。
+
+**缺点**  
+
++ Visual inspection of an encrypted stream  
+
+本方法的缺点在于同样的明文块会被加密成相同的密文块；因此，它不能很好的隐藏数据模式。在某些场合，这种方法不能提供严格的数据保密性，因此并不推荐用于密码协议中。
++ Encryption oracle attack  
+加密预言攻击，oracle是用于计算用的黑盒子，称为“预言机”。
+比如对于 `C = ECB(k, m|S)` ，敌手就可以选择m长度为 len(block)-1 大小，那么整个块为 m|s0，敌手可以遍历最终匹配到s0，以此类推获得整个密文对应的明文。  
+
 ### 密码块链接（CBC，Cipher-block chaining）
 
 ### 填充密码块链接 （PCBC，Propagating cipher-block chaining）
@@ -63,10 +77,29 @@ RC4
 
 ### 输出反馈模式（Output feedback, OFB）
 
+### GCM
 
-## AEAD(Authenticated Encryption with Associated Data)
+[SP 800-38D:Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC](https://csrc.nist.gov/publications/detail/sp/800-38d/final)  
 
-# AES
+## padding
+
+### PKCS#5/PKCS#7 padding
+
+
+## Message Authentication Code(MAC)
+
+### Hash-based Message Authentication Code(HMAC)
+
+[rfc4418 UMAC: Message Authentication Code using Universal Hashing](https://www.ietf.org/rfc/rfc4418.txt)  
+
+
+### AEAD(Authenticated Encryption with Associated Data)
+
+#Block ciphers
+
+分组密码算法
+
+## AES
 
 AES作为DES的升级版本，是当今主流的对称加密算法。
 AES选取的分组长度为128比特，保持不变，而密钥长度可改变为128比特、192比特和256比特。
@@ -75,7 +108,7 @@ AES包括加解密(encrypt/decrypt)和轮密钥生成(key shedule)。
 
 可以参考 [FIPS 197，AES](https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf)。里面有详实的标准介绍。
 
-## AES 加密
+### AES 加密
 
 加密算法流程为：
 ```
@@ -107,7 +140,7 @@ end
 |AES-192 	| 6				| 4				| 12	|
 |AES-256 	| 8 			|4 				| 	14	|
 
-### SubBytes
+#### SubBytes
 
 SubBytes，将原 State中的每个字符转换成S-Box中对应下标的元素。 即 `State[i,j] = s_box[State[i,j]]` 。
 ```
@@ -131,7 +164,7 @@ uint8_t s_box[256] = {
 	0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16};// f
 ```
 
-### ShiftRows 
+#### ShiftRows 
 
 ShiftRows，将State数组按照行 依次向左移位0字节，1字节，2字节，3字节。
 ```
@@ -140,7 +173,7 @@ Row1: s1  s5  s9  s13   <<< 1 byte
 Row2: s2  s6  s10 s14   <<< 2 bytes
 Row3: s3  s7  s11 s15   <<< 3 bytes
 ```
-### MixColumns
+#### MixColumns
 
 MixColumns: 利用GF(2^8)域上算术特性的一个代替，同样用于提供算法的扩散性。
 ```
@@ -192,7 +225,7 @@ byte Mul_03[256] = {
 	0x0b,0x08,0x0d,0x0e,0x07,0x04,0x01,0x02,0x13,0x10,0x15,0x16,0x1f,0x1c,0x19,0x1a
 };
 ```
-### AddRoundKey
+#### AddRoundKey
 
 AddRoundKey, 将State和密钥进行XOR。
 
@@ -238,7 +271,7 @@ end
 
 AES加密算法的动态演示
 <https://coolshell.cn/wp-content/uploads/2010/10/rijndael_ingles2004.swf>
-## AES 解密
+### AES 解密
 
 解密的话也需要四个步骤：InvShiftRows(逆行移位), InvSubBytes(逆字节替换),InvMixColumns(逆列混淆),和 AddRoundKey(轮密钥加)。
 但是解密的顺序略有不同。 `w` 为轮密钥。
@@ -262,7 +295,7 @@ begin
 	out = state
 end
 ```
-### InvShiftRows
+#### InvShiftRows
 
 InvShiftRows 只是将 State序列按照 行号， 进行逆向向右依次移动0个字节、1个字节、2个字节、3个字节。
 ```
@@ -273,7 +306,7 @@ Row2: s2  s6  s10 s14   >>> 2 bytes
 Row3: s3  s7  s11 s15   >>> 3 bytes
 ```
 
-### InvSubBytes
+#### InvSubBytes
 
 InvSubBytes 字节替换用到的逆序S-Box为：
 ```
@@ -296,7 +329,7 @@ InvSubBytes 字节替换用到的逆序S-Box为：
 	0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d};// f
 ```
 
-### InvMixColumns
+#### InvMixColumns
 
 InvMixColumns 是 MixColumns的逆序，需要用到的矩阵相乘系数为
 ```
@@ -387,9 +420,10 @@ byte Mul_0e[256] = {
 
 解密的AddRoundKey 与 加密的相同，只是将State和密钥做XOR操作。
 
-## 参考
+### 参考
 [aes算法实现](https://github.com/openluopworld/aes_128/blob/master/aes.c)
 [aes算法实现](https://github.com/dhuertas/AES/blob/master/aes.c)
+
 
 # RSA
 
@@ -718,11 +752,13 @@ SM4分组密码算法是我国自主设计的分组对称密码算法，用于�
 
 
 
+
 # 参考文献
 1. [安全体系（一）—— DES算法详解](http://www.cnblogs.com/songwenlong/p/5944139.html)
 2. [迪菲-赫尔曼密钥交换](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B)
 3. [分组密码工作模式](https://zh.wikipedia.org/wiki/%E5%88%86%E7%BB%84%E5%AF%86%E7%A0%81%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F)
 4. [密码算法详解——AES](http://www.cnblogs.com/luop/p/4334160.html)
 5. [密码标准应用指南](http://www.gmbz.org.cn/upload/2018-03-24/1521879142922000396.pdf)
+6. [学习密码学的一套教程 CRYPTO101](https://www.crypto101.io/)
 
 
