@@ -43,13 +43,33 @@ print base64.b64decode(t)
 ```
 
 
-RC4 (arch4)流密码
+# stream cipher 
 
-# 填充模式
+## RC4 (arch4)
+
+不安全的六密码算法，已经被TLS弃用。 [rfc7465 Prohibiting RC4 Cipher Suites](https://tools.ietf.org/html/rfc7465)  
+
+
+## Salsa20
+
+一种新的流加密算法，由 Dan Bernstein 设计。根据内部轮数分为  Salsa20/12 和 Salsa20/8 。
+基于 add-rotate-xor（ARX）操作。
+
+优势：
+
+用户可以在恒定时间内寻求输出流中的任何位置。它可以在现代x86处理器中提供约每4–14次循环周期一字节的速度，并具有合理的硬件性能。可以抵御侧信道攻击。
+
+## ChaCha
+
+也是由Dan Bernstein 设计的新型的流加密算法。 根据轮数不同分为：ChaCha8,ChaCha12,ChaCha20。
+
+[Snuffle 2005: the Salsa20 encryption function](https://cr.yp.to/snuffle.html)
 
 # KDF
 
-## 分组密码工作模式
+# 填充模式
+
+## 分组密码工作模式 mode of operation
 
 分组（block）密码的工作模式（mode of operation）允许使用同一个分组密码密钥对多于一块的数据进行加密，并保证其安全性。
 常用模式有以下几块：
@@ -68,6 +88,8 @@ RC4 (arch4)流密码
 比如对于 `C = ECB(k, m|S)` ，敌手就可以选择m长度为 len(block)-1 大小，那么整个块为 m|s0，敌手可以遍历最终匹配到s0，以此类推获得整个密文对应的明文。  
 
 ### 密码块链接（CBC，Cipher-block chaining）
+
+### 计数器模式（CTR，Counter Mode）
 
 ### 填充密码块链接 （PCBC，Propagating cipher-block chaining）
 
@@ -425,12 +447,15 @@ byte Mul_0e[256] = {
 [aes算法实现](https://github.com/dhuertas/AES/blob/master/aes.c)
 
 
+
+
 # RSA
 
 给定一个正整数m，以及两个整数a,b，如果a-b被m整除，则称a与b模m同余，记作 $ a=b \pmod {m} $，否则称a与b模m不同余，记作 $ a \neq b \pmod {m} $。
 
-**欧拉函数**
-意义是求跟某个数互素，且小于这个数的元素的个数。设数n，那么 $\phi(n)=|Z_n^*|$ 。  
+**欧拉函数** 
+
+意义是求跟某个数互素，且小于这个数的元素的个数。设数n，那么 $\phi(n)=|Z_n^\*|$ 。  
 与n互素且小于n的任意一个数，在计算模n的幂次的时候，等于1的那个最小的幂次。  
 即 $ gcd(a,n)=1 $，那么$ a^{\phi(n)}=1 \pmod {n} $。
 
@@ -451,6 +476,17 @@ $$ C = M^e mod n $$
 
 $$ M = C^d mod n $$
 
+## padding
+
+### PKCS1
+
+### OAEP
+
+OAEP (optimal asymmetric encryption padding)
+
+### PSS
+
+[RSA Algorithom 详尽的介绍](https://www.di-mgt.com.au/rsa_alg.html)
 
 # Paillier同态加密算法(Paillier Homomorphic Encryption)
 
@@ -464,7 +500,7 @@ Paillier加密系统是概率公钥加密系统。基于复合剩余类的困难
 + 随机选择一个整数 $g$ , $ g\in \mathbb{Z}_{n^2}^*$ ， 且满足 $gcd(L(g^{\lambda }{\bmod  n}^{2}),n)=1$
 + $\mu =(L(g^{\lambda }{\bmod  n}^{2}))^{-1}{\bmod  n} $，这里 $L$ 被定义为 $L(x)=\frac{x-1}{n} $.
 
-$\mathbb{Z}\_{n^2}$ 为小于 $n^2$ 的整数集合，而$\mathbb{Z}\_{n^2}^*$ 为 $\mathbb{Z}\_{n^2}$ 中与 $n^2$ 互质的整数的集合。
+$\mathbb{Z}\_{n^2}$ 为小于 $n^2$ 的整数集合，而$\mathbb{Z}\_{n^2}^\*$ 为 $\mathbb{Z}\_{n^2}$ 中与 $n^2$ 互质的整数的集合。
 
 **公钥**：$(n, g)$
 **私钥**：$(\lambda, \mu)$ 。
@@ -475,7 +511,7 @@ $\mathbb{Z}\_{n^2}$ 为小于 $n^2$ 的整数集合，而$\mathbb{Z}\_{n^2}^*$ �
 + 随机选择一个整数 $r$, $0 \lt r \lt n $, $r \in \mathbb{Z}^*_{n^2}$, 与$n$ 互质，即 $\mathrm{gcd}(r,n)=1$。  
 + 计算密文：$c=g^{m}\cdot r^{n}{\bmod  n}^{2}$
 
-对于任意明文 $m \in \mathbb{Z}_{n}$，随机选取的整数 $r$ 不同，得到的密文就不同，但是解密后可以还原出相同的明文 $m$ ，从而保证了m密文的语义安全。
+对于任意明文 $m \in \mathbb{Z}\_{n}$，随机选取的整数 $r$ 不同，得到的密文就不同，但是解密后可以还原出相同的明文 $m$ ，从而保证了m密文的语义安全。
 
 ## 解密过程：
 
@@ -549,8 +585,6 @@ $$ D(E(m\_{1},r\_{1})^{k}{\bmod  n}^{2})=km\_{1}{\bmod  n}$$
 第一个离散对数体制是Diffie-Hellman于1976年提出的密钥协商协议。1984年，ElGamal提出了离散对数公钥加密方案和离散对数签名方案。以后，人们相机提出了离散对数公钥密码的各种变种。
 下面介绍基本的ElGamal公钥加密方案和密钥签名方案（DSA）。
 
-### 原根
-
 `模除`（又称模数、取模操作、取模运算等，英语： `modulo` 有时也称作 `modulus`）得到的是一个数除以另一个数的余数。
 
 Diffie–Hellman key exchange[[2]](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F%B2-%E8%B5%AB%E7%88%BE%E6%9B%BC%E5%AF%86%E9%91%B0%E4%BA%A4%E6%8F%9B)，迪菲-赫尔曼密钥交换，是一种安全协议。它能够让通信双方在没有对方任何预先信息的前提下通过不安全信道进行密钥交换。它是无认证的密钥交换协议。目的是创建一个可以用于公共信道上安全通信的共享秘密（shared secret）。
@@ -564,6 +598,18 @@ Diffie–Hellman key exchange[[2]](https://zh.wikipedia.org/wiki/%E8%BF%AA%E8%8F
 5. 鲍勃B计算(g^a mod p)^b mod p。
 6. 爱丽丝A和鲍勃B最终得到了相同的值，协商出的群元素g^(ab)作为共享密钥。
 
+
+D-H具体实现分为 *基于离散对数* 和 *基于椭圆曲线离散对数* 两种。 两种方法的密钥安全等级如下，对于同样的安全等级，椭圆曲线密钥长度比离散对数密钥长度要小得多。 
+
+|Security level in bits | Discrete log key bits | Elliptic curve key bits |
+|-----------------------|	--------------------|-------------------------|
+|56 | 512 |112|
+|80 | 1024 |160|
+|112 | 2048 |224|
+|128 | 3072 |256|
+|256 | 15360 |512|
+
+D-H容易遭受  man-in-the-middle，即MITM（中间人）攻击。因为消息没有认证。
 
 ## ElGamal加密算法
 
