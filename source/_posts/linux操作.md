@@ -6,8 +6,9 @@ tags:
 - ssh
 - scp
 - ip
+- zsh
 categories:
-- linux
+- [linux]
 ---
 
 对linux网络操作，文件操作，进程管理拾遗。针对发行版本为Ubuntu 16.04，间或有 Ubuntu 18.04。
@@ -164,8 +165,49 @@ nameserver dns的ip地址,如8.8.8.8
 sudo /etc/init.d/networking restart
 ```
 
+** Ubuntu18.04 **
+
+在18.04上在 */etc/network/interfaces文件* 配置ip地址也是可以用的，`但是要重启才能生效`。通过 `service networking restart` 无效。  
+
+
+18.04上新采用的netplan命令。网卡信息配置在 */etc/netplan/01-network-manager-all.yaml* 文件，需做如下配置: 
+
+    # Let NetworkManager manage all devices on this system
+    network:
+      version: 2
+      # renderer: NetworkManager
+      ethernets:
+              enp4s0:
+                    dhcp4: no
+                    addresses: [192.168.0.123/24]
+                    gateway4: 192.168.0.1
+                    nameservers:
+                            addresses: [8.8.8.8, 8.8.4.4]
+
+然后使用以下命令使配置立即生效。  
+```
+sudo netplan apply
+```
+
+查看IP是否设置成功。  
+
+```
+ip a
+```
+
+这里有几点需要注意： 
+1. 将renderer: NetworkManager注释，否则netplan命令无法生效； 
+2. ip配置信息要按如上格式，使用yaml语法格式，每个配置项使用 **空格缩进表示层级**；  
+3. 对应配置项后跟着 **冒号，之后要接个空格** ，否则netplan命令也会报错。
+
+参考：  
+[Ubuntu 18.04 LTS设置固定ip](https://blog.csdn.net/u010039418/article/details/80934346)
+
+** Ubuntu18.04 DNS**
+
 在**Ubuntu 18.04**中通过 */etc/resolv.conf* 设置DNS后，重启不起作用。这是一个自动生成文件，来自于进程 *systemd-resolved*。  
-> # This file is managed by man:systemd-resolved(8). Do not edit.
+
+> This file is managed by man:systemd-resolved(8). Do not edit.
 
 通过修改配置文件 */etc/systemd/resolved.conf* 可以修改 DNS。  
 
@@ -212,6 +254,13 @@ curl https://github.com/lennylxx/ipv6-hosts/raw/master/hosts -L >> /etc/hosts
 ping6 ipv6.google.com
 ```
 
+若hosts中出现 *^M 字符*，是由于基于 DOS/Windows 的文本文件在每一行末尾有一个 CR（回车）和 LF（换行），而 UNIX 文本只有一个换行,即win每行结尾为\r\n，而linux只有一个\n 。
+那么在VIM中替换掉即可。  
+
+```
+:%s/\r//g
+```
+
 参考： 
 [1] [ubuntu16.04使用ipv6](http://blog.csdn.net/scylhy/article/details/72699166)
 [2] [ubuntu 使用 ipv6 隧道](http://blog.letow.top/2017/11/05/ubuntu-%E5%BC%80%E5%90%AF-ipv6/)
@@ -230,14 +279,25 @@ apt-get install uml-utilities       # UML（User-mode linux）工具
 
 创建网桥，名字是virbr0
 ```
-sudo brctl added virbr0
+sudo brctl addbr virbr0
 sudo ifconfig virbr0 192.168.122.1 net mask 255.255.255.0 up
 ```
 
-创建tap接口，名字为tap0，并添加到网桥
+创建一张虚拟TUN网卡，名字为tap0。  
 ```
-sudo tunctl -t tap0
-sudo ifconfig tap0 0.0.0.0 up
+sudo tunctl -t tap0 -u <username>
+```
+将网卡设置为任何人都有权限使用  
+```
+sudo chmod 0666 /dev/net/tun
+```
+
+为tap0网卡设置一个IP地址，不要与真实的IP地址在同一个网段。  
+```
+sudo ifconfig tap0 <0.0.0.0> up
+```
+添加到网桥。  
+```
 sudo brctl addif virbr0 tap0
 ```
 
@@ -257,6 +317,41 @@ brctl delbr <网桥名>
 brctl delif br0 tap0
 brctl delif br0 eth0
 ```
+
+### netplan 配置网桥
+
+```
+sudo vi /etc/netplan/50-cloud-init.yaml
+```
+
+在里面添加如下内容：
+
+    network:
+      version: 2
+      ethernets:
+        ens33:
+          dhcp4: no
+          dhcp6: no
+
+      bridges:
+        br0:
+          interfaces: [ens33]
+          dhcp4: no
+          addresses: [192.168.0.51/24]
+          gateway4: 192.168.0.1
+          nameservers:
+            addresses: [192.168.0.1]
+
+
+```
+sudo netplan apply
+```
+
+确认网络桥接状态：
+```
+sudo networkctl status -a
+```
+
 
 
 ## scp
@@ -477,11 +572,28 @@ du -sh
 ```
 参数 `-sh` 同上。  
 
-+  查看磁盘空间大小  
++  查看磁盘空间大小和剩余大小  
 
 ```
 df -hl
 ```
+
+得到的结果为：
+
+    Filesystem      Size  Used Avail Use% Mounted on
+    udev            7.8G     0  7.8G   0% /dev
+    tmpfs           1.6G  1.7M  1.6G   1% /run
+    /dev/sda2       164G   34G  123G  22% /
+    tmpfs           7.9G  216K  7.9G   1% /dev/shm
+    tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+    tmpfs           7.9G     0  7.9G   0% /sys/fs/cgroup
+    ...
+
+`/dev/sda2       164G   34G  123G  22% /` 表示： SATA硬盘接口的第一个硬盘（`a`），第二个分区（`2`），容量是`164G`，用了`34G`，可用是`123G`，因此利用率是`22%`， 被挂载到根分区目录上（`/`）。
+
+
+[玩转Linux之硬盘分区格式化挂载与合并](https://o-my-chenjian.com/2017/05/10/Play-Disk-On-Linux/)  
+
 + 查看硬盘的分区  
 
 ```
@@ -547,6 +659,23 @@ diff -urNa dir1 dir2
     　　 a
 
 除了有变动的那些行以外，也是上下文各显示3行。它将两个文件的上下文，合并显示在一起，所以叫做"合并格式"。每一行最前面的标志位，空表示无变动，减号表示第一个文件删除的行，加号表示第二个文件新增的行。
+
++ 仅仅输出不同的文件名
+
+```
+-q   Report only whether the files differ, not the details of the differences.
+-r   When comparing directories, recursively compare any subdirectories found.
+```
+
+```
+diff -qr dir1 dir2
+```
+    
+    Files dir1/different and dir2/different differ
+    Only in dir1: only-1
+    Only in dir2: only-2
+
+[diff to output only the file names](https://stackoverflow.com/a/6217722)
 
 ## patch打补丁
 
@@ -875,3 +1004,72 @@ cat /boot/config-$(uname -r) | grep NOUVEAU
 参考
 
 [linux 下查看机器是cpu是几核的](https://www.cnblogs.com/xd502djj/archive/2011/02/28/1967350.html)
+
+# tools
+
+## shell---zsh
+
+[安装步骤](https://github.com/robbyrussell/oh-my-zsh/wiki/Installing-ZSH)：  
+
+```
+sudo apt install zsh
+```
+
+把默认的Shell改成zsh  
+```
+chsh -s /bin/zsh
+```
+
+logout 再登录。  
+
+安装 zsh 配置工具 [Oh My ZSH](https://github.com/robbyrussell/oh-my-zsh)。 
+
+```
+sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+```
+
+
+可以按照 [Oh My ZSH](https://github.com/robbyrussell/oh-my-zsh/wiki/Themes) 更改zsh的主题。
+
+参考：  
+[Ubuntu 18.04 LTS中安装和美化ZSH Shell](https://novnan.github.io/Linux/install-zsh-shell-ubuntu-18-04/)  
+
+## remove zsh
+
+在删除zsh前，将默认shell恢复成其他shell。
+```
+chsh -s /bin/bash
+```
+
+删除 zsh。
+```
+sudo apt-get --purge remove zsh
+```
+
+[Remove Zsh from Ubuntu 16.04](https://askubuntu.com/a/958124)
+
+
+## BASH SHELL for Windows10
+
+
+从 PowerShell 启动 支持Linux的Windows子系统。  
+1. 以 administrator 启动 Windows PowerShell。  
+
+2. 将以下命令输入PowerShell中以启动Win10中的Bash。  
+
+```
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+```
+    按照提示，重启reboot。  
+
+3. 从 Windows 商店中搜索 linux，在搜索结果中下载不同的发行版本，这里选择 Ubuntu 应用。  
+4. 启动Ubuntu即可，这里默认以 root 用户登录。
+
+
+### 文件系统交互 
+
+Ubuntu默认把磁盘挂载到/mnt目录下，可以直接`cd /mnt/c` 进入C盘，进而操作文件。
+
+
+参考：
+[How to Install Linux Bash Shell on Windows 10](https://itsfoss.com/install-bash-on-windows/)  
