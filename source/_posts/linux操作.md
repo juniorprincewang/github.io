@@ -156,6 +156,8 @@ iface eth0 inet6 static
 2. `eth0`是通过`ifconfig`得出的网卡名称。
 3. 将`eth0`的IP分配方式修改为静态分配(static)后，为其制定IP、网关、子网掩码、DNS等信息。
 
+**注意**：*dns-nameservers* 设置不起作用，我设置了两个dns，不知道为啥。
+
 设置DNS。
 ```
 sudo gedit /etc/resolv.conf
@@ -164,6 +166,20 @@ nameserver dns的ip地址,如8.8.8.8
 #重启服务
 sudo /etc/init.d/networking restart
 ```
+
+**注意** ：上面设置的文件重启后会覆盖，如果要持久的保存，需要修改：*/etc/resolvconf/resolv.conf.d/base* 。
+
+```
+vim /etc/resolvconf/resolv.conf.d/base
+nameserver 172.16.3.4 
+nameserver 172.16.3.3 
+```
+
+使DNS生效  
+```
+sudo /etc/init.d/resolvconf restart 
+```
+
 
 ** Ubuntu18.04 **
 
