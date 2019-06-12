@@ -3,6 +3,8 @@ title: Hexo的搭建
 date: 2017-08-07 20:44:39
 tags:
 - hexo
+categories:
+- [hexo]
 ---
 
 本篇博客记录了如何简单搭建Hexo，并对搭建好的Hexo主题博客进行设置，包括主题，布局，风格等等。
