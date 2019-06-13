@@ -5,7 +5,7 @@ tags:
 - find
 - grep
 categories:
-- linux
+- [linux]
 ---
 
 `Linux` 下文件查找主要使用 `find` 命令，而根据文件内容查找主要使用 `grep` 命令。

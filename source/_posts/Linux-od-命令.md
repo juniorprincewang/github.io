@@ -4,7 +4,7 @@ date: 2018-11-20 10:08:17
 tags:
 - od
 categories:
-- linux
+- [linux]
 ---
 linux中的`od`命令用于将文件内容以八进制或其他进制的编码方式显示。
 <!-- more -->

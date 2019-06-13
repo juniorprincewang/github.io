@@ -5,7 +5,7 @@ tags:
 - xxd
 - vim
 categories:
-- linux
+- [linux]
 ---
 Linux 平台下想要查看二进制文件，可以通过 `xxd`、 `hexdump` 或者通过 `VIM` 与 `xxd` 结合使用。
 

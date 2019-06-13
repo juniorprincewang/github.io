@@ -4,7 +4,7 @@ date: 2018-12-11 10:04:56
 tags:
 - debugfs
 categories:
-- linux
+- [linux]
 ---
 `debugfs` 虚拟文件系统是一种内核空间与用户空间的接口，基于libfs库实现，专用于开发人员调试，便于向用户空间导出内核空间数据。
 <!-- more -->

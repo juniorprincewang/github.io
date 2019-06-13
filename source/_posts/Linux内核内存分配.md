@@ -4,7 +4,7 @@ date: 2018-11-24 11:13:48
 tags:
 - kmalloc
 categories:
-- linux
+- [linux]
 ---
 本篇博客整理Linux内核的内存分配相关知识，包括 `kmalloc` ...(补充)
 <!-- more -->

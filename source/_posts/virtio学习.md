@@ -62,12 +62,84 @@ Linux2.6.24及其以上版本的内核都支持virtio。由于virtio的后端处
 
 ![virtio基本数据结构层次](../virtio学习/structure.gif)
 
+```
+/**
+ * virtio_driver - operations for a virtio I/O driver
+ * @driver: underlying device driver (populate name and owner).
+ * @id_table: the ids serviced by this driver.
+ * @feature_table: an array of feature numbers supported by this driver.
+ * @feature_table_size: number of entries in the feature table array.
+ * @feature_table_legacy: same as feature_table but when working in legacy mode.
+ * @feature_table_size_legacy: number of entries in feature table legacy array.
+ * @probe: the function to call when a device is found.  Returns 0 or -errno.
+ * @scan: optional function to call after successful probe; intended
+ *    for virtio-scsi to invoke a scan.
+ * @remove: the function to call when a device is removed.
+ * @config_changed: optional function to call when the device configuration
+ *    changes; may be called in interrupt context.
+ * @freeze: optional function to call during suspend/hibernation.
+ * @restore: optional function to call on resume.
+ */
+struct virtio_driver {
+    struct device_driver driver;
+    const struct virtio_device_id *id_table;
+    const unsigned int *feature_table;
+    unsigned int feature_table_size;
+    const unsigned int *feature_table_legacy;
+    unsigned int feature_table_size_legacy;
+    int (*validate)(struct virtio_device *dev);
+    int (*probe)(struct virtio_device *dev);
+    void (*scan)(struct virtio_device *dev);
+    void (*remove)(struct virtio_device *dev);
+    void (*config_changed)(struct virtio_device *dev);
+#ifdef CONFIG_PM
+    int (*freeze)(struct virtio_device *dev);
+    int (*restore)(struct virtio_device *dev);
+#endif
+};
+```
 
-该流程以创建 `virtio_driver` 并通过 `register_virtio_driver` 进行注册开始。`virtio_driver` 结构定义上层设备驱动程序(struct device_driver driver)、驱动程序支持的设备 ID 的列表（struct virtio_device_id \*id_table）、一个特性表单（取决于设备类型）（feature_table）和一个回调函数列表。当 hypervisor 识别到与设备列表中的设备 ID 相匹配的新设备时，将调用 `probe` 函数（由 `virtio_driver` 对象提供）来传入 `virtio_device` 对象。将这个对象和设备的管理数据缓存起来（以独立于驱动程序的方式缓存）。可能要调用 `virtio_config_ops`函数来获取或设置特定于设备的选项，例如，为 `virtio_blk` 设备获取磁盘的 `Read/Write`状态或设置块设备的块大小，具体情况取决于启动器的类型。
+from <https://elixir.bootlin.com/linux/v4.15.4/source/include/linux/virtio.h> 。  
+该流程以创建 `virtio_driver` 并通过 `register_virtio_driver` 进行注册开始。  
+`virtio_driver` 结构定义上层设备驱动程序(struct device_driver driver)、驱动程序支持的设备 ID 的列表（struct virtio_device_id \*id_table）、一个特性表单（取决于设备类型）（feature_table）和一个回调函数列表。  
+当 hypervisor 识别到与设备列表中的设备 ID 相匹配的新设备时，将调用 `probe` 函数（由 `virtio_driver` 对象提供）来传入 `virtio_device` 对象。将这个对象和设备的管理数据缓存起来（以独立于驱动程序的方式缓存）。可能要调用 `virtio_config_ops`函数来获取或设置特定于设备的选项，例如，为 `virtio_blk` 设备获取磁盘的 `Read/Write`状态或设置块设备的块大小，具体情况取决于启动器的类型。
 
-注意，`virtio_device` 不包含到 `virtqueue` 的引用（但 `virtqueue` 确实引用了 `virtio_device`）。要识别与该 `virtio_device` 相关联的 `virtqueue`，需要结合使用 `virtio_config_ops` 对象和 `find_vq` 函数。该对象返回与这个 `virtio_device` 实例相关联的虚拟队列。`find_vq` 函数还允许为 `virtqueue` 指定一个回调函数。
+```
+/**
+ * virtio_device - representation of a device using virtio
+ * @index: unique position on the virtio bus
+ * @failed: saved value for VIRTIO_CONFIG_S_FAILED bit (for restore)
+ * @config_enabled: configuration change reporting enabled
+ * @config_change_pending: configuration change reported while disabled
+ * @config_lock: protects configuration change reporting
+ * @dev: underlying device.
+ * @id: the device type identification (used to match it with a driver).
+ * @config: the configuration ops for this device.
+ * @vringh_config: configuration ops for host vrings.
+ * @vqs: the list of virtqueues for this device.
+ * @features: the features supported by both driver and device.
+ * @priv: private pointer for the driver's use.
+ */
+struct virtio_device {
+    int index;
+    bool failed;
+    bool config_enabled;
+    bool config_change_pending;
+    spinlock_t config_lock;
+    struct device dev;
+    struct virtio_device_id id;
+    const struct virtio_config_ops *config;
+    const struct vringh_config_ops *vringh_config;
+    struct list_head vqs;
+    u64 features;
+    void *priv;
+};
 
-`virtio_driver` 有自己的PCI总线 `virtio_bus`。`probe`函数用于PCI总线发现设备。比如启动 `virtio_blk` 时，当通过`qemu`启动`guest`的时候如果指定`-device virtio-blk-device`，就会调用`virtio_blk`的 `virtblk_probe` 函数。
+```
+
+注意，`virtio_device` 不包含到 `virtqueue` 的引用（但 `virtqueue` 确实引用了 `virtio_device`）。要识别与该 `virtio_device` 相关联的 `virtqueue`，需要结合使用 `virtio_config_ops` 对象和 `find_vq` 函数。该对象返回与这个 `virtio_device` 实例相关联的虚拟队列。`find_vq` 函数还允许为 `virtqueue` 指定一个回调函数。  
+
+`virtio_driver` 有自己的PCI总线 `virtio_bus`。 `probe`函数用于PCI总线发现设备。比如启动 `virtio_blk` 时，当通过`qemu`启动`guest`的时候如果指定`-device virtio-blk-device`，就会调用`virtio_blk`的 `virtblk_probe` 函数。
 
 ### virtqueue
 
@@ -622,6 +694,10 @@ QEMU 监控器是终端窗口，可以执行一些命令来查看当前启动的
 可以通过 `-monitor stdio` 参数启动。
 或者在QEMU窗口中使用快捷键 `Ctrl+Alt+2`， 使用 `Ctrl+Alt+1` 切换回普通的客户机。
 
+### VM Screen Resolution
+
+在启动项中添加 `-vga virtio`， 提供了很高的resolution，然后 `Ctrl + Alt + F` 或者在启动项中添加 `-full-screen` 即可。  
+[How to increase the visualized screen resolution on QEMU / KVM?](https://superuser.com/questions/132322/how-to-increase-the-visualized-screen-resolution-on-qemu-kvm)  
 
 
 # 参考

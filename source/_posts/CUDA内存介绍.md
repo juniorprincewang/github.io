@@ -8,6 +8,8 @@ categories:
 - [GPU,CUDA]
 ---
 
+CUDA内存使用总结。  
+<!-- more -->
 
 
 # 片上内存

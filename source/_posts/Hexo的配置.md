@@ -116,6 +116,9 @@ hexo d -g
 </div>
 ```
 
+
+[更多炫酷的主题个性化](http://shenzekun.cn/hexo%E7%9A%84next%E4%B8%BB%E9%A2%98%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B.html)  
+
 ## `hexo s`命令失效
 
 我将hexo整个文件夹上传到github服务器，在另一台电脑下载下来，运行`hexo s`失效，从显示结果来看，不存在此命令。

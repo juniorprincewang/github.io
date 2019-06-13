@@ -4,7 +4,7 @@ date: 2018-11-21 18:52:27
 tags:
 - kthread
 categories:
-- linux
+- [linux]
 ---
 
 介绍Linux内核线程的编程。

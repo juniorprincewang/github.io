@@ -5,7 +5,7 @@ tags:
 - container_of
 - offsetof
 categories:
-- linux
+- [linux]
 ---
 `offsetof` 宏是用来判断结构体中成员的偏移位置，`container_of`宏用来根据成员的地址来获取结构体的地址。
 <!-- more -->
