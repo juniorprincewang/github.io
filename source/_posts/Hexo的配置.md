@@ -119,6 +119,24 @@ hexo d -g
 
 [更多炫酷的主题个性化](http://shenzekun.cn/hexo%E7%9A%84next%E4%B8%BB%E9%A2%98%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B.html)  
 
+## 文章按照更新时间排序
+
+找到主配置文件 *\_config.yml*，然后修改或者添加 `index_generator` 的 `order_by` 为 `-updated` 即可:
+
+```
+index_generator:
+  path: ''
+  per_page: 10
+  order_by: -updated
+```
+
+重新生成页面：  
+```
+hexo g
+```
+
+[Hexo 文章按照更新时间排序](http://aiellochan.com/2018/02/13/hexo/Hexo-%E6%96%87%E7%AB%A0%E6%8C%89%E7%85%A7%E6%9B%B4%E6%96%B0%E6%97%B6%E9%97%B4%E6%8E%92%E5%BA%8F/)  
+
 ## `hexo s`命令失效
 
 我将hexo整个文件夹上传到github服务器，在另一台电脑下载下来，运行`hexo s`失效，从显示结果来看，不存在此命令。
@@ -134,8 +152,58 @@ npm install
 
 这种情况的出现是由于主题配置出错。查看`themes`文件夹下是否有相关文件夹并且文件夹下是否有文件；`_config.yml`内`theme`是否和主题名称对应。
 
-# 参考
-[1] [Hexo｜快速搭建自己（Github）博客](http://www.jianshu.com/p/808554f12929)
-[2] [给Hexo博客添加访问统计](http://www.jianshu.com/p/8a8f880f40c0)
-[3] [搭建hexo部署到github图文教程 亲测可用超详细](https://m.paopaoche.net/new/85988)
-[4] [用Hexo 3 搭建github blog](http://forsweet.github.io/hexo/%E7%94%A8Hexo%E6%90%AD%E5%BB%BAGithub%E5%8D%9A%E5%AE%A2/)
+
+# 操作
+
+## 发布新文章 [5](https://lanjingling.github.io/2015/09/24/use-of-hexo-2/)
+
+执行 new 命令， 生成指定名称的文章至 *hexo\source_posts\postName.md* 。  
+
+```
+hexo new [layout] "postName" 
+```
+
+其中layout是可选参数，默认值为post。有哪些layout呢，请到scaffolds目录下查看，这些文件名称就是layout名称。  
+当然你可以添加自己的layout，方法就是添加一个文件即可，同时你也可以编辑现有的layout，比如post的layout默认是 *hexo\scaffolds\post.md*。  
+
+
+
+新文件的开头是属性，采用统一的 `yaml` 格式，用三条短横线分隔。
+可以直接修改 *title*（标题名字）、 *date*（时间）等。 *description* 是文章概要，该项为空时hexo默认在首页会显示全部文章内容，如果文章比较长就会显的内容很乱；写让该项后hexo会显示摘要和“阅读全文”连接。下面是文章正文。  
+
+
+    title: postName #文章页面上的显示名称，可以任意修改，不会出现在URL中
+    date: 2013-12-02 15:30:16 #文章生成时间，一般不改，当然也可以任意修改
+    categories: #文章分类目录，可以为空，注意:后面有个空格， 用格式
+    - [tag1,tag2]
+    tags: #文章标签，可空，多标签请用格式[tag1,tag2,tag3]，注意:后面有个空格
+    - tag1
+    - tag2
+    description: #概要信息
+    ---
+    正文。
+
+## 草稿
+
+草稿默认不会显示在页面上，链接也搜索不到。会在 *source/_drafts* 目录下生成一个 *new-draft.md* 文件。  
+```
+hexo new draft "new draft"
+```
+
+如果预览草稿，可
+1. 更改配置文件（*_config.yml*）`render_drafts: true`  
+2. 或者如下方式启动server：`hexo server --drafts`  
+
+下面这条命令可以把草稿变成文章，或者页面：
+```sh
+hexo publish [layout] <filename>
+```
+
+
+
+# 参考  
+[1] [Hexo｜快速搭建自己（Github）博客](http://www.jianshu.com/p/808554f12929)  
+[2] [给Hexo博客添加访问统计](http://www.jianshu.com/p/8a8f880f40c0)  
+[3] [搭建hexo部署到github图文教程 亲测可用超详细](https://m.paopaoche.net/new/85988)  
+[4] [用Hexo 3 搭建github blog](http://forsweet.github.io/hexo/%E7%94%A8Hexo%E6%90%AD%E5%BB%BAGithub%E5%8D%9A%E5%AE%A2/)  
+[5] [hexo使用心得（二）](https://lanjingling.github.io/2015/09/24/use-of-hexo-2/)
