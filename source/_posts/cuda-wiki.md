@@ -3,7 +3,6 @@ title: cuda wiki
 date: 2019-07-31 19:16:45
 tags:
 - CUDA
-- Memory
 categories:
 - [GPU,CUDA]
 - [wiki]
@@ -17,12 +16,23 @@ categories:
 
 # CUDA Programming
 
-## structure
+## modular arithmetic
+
+formule like *(a*b - c*d) mod m or (a*b + c) mod m *.  
+use double-precision arithmetic to avoid expensive div and mod operations.  
+
++ [modular arithmetic on the gpu](https://stackoverflow.com/questions/12252826/modular-arithmetic-on-the-gpu)  
++ [Using the modulo (%) operator in CUDA 65536](https://www.beechwood.eu/using-the-modulo-operator-in-cuda-65536/)  
+
+## CUDA structure
 
 + [Why does CUDA CUdeviceptr use unsigned int instead of void?](https://stackoverflow.com/a/18141906)  
 > CUdeviceptr is a handle to an allocation in device memory and not an address in device memory.  
 
+## warp
 
++ [How do CUDA blocks/warps/threads map onto CUDA cores?](https://stackoverflow.com/questions/10460742/how-do-cuda-blocks-warps-threads-map-onto-cuda-cores)  
++ 
 
 ## MPS
 
@@ -99,3 +109,25 @@ static __device__ __inline__ uint32_t __mysmid()
 
 + [CUDA Code Snippets](https://github.com/yszheda/wiki/wiki/CUDA-Code-Snippets)
 + [CUDA Samples](https://github.com/huoyao/cudasdk)
+
+# review
+
++ [Interview questions on CUDA Programming?](https://stackoverflow.com/questions/1958320/interview-questions-on-cuda-programming)  
+    + How many different kind of memories are in a GPU ?
+    + What means coalesced / uncoalesced?
+    + Can you implement a matrix transpose kernel?
+    + What is a warp ?
+    + How many warps can run simultaneously inside a multiprocessor?
+    + What is the difference between a block and a thread ?
+    + Can thread communicate between them? and blocks ?
+    + Can you describe how works a cache?
+    + What is the difference between shared memory and registers?
+    + Which algorithms perform better on the gpu? data bound or cpu bound?
+    + Which steps will you perform to port of an application to cuda ?
+    + What is a barrier ?
+    + What is a Stream ?
+    + Can you describe what means occupancy of a kernel?
+    + What means structure of array vs array of structures?
+
++ [Nvidia Interview | Set 1](https://www.geeksforgeeks.org/nvidia-interview-set-1/)  
++ 
