@@ -14,6 +14,12 @@ categories:
 
 主要参考 <https://github.com/yszheda/wiki/wiki/CUDA> 的形式，以链接的形式记录，如果有需要便去链接的网页搜索。  
 
+# CUDA Reading List
+
+跟着 <https://github.com/yszheda/wiki/wiki/CUDA-Reading-List> 学就完了。  
+
++ <http://docs.nvidia.com/cuda/cuda-c-best-practices-guide>
+
 # CUDA Programming
 
 ## modular arithmetic
@@ -24,10 +30,26 @@ use double-precision arithmetic to avoid expensive div and mod operations.
 + [modular arithmetic on the gpu](https://stackoverflow.com/questions/12252826/modular-arithmetic-on-the-gpu)  
 + [Using the modulo (%) operator in CUDA 65536](https://www.beechwood.eu/using-the-modulo-operator-in-cuda-65536/)  
 
+这里总结了单双精度浮点数的区别：
++ [What's the difference between a single precision and double precision floating point operation?](https://stackoverflow.com/a/801146)  
++ 
+
 ## CUDA structure
 
++ [Why does CUDA CUdeviceptr use unsigned int instead of void?](http://www.cudahandbook.com/2013/08/why-does-cuda-cudeviceptr-use-unsigned-int-instead-of-void/)  
 + [Why does CUDA CUdeviceptr use unsigned int instead of void?](https://stackoverflow.com/a/18141906)  
 > CUdeviceptr is a handle to an allocation in device memory and not an address in device memory.  
+
+### volatile
+
+编译器会自动优化对global和shared memory的读写，比如将global内存变量缓存到register或者 L1 Cache。  
+volatile关键字阻止编译器优化，编译器会认为被volatile声明过的变量可能随时会被其他线程访问或修改。  
+
+
++ [When to use volatile with shared CUDA Memory](https://stackoverflow.com/a/15331158)
++ [一个volatile引发的CUDA程序的血案](https://baiweiblog.wordpress.com/2017/12/06/cuda-reduce-unroll-the-last-warp%E7%9A%84%E4%B8%80%E4%B8%AA%E6%98%93%E7%8A%AF%E7%9A%84%E9%94%99%E8%AF%AF/)
++ [Warp Synchrony and The First Law of CUDA Development](http://www.cudahandbook.com/2017/05/warp-synchrony-and-the-first-law-of-cuda-development/)
+
 
 ## warp
 
@@ -97,6 +119,14 @@ static __device__ __inline__ uint32_t __mysmid()
 + [How can I find out which thread is getting executed on which core of the GPU?](https://stackoverflow.com/questions/28881491/how-can-i-find-out-which-thread-is-getting-executed-on-which-core-of-the-gpu)
 + [which SM a thread is running?](https://devtalk.nvidia.com/default/topic/481465/cuda-programming-and-performance/any-way-to-know-on-which-sm-a-thread-is-running-/2)
 + [sm-id and warp-id](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#sm-id-and-warp-id)
+
+## Dynamic Parallelism
+
+dynamic kernel creation
+
++ [find CUDA DYNAMIC PARALLELISM in CUDA C Programming Guide](https://docs.nvidia.com/cuda/pdf/CUDA_C_Programming_Guide.pdf)
++ <https://www.cnblogs.com/1024incn/p/4557156.html>
++ [CUDA Dynamic Parallelism, bad performance](https://stackoverflow.com/questions/45201062/cuda-dynamic-parallelism-bad-performance)
 
 # PTX
 

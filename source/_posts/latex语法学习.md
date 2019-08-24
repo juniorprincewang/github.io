@@ -343,3 +343,58 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 之后使用 bibtex 编译   
 之后在使用 pdflatex 编译两次  
 
+
+# 简历 CV Resume
+
+简历模板可以从[overleaf Gallery — Résumé / CV](https://www.overleaf.com/gallery/tagged/cv)获取，但是很少有支持中文的。  
+
+## 中文的支持
+
+在overleaf上找到的latex cv_resume不支持中文，又找了几个支持中文的resume：
++ [适合中文的简历模板收集](https://github.com/dyweb/awesome-resume-for-chinese)
+有基于 ModernCV 模板的，进行了中文字体支持和优化，使用 xelatex 编译。即这个 [cv_resume](https://github.com/geekplux/cv_resume)和[demo of moderncv](https://gist.github.com/juniorprincewang/7a7e0c9bbc4884fc2eeafe041dd02946)
++ [moderncv 的笔记（支持中文）](https://www.xiangsun.org/tex/notes-on-moderncv)
+
+主要的做发是：  
+
+添加xeCJK中文包，使用 xelatex 命令编译源文件。  
+```
+% 该文件使用 xelatex 命令可以编译通过
+\documentclass[12pt, a4paper]{article}
+\usepackage{fontspec}
+\usepackage[slantfont, boldfont]{xeCJK}
+
+% 设置英文字体
+\setmainfont{Microsoft YaHei}
+\setsansfont{Comic Sans MS}
+\setmonofont{Courier New}
+
+% 设置中文字体
+\setCJKmainfont{Microsoft YaHei}
+\setCJKmonofont{Source Code Pro}
+\setCJKsansfont{YouYuan}
+
+% 中文断行设置
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+```
+
+- \setCJKmainfont{} 命令用来设置正文的字体，同时也是 \textrm{} 命令使用的字体。
+- \setCJKmonofont{} 用来设置 \texttt{} 命令中的中文使用的字体 。
+- \setCJKsansfont{} 用来设置 \textsf{} 命令中的中文使用的字体。
+
+可是仍然有几个偏僻字无法成功显示，这是由于 xeCJK 宏包提供了有限的中文字符。  
+使用ctex 宏包或者ctexart 文档类。  
+```
+\documentclass[UTF8]{ctexart}
+```
+使用 ctexart documentclass 时候，最好加上 \usepackage[T1]{fontenc}。  
+
+```
+\documentclass{article}
+\usepackage[UTF8]{ctex}
+```
+
+可以使用 latex，pdflatex，xelatex 或者 lualatex 命令来编译 生成 PDF 文件，CTeX 开发者推荐使用 xelatex 命令编译源文件。
+
++ [如何在 LaTeX 中使用中文](https://jdhao.github.io/2018/03/29/latex-chinese.zh/)

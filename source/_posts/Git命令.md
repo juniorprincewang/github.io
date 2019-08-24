@@ -85,6 +85,12 @@ git checkout -b [name_of_your_new_branch]
 git push origin [name_of_your_new_branch]
 ```
 
+或者首次使用 `-u` 选项，之后仅仅使用`git push`即可。
+```
+git push -u origin <branch>
+```
++ [How do I push a new local branch to a remote Git repository and track it too?]()
+
 + Delete a branch on your local filesystem  
 ```
 git branch -d [name_of_your_new_branch]

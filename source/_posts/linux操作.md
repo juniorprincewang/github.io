@@ -1081,6 +1081,29 @@ sudo apt-get --purge remove zsh
 
 [Remove Zsh from Ubuntu 16.04](https://askubuntu.com/a/958124)
 
+## switch zsh with bash
+
+切换到bash：
+
+```
+exec bash
+```
+
+切换到zsh：
+```
+exec zsh
+```
+
++ [Switching from zsh to bash on OSX, and back again?](https://stackoverflow.com/a/10341338)  
+
+## disable zsh
+
+禁用zsh：
+
+运行chsh选择bash，或者运行 `chsh -s /bin/bash` 。
+
+
++ [How do you “disable” oh-my-zsh (and zsh) without uninstalling it?](https://unix.stackexchange.com/a/137187)
 
 ## BASH SHELL for Windows10
 
