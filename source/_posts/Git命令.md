@@ -160,6 +160,21 @@ git clean -fdx
 
 [git undo all uncommitted or unsaved changes](https://stackoverflow.com/a/14075772)
 
+## ignoring changes to a single already versioned file
+
+本次提交时忽略某一文件。
+
+```
+git add -u
+git reset -- main/dontcheckmein.txt
+```
+
+[Add all files to a commit except a single file](https://stackoverflow.com/a/4475506)
+
+## completely ignore a specific single file preventing it from being created at repository
+
+完全忽略某一文件：
+在仓库根目录创建 *.gitignore* 文件，并将要忽略的文件相对路径写入。
 
 # github操作
 
