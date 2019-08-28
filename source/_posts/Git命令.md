@@ -176,6 +176,31 @@ git reset -- main/dontcheckmein.txt
 完全忽略某一文件：
 在仓库根目录创建 *.gitignore* 文件，并将要忽略的文件相对路径写入。
 
+## gitignore without binary files
+
++ [ignore binary file in git](https://stackoverflow.com/a/7834886)
+
+```
+find . -executable -type f >>.gitignore
+```
+
+## gitignore does not work
+
++ [Why doesn't Git ignore my specified file?](https://stackoverflow.com/a/3833675)  
++ [Gitignore not working](https://stackoverflow.com/a/25436481)  
+
+*.gitignore* 忽略的是没有加入到仓库中的文件，如果已经添加到仓库，需要先删除。  
+这条命令会将文件从仓库中删除，但不会物理删除。然后提交更改即可。  
+```
+git rm --cached files
+```
+
+或者简单粗暴全部删除再提交。  
+```
+git rm -rf --cached .
+git add .
+```
+
 # github操作
 
 为了方便管理repository，免去每次push时候输入账户名和密码，接下来我们需要生成SSH公私钥对，并将公钥上传到 project->Settings->Deploy keys->Add deploy key。

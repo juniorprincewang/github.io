@@ -56,6 +56,20 @@ volatile关键字阻止编译器优化，编译器会认为被volatile声明过�
 + [How do CUDA blocks/warps/threads map onto CUDA cores?](https://stackoverflow.com/questions/10460742/how-do-cuda-blocks-warps-threads-map-onto-cuda-cores)  
 + 
 
+## CUDA runtime API
+
+### cudaMemcpyAsync
+
++ [Effect of using page-able memory for asynchronous memory copy?](https://stackoverflow.com/a/14094079)  
+
+`cudaMemcpyAsync` 是 `cudaMemcpy` 的异步版本。若满足以下两个条件：
+    - 使用non-default stream
+    - host memory是pinned allocation。  
+GPU会分配一个free DMA copy engine，效果就是拷贝过程可以和其他GPU操作同步，比如kernel执行或者另一个拷贝（假如GPU有多个DMA copy engine的话）。  
+如果两个条件不能同时满足的话，GPU上的操作和 `cudaMemcpy` 是一致的，只不过它不会阻塞host。  
+
+也就是说， `cudaMemcpyAsync` 不一定使用创建的流和锁页内存。  
+
 ## MPS
 
 ### MPS介绍

@@ -168,6 +168,11 @@ categories:
 ```
 
 # 查看文件格式  
+
+> /bin/sh^M: bad interpreter: No such file or directory
+
+这是不同系统编码格式引起的：在windows系统中编辑的.sh文件可能有不可见字符，所以在Linux系统下执行会报以上异常信息。  
+
 ```
 :set fileformat?
 ```
