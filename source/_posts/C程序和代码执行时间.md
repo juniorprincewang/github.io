@@ -5,7 +5,7 @@ tags:
     - time
     - c
 categories:
-    - c
+    - [c]
 ---
 
 记录执行c代码和c程序的时间，benchmark执行时间。
@@ -82,6 +82,37 @@ avg_time 5 sleep 1
     real 1.000000
     user 0.000000
     sys 0.000000
+
+# rdtsc  
+
+统计消耗的CPU cycle。  
+
++ [How to get the CPU cycle count in x86_64 from C++?](https://stackoverflow.com/a/13772771)  
+
+GCC 已经有`__rdtsc()` 原语来读取时间戳计数器。  
+
+```c
+#include <stdint.h>
+
+//  Windows
+#ifdef _WIN32
+
+#include <intrin.h>
+uint64_t rdtsc(){
+    return __rdtsc();
+}
+
+//  Linux/GCC
+#else
+
+uint64_t rdtsc(){
+    unsigned int lo,hi;
+    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((uint64_t)hi << 32) | lo;
+}
+
+#endif
+```
 
 # code snippet
 

@@ -60,6 +60,11 @@ git pull --rebase origin master
 git clone --depth 1 git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
 ```
 
++ [Download a specific tag with Git](https://stackoverflow.com/a/31666461)  
+下载指定分支或者tag：  
+```
+git clone -b 'v2.0' --single-branch --depth 1 https://github.com/git/git.git
+```
 
 # branch
 
@@ -127,6 +132,36 @@ git checkout tags/<tag_name>
 ```
 
 [Download a specific tag with Git](https://stackoverflow.com/a/792027)
+
+# 版本管理
+
++ [5.2 代码回滚：Reset、Checkout、Revert 的选择](https://github.com/geeeeeeeeek/git-recipes/wiki/5.2-%E4%BB%A3%E7%A0%81%E5%9B%9E%E6%BB%9A%EF%BC%9AReset%E3%80%81Checkout%E3%80%81Revert-%E7%9A%84%E9%80%89%E6%8B%A9)  
+
+## git reset
+
+版本回滚，向前回滚两个版本，可以用 *HEAD~2*，也可以使用7位commit id号。  
+```
+git reset HEAD~2
+git reset 1234567
+```
+
+末端的两个提交现在变成了悬挂提交。也就是说，下次 Git 执行垃圾回收的时候，这两个提交会被删除。  
+当需要跳转回时，查看消失的两个commit可以使用`git reflog`命令。  
+
+```
+git reflog
+```
+
+
+## Revert
+
+顾名思义，版本还原，即撤销一个提交的同时会创建一个新的提交。  
+还原倒数第二个commit。  
+```
+git revert HEAD~2
+```
+
+`revert` 和 `reset` 区别是`revert`会改变提交历史，而`reset`不会。  
 
 # undo all changes
 
@@ -201,6 +236,24 @@ git rm -rf --cached .
 git add .
 ```
 
+## git checkout error
+
+git切换分支时出错：
+
+> error: The following untracked working tree files would be overwritten by checkout
+
+这是由于一些untracked working tree files引起的问题。解决方法：  
+```
+git clean -d -fx
+```
+
+`git clean` 参数:  
++ `-n` 显示将要删除的文件和目录；
++ `-x` 删除忽略文件已经对git来说不识别的文件
++ `-d` 删除未被添加到git的路径中的文件
++ `-f` 强制运行
+
+
 # github操作
 
 为了方便管理repository，免去每次push时候输入账户名和密码，接下来我们需要生成SSH公私钥对，并将公钥上传到 project->Settings->Deploy keys->Add deploy key。
@@ -253,3 +306,29 @@ ssh-add -l
 查看*.git/config*文件查看传输协议, 如果是https模式改为ssh模式即可。  
 
 [Github Deploy Key 操作如何避免输密码](https://www.jianshu.com/p/8d0fae451745)  
+
+## github如何向开源项目提交pr
+
+1. `fork` 到自己的仓库  
+2. git clone 到本地  
+3. 上游建立连接  
+`git remote add upstream 开源项目地址`
+4. 创建开发分支 (非必须)  
+`git checkout -b dev`
+5. 修改提交代码  
+```
+git status 
+git add . 
+git commit -m "message"
+git push origin branch
+```
+6. 同步代码三部曲  
+```
+git fetch upstream 
+git rebase upstream/master 
+git push origin master
+```
+7. 提交pr  
+去自己github仓库对应fork的项目下new pull request
+
++ [github如何向开源项目提交pr ](https://github.com/gnipbao/iblog/issues/19)  

@@ -200,22 +200,22 @@ sudo apt-get install kvm qemu-kvm libvirt-bin virtinst bridge-utils
 
 它们的作用分别为：
 
-    kvm: KVM的内核，通常linux系统自带
-    qemu-kvm: KVM的设备模拟器，实际上kvm只是负责加速，qemu才是虚拟机管理器
-    libvirt-bin: libvirt库，虚拟机命令行管理工具，包含很多实用工具，如后面需要大量使用的virsh。（安装之后会生成一个名为virbr0的网桥）
-    virtinst: 虚拟机创建（virt-install）和克隆工具（vrit-clone）等
-    birdge-utils: 用于桥接网卡的工具，如命令brctl）
-        如果有图形化桌面，推荐安装virt-manager，这个工具可以非常方便地图形化管理虚拟机，就像常见的virtualbox/vmware界面那样，可以通过点点鼠标来完成虚拟机的管理。
++ kvm: KVM的内核，通常linux系统自带
++ qemu-kvm: KVM的设备模拟器，实际上kvm只是负责加速，qemu才是虚拟机管理器 
++ libvirt-bin: libvirt库，虚拟机命令行管理工具，包含很多实用工具，如后面需要大量使用的virsh。（安装之后会生成一个名为virbr0的网桥） 
++ virtinst: 虚拟机创建（virt-install）和克隆工具（vrit-clone）等 
++ birdge-utils: 用于桥接网卡的工具，如命令brctl），如果有图形化桌面，推荐安装virt-manager，这个工具可以非常方便地图形化管理虚拟机，就像常见的virtualbox/vmware界面那样，可以通过点点鼠标来完成虚拟机的管理。
 
 KVM管理工具的一些注解及一些实用工具
 
-    libvirt：操作和管理KVM虚机的虚拟化API，使用C语言编写，可以由Python,Ruby, Perl, PHP, Java等语言调用。可以操作包括KVM，vmware，XEN，Hyper-v, LXC，virtualbox等 Hypervisor。
-    virsh：基于libvirt的命令行工具，后面需要大量使用。
-    virt-v2v：虚机格式迁移工具，该工具与virt-sysprep都包含在包libguestfs-tools中，后面布署中会用到
-    virt-install：创建KVM虚机的命令行工具
-    virt-viewer：连接到虚拟机屏幕的工具，需要主机有桌面环境，该工具需要单独安装sudo apt-get install virt-viewer
-    virt-clone：虚机克隆工具
-    virt-top：类似于linux系统下的top命令，可以显示所有虚拟机CPU、内存等使用情况，该工具需要单独安装sudo apt-get install virt-top
++ libvirt：操作和管理KVM虚机的虚拟化API，使用C语言编写，可以由Python,Ruby, Perl, PHP, Java等语言调用。  
+  可以操作包括KVM，vmware，XEN，Hyper-v, LXC，virtualbox等 Hypervisor。
++ virsh：基于libvirt的命令行工具，后面需要大量使用。  
++ virt-v2v：虚机格式迁移工具，该工具与virt-sysprep都包含在包libguestfs-tools中，后面布署中会用到 
++ virt-install：创建KVM虚机的命令行工具 
++ virt-viewer：连接到虚拟机屏幕的工具，需要主机有桌面环境，该工具需要单独安装`sudo apt-get install virt-viewer` 
++ virt-clone：虚机克隆工具 
++ virt-top：类似于linux系统下的top命令，可以显示所有虚拟机CPU、内存等使用情况，该工具需要单独安装`sudo apt-get install virt-top`
 
 ### 参考
 [1] [Ubuntu Server/Debian下的KVM虚拟机创建及管理详解](http://notes.maxwi.com/2016/11/29/kvm-create-and-manage)

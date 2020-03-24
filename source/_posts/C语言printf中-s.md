@@ -2,10 +2,9 @@
 title: C语言printf中%.*s
 date: 2018-11-21 15:05:55
 tags:
-- printf
+    - printf
 categories:
-- linux
-- c
+    - [c]
 ---
 
 `printf` 的格式化参数`printf("%.*s", len, buffer)`。

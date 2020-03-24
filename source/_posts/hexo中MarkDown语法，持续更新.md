@@ -107,14 +107,20 @@ categories:
 
 #### hexo的文章资源文件夹[3]
 
+
+
 通过将 config.yml 文件中的 post_asset_folder 选项设为 true 来打开。
 ```
 _config.yml
 post_asset_folder: true
 ```
-当资源文件管理功能打开后，Hexo将会在你每一次通过 `hexo new [layout] <title> `命令创建新文章时自动创建一个文件夹。这个资源文件夹将会有与这个 markdown 文件一样的名字。
+当资源文件管理功能打开后，Hexo将会在你每一次通过 `hexo new [layout] <title> `命令创建新文章时自动创建一个文件夹。这个资源文件夹将会有与这个 markdown 文件一样的名字。  
+**引入图片相对路径**
+
 将所有与你的文章有关的资源放在这个关联文件夹中之后，你可以通过相对路径来引用它们。
-目录名和文章名一致，只要使用 `![logo](../本地图片测试/logo.jpg)`就可以插入图片。其中[]里面不写文字则没有图片标题。
+目录名和文章名一致，只要使用 ~~`![logo](../本地图片测试/logo.jpg)`~~ `![logo](logo.jpg)`就可以插入图片。其中[]里面不写文字则没有图片标题。
+
++ [Hexo博客搭建之在文章中插入图片](https://yanyinhong.github.io/2017/05/02/How-to-insert-image-in-hexo-post/)  
 
 ### 视频链接
 
@@ -341,6 +347,11 @@ $$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
 |	`\lceil` |	$\lceil$	|	`\rceil`	|	$\rceil$	|
 |	`\lfloor`	|	$\lfloor$	|	`\rfloor`	|	$\rfloor$	|
 |	`\lbrace`	|	$\lbrace$	|	`\rbrace`	|	$\rbrace$	|
+
+
+其他符号：  
+
+`\times` : $\times$
 
 
 更多的去参考 [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)

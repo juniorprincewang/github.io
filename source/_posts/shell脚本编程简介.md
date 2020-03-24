@@ -67,12 +67,44 @@ categories:
 + `$*` - 传入 Bash 脚本所有参数.
 + `$@` - 传递给脚本或函数的所有参数。被双引号(" ")包含时，与 $* 稍有不同。
 + `$?` - 上个命令的退出状态，或函数的返回值.
-+ `$$` - 当前Shell进程ID。对于 Shell 脚本，就是这些脚本所在的进程ID。.
-+ $USER - The username of the user running the script.
-+ $HOSTNAME - The hostname of the machine the script is running on.
-+ $SECONDS - The number of seconds since the script was started.
-+ $RANDOM - Returns a different random number each time is it referred to.
-+ $LINENO - Returns the current line number in the Bash script.
++ `$$` - 当前Shell进程ID。对于 Shell 脚本，就是这些脚本所在的进程ID。  
++ `$USER` - The username of the user running the script.
++ `$HOSTNAME` - The hostname of the machine the script is running on.
++ `$SECONDS` - The number of seconds since the script was started.
++ `$RANDOM` - Returns a different random number each time is it referred to.
++ `$LINENO` - Returns the current line number in the Bash script.
+
+### 脚本传参
+
+[How can I pass a command line argument into a shell script?](https://unix.stackexchange.com/a/31419)  
+"`$0`" 为脚本名称。  
+"`$1`", "`$2`", "`$3`"等分别为第1、第2、第3个参数。  
+`$#` 为参数数量。  
+
+```
+echo "First arg: $1"
+```
+
+help 函数： 
+
+```
+helpFunction()
+{
+   echo ""
+   echo "Usage: $0 -a parameterA -b parameterB -c parameterC"
+   echo -e "\t-a Description of what is parameterA"
+   echo -e "\t-b Description of what is parameterB"
+   echo -e "\t-c Description of what is parameterC"
+   exit 1 # Exit script after printing help
+}
+
+if [ -z "$1" ] || [ -z "$2" ]
+then
+   helpFunction
+fi
+
+```
+
 
 # 注释
 
@@ -441,6 +473,16 @@ fi
 ```
 
 
+# Makefile 中判断一个文件是否存在
+
+Makefile中调用shell函数判断：
+
+```
+exist = $(shell if [ -f $(FILE) ]; then echo "exist"; else echo "notexist"; fi;)
+ifeq (exist, "exist")
+#do something here
+endif
+```
 
 
 # 参考

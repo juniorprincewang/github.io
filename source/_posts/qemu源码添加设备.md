@@ -17,7 +17,7 @@ qemu中需要模拟出设备与总线的关系。因为
 
 # QOM
 
-`QEMU Object Model (QOM)` 模型提供了注册类型的框架，这些类型包括 总线bus、接口interface、设备device等。
+`QEMU Object Model (QOM)` 模型提供了注册用户创建的类型的框架，这些类型包括 总线bus、接口interface、设备device等。
 
 以 `QEMU v2.12.0` 版本中的 `hw/misc/pci-testdev.c` 文件为例子，分析QOM创建新类型的过程。
 >pci-testdev
@@ -26,7 +26,7 @@ qemu中需要模拟出设备与总线的关系。因为
 > edu
 >> 		A PCI device that supports testing both INTx and MSI interrupts and DMA transfers.
 
-`QOM` 创建新类型时需要用到的数据结构为： 类对象`OjectClass` 、 类实例对象`Object` 、 类型对象`TypeInfo` ，基本结构定义在 `include\qom\object.h` ， 文件中的注释非常详细，对数据结构的字段说明和QOM模型的用法。 `TypeImpl` 定义在 `qom/object.c` 中，没有注释。
+`QOM` 创建新类型 `Type` 时需要指定其 类对象`OjectClass` 实例和 类`Object` 实例，这两者通过 类型`TypeInfo` 结构体指定，基本结构定义在 `include\qom\object.h` ， 文件中的注释非常详细，对数据结构的字段说明和QOM模型的用法。 `TypeImpl` 定义在 `qom/object.c` 中，没有注释。
 
 + ObjectClass: 是所有类对象的基类，仅仅保存了一个整数 `type` 。
 + Object: 是所有对象的 基类`Base Object` ， 第一个成员变量为指向 `ObjectClass` 的指针。
@@ -36,7 +36,7 @@ qemu中需要模拟出设备与总线的关系。因为
 对象的初始化分为4步：
 1. 将 TypeInfo 注册 TypeImpl
 2. 实例化 Class（ObjectClass）
-3. 实例化 Instance(Object)
+3. 实例化 Object
 4. 添加 Property
 
 `TypeInfo` 结构体里面的字段：
@@ -105,13 +105,13 @@ TYPE_DEVICE has a pure virtual method 'init' which is a bit of a misnomer.  The 
 
 ## 模块注册
 
-向QOM模块注册自己，类似于Linux驱动的注册，通过 `type_init` 宏注册，它在 `include/qemu/module.h` 中。
+向QOM模块注册Type，类似于Linux驱动的注册，通过 `type_init` 宏注册，它在 `include/qemu/module.h` 中。
 这个宏调用发生在 `qemu main` 函数之前。
-```
+```c
 static const TypeInfo pci_testdev_info = {
     .name          = TYPE_PCI_TEST_DEV,	/*类型的名字*/
     .parent        = TYPE_PCI_DEVICE, /*父类的名字*/
-    .instance_size = sizeof(PCITestDevState), /*必须向系统说明对象的大小，以便系统为对象的实例分配内存*/
+    .instance_size = sizeof(PCITestDevState), /*必须向系统说明Object的大小，以便系统为Object的实例分配内存*/
     .class_init    = pci_testdev_class_init, /*在类初始化时就会调用这个函数，将虚拟函数赋值*/
     .interfaces = (InterfaceInfo[]) {
         { INTERFACE_CONVENTIONAL_PCI_DEVICE },
@@ -126,21 +126,79 @@ static void pci_testdev_register_types(void)
 
 type_init(pci_testdev_register_types)
 ```
+
 这里会调用 `pci_testdev_register_types` ，这个函数以 `pci_testdev_info` 为参数调用了 `type_register_static` 类型注册函数。
-这一过程的目的就是利用 `TypeInfo` 构造出一个 `TypeImpl` 结构，之后插入到一个hash表之中，这个hash表以 `ti->name` （TypeImpl ti），也就是 `info->name` 为key，value就是根据 `TypeInfo` 生成的 `TypeImpl` 。
+这一过程的目的就是分配并创建`TypeImpl` 结构，使用 `TypeInfo` 数据赋值，之后插入到一个hash表之中，这个hash表以 `ti->name` （TypeImpl ti），也就是 `info->name` 为key，value就是根据 `TypeInfo` 生成的 `TypeImpl` 。  
+在QEMU启动阶段`vl.c:main()`，`pci_testdev_register_types()`函数将会在`module_call_init(MODULE_INIT_QOM)` 中执行，通过遍历QOM队列中的module entry。  
 在 `pci_testdev_info` 中得字段 `name` 定义了我们将来启动此设备时候传参 `-device ` 后面跟的值。
 
 ## Class的初始化
 
 现在已经有了一个TypeImpl的哈希表。下一步就是初始化每个type了，这一步可以看成是class的初始化，可以理解成每一个type对应了一个class，接下来会初始化class。
 
-由于在初始化每个type时候，调用到的是 `type_initialize` 函数。 
-```
-static void type_initialize(TypeImpl *ti)
-```
-如果 `ti->class` 已经存在说明已经初始化了，直接返回。如果有 `parent`，会递归调用 `type_initialize`，即调用父对象的初始化函数。
+由于在初始化每个type时候，调用到的是 `type_initialize` 函数。`ObjectClass`的分配和初始化就在此函数中实现，此外`ObjectClass`和`Type`的关联操作也在此函数中实现。     
+```c
+/* include/qom/object.h */
+struct TypeImpl;
+typedef struct TypeImpl *Type;
+/* qom/object.c */
+struct TypeImpl
+{
+    ...
+    ObjectClass *class;
+    ...
+};
 
-这里type也有一个层次关系，即QOM 对象的层次结构。在 `pci_testdev_info` 结构的定义中，我们可以看到有一个 `.parent` 域，值为 `TYPE_PCI_DEVICE` 。
+static void type_initialize(TypeImpl *ti)
+{
+    TypeImpl *parent;
+
+    if (ti->class) {
+        return;
+    }
+
+    ti->class_size = type_class_get_size(ti);
+    ti->instance_size = type_object_get_size(ti);
+    /* Any type with zero instance_size is implicitly abstract.
+     * This means interface types are all abstract.
+     */
+    if (ti->instance_size == 0) {
+        ti->abstract = true;
+    }
+    if (type_is_ancestor(ti, type_interface)) {
+        ...
+    }
+    ti->class = g_malloc0(ti->class_size);
+
+    parent = type_get_parent(ti);
+    if (parent) {
+        type_initialize(parent);
+        ...
+        memcpy(ti->class, parent->class, parent->class_size);
+        ...
+    } else {
+        ti->class->properties = g_hash_table_new_full(
+            g_str_hash, g_str_equal, g_free, object_property_free);
+    }
+
+    ti->class->type = ti;
+
+    while (parent) {
+        if (parent->class_base_init) {
+            parent->class_base_init(ti->class, ti->class_data);
+        }
+        parent = type_get_parent(parent);
+    }
+
+    if (ti->class_init) {
+        ti->class_init(ti->class, ti->class_data);
+    }
+}
+```
+如果 `ti->class` 已经存在说明已经初始化了，直接返回。如果有 `parent`，会递归调用 `type_initialize()`，即调用父对象的初始化函数。  
+`ti->class->type = ti;` 将当前`Type`和刚派生的`Class`。最后，`ti->class`字段被当作第一个参数传给`Type`的class构造函数，通过`ti->class_init(ti->class, ti->class-data).`。  
+
+这里`Type`也有一个层次关系，即QOM 对象的层次结构。在 `pci_testdev_info` 结构的定义中，我们可以看到有一个 `.parent` 域，值为 `TYPE_PCI_DEVICE` 。
 这说明 `TYPE_PCI_TEST_DEV` 的 父类型 是 `TYPE_PCI_DEVICE` ，在 `hw/pci/pci.c` 中可以看到 `pci_device_type_info` 的父type是 `TYPE_DEVICE`
 
 	static const TypeInfo pci_device_type_info = {
@@ -160,7 +218,8 @@ static void type_initialize(TypeImpl *ti)
 在定义新类型中，实现了父类的虚拟方法，那么需要定义新的class的初始化函数，并且在TypeInfo数据结构中，给TypeInfo的 `class_init` 字段赋予该初始化函数的函数指针。
 我们以一个 `class_init` 为例，
 
-```
+```c
+/* hw/misc/pci-testdev.c */
 static void pci_testdev_class_init(ObjectClass *klass, void *data)
 {
 	//父对象必须是该对象数据结构的第一个属性，以便实现父对象向子对象的cast
@@ -179,32 +238,156 @@ static void pci_testdev_class_init(ObjectClass *klass, void *data)
 }
 ```
 `class_init` 构造函数钩子。 这个函数将负责初始化Type的 `ObjectClass` 实例。
-这里从 `ObjectClass` 转换成了 `DeviceClass` 。为什么这么转换，还需要从 `	Class` 的层次结构说起。
+这里从 `ObjectClass` 转换成了 `DeviceClass` 。为什么这么转换，还需要从 `ObjectClass` 的层次结构说起。
 
-有这么一种层次 
+```
+/* include/qom/object.h */
+typedef struct TypeImpl *Type;
+typedef struct ObjectClass ObjectClass;
+struct ObjectClass
+{
+        /*< private >*/
+        Type type;       /* points to the current Type's instance */
+        ...
+
+/* include/hw/qdev-core.h */
+typedef struct DeviceClass {
+        /*< private >*/
+        ObjectClass parent_class;
+        /*< public >*/
+        ...
+
+/* include/hw/pci/pci.h */
+typedef struct PCIDeviceClass {
+        DeviceClass parent_class;
+        ...
+```
+
+根据结构体定义，`struct PCIDeviceClass` 的首个字段是 `struct DeviceClass`，因为C标准确保结构的第一个字段始终位于字节0，因此可以直接将 `PCIDeviceClass *` 指针转换成 `DeviceClass *` 类型。以此类推，这里可以看成C++中的继承关系，即Type的ObjectClass实例的基类就是 `ObjectClass` ，子类是`DeviceClass` 和 `PCIDeviceClass` ，越往下包含的数据越具体。
+
 > PCIDeviceClass->DeviceClass->ObjectClass
-可以看成C++中的继承关系，即当然基类就是 `ObjectClass` ，越往下包含的数据越具体。
-将一个父类的指针转换为子类的指针是不安全的，为了实现这种转换，各类需要提供强制类型转换的宏
-以下面这句为例：
-```
-PCIDeviceClass *c = PCI_DEVICE_CLASS(kclass);
-```
-宏 `PCI_DEVICE_CLASS` 定义在 `hw/pci/pci.h` 中。
-```
-#define PCI_DEVICE_GET_CLASS(obj) \
-        OBJECT_GET_CLASS(PCIDeviceClass, obj, TYPE_PCI_DEVICE)
 
+因此，ObjectClass基类和子类间可以相互转换，如下。  
+```c
+/* hw/misc/pci-testdev.c */
+static void pci_testdev_class_init(ObjectClass *klass, void *data)
+    ...
+    ((PCIDeviceClass *)klass)->realize = pci_testdev_realize;
+    ...
+```
+
+将一个父类的指针直接转换为子类的指针是不安全的，为了安全校验从Type实例的父类型转换成子类，各类需要提供强制类型转换的宏，以下面这句为例：
+
+```c
+DeviceClass *dc = DEVICE_CLASS(klass);
+PCIDeviceClass *k = PCI_DEVICE_CLASS(klass);
+```
+而这些宏，都由 `OBJECT_CLASS_CHECK()` 封装。  
+```c
+/* include/hw/qdev-core.h */
+#define TYPE_DEVICE "device"
+#define DEVICE_CLASS(klass) OBJECT_CLASS_CHECK(DeviceClass, (klass), TYPE_DEVICE)
+
+/* include/hw/pci/pci.h */
+#define TYPE_PCI_DEVICE "pci-device"
 #define PCI_DEVICE_CLASS(klass) \
         OBJECT_CLASS_CHECK(PCIDeviceClass, klass, TYPE_PCI_DEVICE)
 
+/* include/qom/object.h */
+/**
+ * OBJECT_CLASS_CHECK:
+ * @class_type: The C type to use for the return value.
+ * @class: A derivative class of @class_type to cast.
+ * @name: the QOM typename of @class_type.
+ *
+ * A type safe version of @object_class_dynamic_cast_assert.  This macro is
+ * typically wrapped by each type to perform type safe casts of a class to a
+ * specific class type.
+ */
+#define OBJECT_CLASS_CHECK(class_type, class, name) \
+    ((class_type *)object_class_dynamic_cast_assert(OBJECT_CLASS(class), (name), \
+                                               __FILE__, __LINE__, __func__))
+```
+
+`DEVICE_CLASS()`宏断言用户Type的`DeviceClass`子类是从`TYPE_DEVICE`父类的`ObjectClass`实例派生的。同理， `PCI_DEVICE_CLASS()` 宏断言用户的Type的`PCIDeviceClass`子类是从`TYPE_PCI_DEVICE`父类的`OjbectClass`实例派生而来。
+
+`object_class_dynamic_cast_assert()` 根据class对应的type以及typename对应的type，判断是否能够转换，判断的主要依据就是type_is_ancestor， 这个判断target_type是否是type的一个祖先，如果是当然可以进行转换，否则就不行。
+该函数会在 `type_table_lookup()` 中通过 `g_hash_table_lookup` 比较字符串来断言 `DeviceClass` 和 `PCIDeviceClass` 的父类。
+
+总之，就是从最开始的 `TypeImpl` 初始化了每一个type对应的 `ObjectClass *class` ，并且构建好了各个Class的继承关系。
+
+## Object的构造
+
+用户定义的PCI Type的`ObjectClass`实例的构造函数调用在`type_register_static()` 调用时即可完成，而Type的`Object`实例只有在QEMU命令行中添加`-device`选项时才会创建。  
+我们上面已经看到了Type哈希表的构造以及 `Class` 的初始化，接下来讨论具体设备的创建。
+
+### Object基类和子类
+
+与OjbectClass类似，Object也有继承关系；与ObjectClass不同的是，用户可以定义Type的自己的Object结构体，继承自`PCIDevice`。  
+
+```c
+typedef struct PCITestDevState {
+    /*< private >*/
+    PCIDevice parent_obj;
+    /*< public >*/
+
+    MemoryRegion mmio;
+    MemoryRegion portio;
+    IOTest *tests;
+    int current;
+} PCITestDevState;
+
+/* include/hw/pci/pci.h */
+struct PCIDevice {
+    DeviceState qdev;
+    ...
+}
+
+/* include/hw/qdev-core.h */
+struct DeviceState {
+    /*< private >*/
+    Object parent_obj;
+    ...
+}
+
+/* include/qom/object.h */
+/**
+ * Object:
+ *
+ * The base for all objects.  The first member of this object is a pointer to
+ * a #ObjectClass.  Since C guarantees that the first member of a structure
+ * always begins at byte 0 of that structure, as long as any sub-object places
+ * its parent as the first member, we can cast directly to a #Object.
+ *
+ * As a result, #Object contains a reference to the objects type as its
+ * first member.  This allows identification of the real type of the object at
+ * run time.
+ */
+struct Object
+{
+    /*< private >*/
+    ObjectClass *class;
+    ObjectFree *free;
+    GHashTable *properties;
+    uint32_t ref;
+    Object *parent;
+};
+```
+Object 的继承关系：  
+> PCITestDevState->PCIDevice->DeviceState->Object  
+
+而`Object`继承类之间的转换同样是靠宏，`DEVICE`和`PCI_DEVICE`由`OBJECT_CHECK`封装，`OBJECT_CHECK` 用于转换`Object`基类和子类的转换。  
+
+```c
+/* include/hw/qdev-core.h */
+#define TYPE_DEVICE "device"
+#define DEVICE(obj) OBJECT_CHECK(DeviceState, (obj), TYPE_DEVICE)
+
+/* include/hw/pci/pci.h */
 #define PCI_DEVICE(obj) \
         OBJECT_CHECK(PCIDevice, obj, TYPE_PCI_DEVICE)
-```
 
-其中 `OBJECT_CHECK` 、 `OBJECT_CLASS_CHECK` 、 `OBJECT_GET_CLASS` 的定义如下：
-
-`OBJECT_CHECK` 用于转换`Object`，`OBJECT_CLASS_CHECK` 用于转换 `ObjcetClass` ， `OBJECT_GET_CLASS` 用于从`Object` 获取 `Class`。
-```
+/* include/qom/object.h */
 /**
  * OBJECT_CHECK:
  * @type: The C type to use for the return value.
@@ -222,22 +405,19 @@ PCIDeviceClass *c = PCI_DEVICE_CLASS(kclass);
     ((type *)object_dynamic_cast_assert(OBJECT(obj), (name), \
                                         __FILE__, __LINE__, __func__))
 ```
-```
-/**
- * OBJECT_CLASS_CHECK:
- * @class_type: The C type to use for the return value.
- * @class: A derivative class of @class_type to cast.
- * @name: the QOM typename of @class_type.
- *
- * A type safe version of @object_class_dynamic_cast_assert.  This macro is
- * typically wrapped by each type to perform type safe casts of a class to a
- * specific class type.
- */
-#define OBJECT_CLASS_CHECK(class_type, class, name) \
-    ((class_type *)object_class_dynamic_cast_assert(OBJECT_CLASS(class), (name), \
-                                               __FILE__, __LINE__, __func__))
-```
-```
+
+此外，`OBJECT_GET_CLASS()` 用于从`Object` 获取 `ObjectClass`。`OBJECT_GET_CLASS()`的用处就是`PCI_DEVICE_GET_CLASS()` 或 `DEVICE_GET_CLASS`，对于给定的`Object`实例，可以获得相应的`PCIDeviceClass`或`DeviceClass`的`ObjectClass`实例。  
+
+```c
+/* include/hw/qdev-core.h */
+#define TYPE_DEVICE "device"
+#define DEVICE_GET_CLASS(obj) OBJECT_GET_CLASS(DeviceClass, (obj), TYPE_DEVICE)
+
+/* include/hw/pci/pci.h */
+#define PCI_DEVICE_GET_CLASS(obj) \
+        OBJECT_GET_CLASS(PCIDeviceClass, obj, TYPE_PCI_DEVICE)
+
+/* include/qom/object.h */
 /**
  * OBJECT_GET_CLASS:
  * @class: The C type to use for the return value.
@@ -252,43 +432,8 @@ PCIDeviceClass *c = PCI_DEVICE_CLASS(kclass);
     OBJECT_CLASS_CHECK(class, object_get_class(OBJECT(obj)), name)
 ```
 
-在 `PCI_DEVICE_CLASS` 这个宏定义中，最终会进入 `object_class_dynamic_cast` 函数，在该函数中，根据class对应的type以及typename对应的type，判断是否能够转换，判断的主要依据就是type_is_ancestor， 这个判断target_type是否是type的一个祖先，如果是当然可以进行转换，否则就不行。
 
-总之，就是从最开始的 `TypeImpl` 初始化了每一个type对应的 `ObjectClass *class` ，并且构建好了各个Class的继承关系。
-
-## Object的构造
-
-我们上面已经看到了type哈希表的构造以及 `Class` 的初始化，接下来讨论具体设备的创建。
-
-```
-typedef struct PCITestDevState {
-    /*< private >*/
-    PCIDevice parent_obj;
-    /*< public >*/
-
-    MemoryRegion mmio;
-    MemoryRegion portio;
-    IOTest *tests;
-    int current;
-} PCITestDevState;
-
-// hw/pci/pci.h
-struct PCIDevice {
-    DeviceState qdev;
-    ...
-}
-
-// hw/qdev-core.h
-struct DeviceState {
-    /*< private >*/
-    Object parent_obj;
-    ...
-}
-```
-Object 的继承
-> PCITestDevState->PCIDevice->DeviceState->Object
-
-Object的创建由 ` k->realize = pci_testdev_realize;` 函数实现，不同于type和class的构造，`Object` 当然是根据需要创建的，只有在命令行指定了设备或者是热插一个设备之后才会有 `Object` 的创建。 `Class` 和 `Object` 之间是通过 `Object` 的 `class域` 联系在一起的。
+Object的创建由 ` k->realize = pci_testdev_realize;` 函数实现，不同于type和class的构造，`Object` 当然是根据需要创建的，只有在命令行指定了设备或者是热插一个设备之后才会有 `Object` 的创建。 `ObjectClass` 和 `Object` 之间是通过 `Object` 的 `class`字段 联系在一起的。
 
 # 属性
 
@@ -296,6 +441,7 @@ Object的创建由 ` k->realize = pci_testdev_realize;` 函数实现，不同于
 
 ## 属性对象
 属性对象包含属性名称、类型、描述，类型对应的属性结构，以及相应访问函数。
+
 ```
 typedef struct ObjectProperty
 {
@@ -309,6 +455,7 @@ typedef struct ObjectProperty
     void *opaque;
 } ObjectProperty;
 ```
+
 ## 静态属性
 
 凡是在代码中就已经定义好名称和类型的属性，都是静态属性。包括在初始化过程中添加 和 props 。
@@ -325,6 +472,14 @@ static Property test_properties[] = {
     DEFINE_PROP_STRING("test_string", struct_type, , struct_type_property),
     DEFINE_PROP_END_OF_LIST()
 };
+
+...
+static void test_class_init(ObjectClass *klass, void *data)
+{
+        DeviceClass *dc = DEVICE_CLASS(klass);
+
+        dc->props = test_properties;
+}
 ```
 ### 查看
 可通过命令查看设备的静态属性，参数为设备 `TypeInfo` 的 `name` ：
@@ -375,6 +530,7 @@ QOM的对象构造分成三部分，第一部分是type的构造，这是通过T
 第二部分是class的构造，这是在main中进行的，这两部分都是全局的，也就是只要编译进去了的QOM对象都会调用。
 第三部分是object的构造，这是构造具体的对象实例，在命令行指定了对应的设备时，才会创建object。
 
+可以参考[QEMU PCI device emulator and guest ldd](http://tic-le-polard.blogspot.com/2015/01/emulate-pci-device-with-qemu.html) ，里面有详细的解释和[QEMU device源码](https://github.com/grandemk/qemu_devices/blob/master/hello_tic.c)与[Guest Driver源码](https://github.com/grandemk/qemu_devices/blob/master/driver_pci.c)。
 
 # 参考
 1. [How to add a new device in QEMU source code?](https://stackoverflow.com/questions/28315265/how-to-add-a-new-device-in-qemu-source-code)
@@ -394,3 +550,4 @@ QOM的对象构造分成三部分，第一部分是type的构造，这是通过T
 15. [QOM说明文档](https://lists.gnu.org/archive/html/qemu-devel/2012-08/msg02271.html)
 16. [
 QEMU学习笔记——QOM(Qemu Object Model)](https://www.binss.me/blog/qemu-note-of-qemu-object-model/)
+17. [Essential QEMU PCI API](http://web.archive.org/web/20151116022950/http://nairobi-embedded.org/001_qemu_pci_device_essentials.html)  

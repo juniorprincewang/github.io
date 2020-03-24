@@ -436,8 +436,37 @@ scp -P 2222 -r local_folder remote_username@remote_ip:remote_folder
 
 
 
-# 文件操作
+# 文件操作  
 
+## rm 
+
++ [Unable to remove a file which has a name like a command argument [duplicate]](https://askubuntu.com/a/482183)  
+
+删除带有 `-` 这些命令字符的文件夹，使用 `--` 来将后面紧跟的输入不当成命令参数。  
+
+```
+rm -- -r
+```
+
+当然也可以使用全路径，比如：  
+
+```
+rm /home/you/directory/-r
+```
+
+## xxd  
+
+将文件以二进制呈现。  
+
++ hex:  
+```
+xxd file
+```
+
++ bin:  
+```
+xxd -b file
+```
 
 ## tar
 

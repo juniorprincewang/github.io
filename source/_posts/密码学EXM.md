@@ -461,20 +461,84 @@ byte Mul_0e[256] = {
 
 ## RSA算法流程
 
-1. 随机生成等二进制长度的两个素数: p、q；
+1. 随机生成等二进制长度的两个素数: $p$、$q$；
 2. 计算 $\phi(n)=(p-1)\*(q-1)$，$n=p\*q$；
-3. 随机取值e，使e与 $\phi(n)$ 互素；
-4. 计算e对 $\phi(n)$ 的模逆，$e*d=1\pmod {\phi(n)}$；
-5. (e, n)为公钥，(d, n)为私钥。
+3. 随机取值$e$，使$e$与 $\phi(n)$ 互素；
+4. 计算$e$对 $\phi(n)$ 的模逆，$e*d=1\pmod {\phi(n)}$；
+5. $(e, n)$为公钥，$(d, n)$为私钥。
 
-## 公钥加密
++ 公钥加密
 
-$$ C = M^e mod n $$
+$$ C = M^e \pmod {n} $$
+
++ 私钥解密
+
+$$ M = C^d \pmod {n} $$
+
+## Modular Exponentiation
+
+RSA 的操作主要是模幂运算，这里有 *Repeated squaring*，*Sliding window*，*Chinese Remainder Theorem (CRT)*，*Montgomery multiplication*，*Karatsuba multiplication* 等。  
 
 
-## 私钥解密
+### 滑动窗口：sliding windows
 
-$$ M = C^d mod n $$
+
+Input: $M$; $e$; $n$。
+Output: $C = M^e \pmod {n}$.
+1. Compute and store $M^w \pmod {n}$ for all $w = 3, 5, 7, ... , 2^d - 1$。
+2. Decompose $e$ into zero and nonzero windows $F(i)$ of length $L(F(i))$，for $i = 0, 1, 2, ... , p - 1$。
+3. $C := M^{F(p-1)} \pmod {n}$
+4. for i = p - 2 down to 0
+	1. $C := C^{2^{L(F(i))}} \pmod {n}$
+    2. if (F(i) != 0), then $C := C * M^{F(i)} \pmod {n}$
+5. return C
+
+
+### CRT calculation  
+
++ [Implementation of RSA Algorithm with Chinese Remainder Theorem for Modulus N 1024 Bit and 4096 Bit](https://www.cscjournals.org/manuscript/Journals/IJCSS/Volume10/Issue5/IJCSS-1289.pdf)
+
+简介中国剩余定理（Chinese Remainder Theorem，CRT）：  
+
+p和q是互相独立的大素数，n为p*q，对于任意(m1, m2), (0<=m1< p, 0<=m2< p)
+必然存在一个唯一的m ,0<=m< n
+使得
+$$m1 = m \pmod {p}$$
+$$m2 = m \pmod {q}$$
+
+所以换句话说，给定一个(m1,m2)，其满足上述等式的m必定唯一存在。
+
+
+通过中国剩余定理计算RSA。  
+需要的参数：  
++ Modulus ($n=pq$)
++ Public exponent ($e$，通常为3, 17 or 65537)
++ Private exponent ($d=e^{−1}\pmod {\phi(n)}$)
++ First prime ($p$)
++ Second prime ($q$)
++ First exponent, used for Chinese remainder theorem ($d_P=d\pmod{p−1}$)
++ Second exponent, used for CRT ($d_Q=d\pmod{q−1}$)
++ Coefficient, used for CRT ($q_{inv}=q^{−1}\pmod{p}$)
+
+公钥为 $(e, n)$，私钥为 $(d_P, d_Q, q_{inv}, p, q)$。
+
++ 公钥加密
+
+$$ C = M^e \pmod {n} $$
+
++ 私钥解密
+
+这里和常规方法不同。  
+
+1. 计算 $C_p = C \pmod{p}$, $C_q = C \pmod{q}$
+2. 计算 $x_1={C_p}^{d_P}\pmod{p}$ , $x_2={C_q}^{d_Q}\pmod{q}$
+3. 计算 $h=q_{inv} \times (x_1-x_2)\pmod{p}$
+4. 明文 $M = x_2+ {h}\times{q}$
+
+
+### Montgomery Multiplication
+
+
 
 ## padding
 
