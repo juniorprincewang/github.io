@@ -120,18 +120,51 @@ git可以对某一时间点的版本[打标签tag](https://git-scm.com/book/zh/v
 
 + 列出所有tag
 
-```
+```sh
+git tag  
 git tag -l
 git tag -l 'v3.14.*'
 ```
 
 + checkout a specific tag
 
-```
+```sh
 git checkout tags/<tag_name>
 ```
 
 [Download a specific tag with Git](https://stackoverflow.com/a/792027)
+
++ add tag  
+
+```sh
+git tag -a v2.1.0 -m "xyz feature is released in this tag."
+git tag v2.0.0
+```
+
+push tag  
+
+just push particular tag  
+```sh
+git push origin v1.0.3
+```
+
+push all tags:
+
+```sh
+git push --tags
+```
+[Create a tag in a GitHub repository](https://stackoverflow.com/a/48534947)  
+
++ delete tag  
+
+```sh
+// delete a remote tag
+git push --delete origin v1.0.0
+// also delete the local tag
+git tag --delete tagname
+```
+
+[How to delete a remote tag?](https://stackoverflow.com/a/5480292)  
 
 # 版本管理
 
@@ -210,6 +243,27 @@ git reset -- main/dontcheckmein.txt
 
 完全忽略某一文件：
 在仓库根目录创建 *.gitignore* 文件，并将要忽略的文件相对路径写入。
+
+## *.gitkeep*  
+
+git无法追踪一个空的文件夹，当用户需要追踪(track)一个空的文件夹的时候，按照惯例，大家会把一个称为.gitkeep的文件放在这些文件夹里。  
+
+主要用在：使git忽略一个文件夹下的所有文件，并保留该文件夹。  
+
+```
+# .gitignore 
+
+# ignore all files in lib/
+lib/*
+# except for .gitkeep
+!.gitkeep
+# ignore TODO file in root directory,not subdir/TODO
+/TODO
+```
+
+当.gitignore采用上面的写法时，git会忽略lib文件夹下除了.gitkeep外的所有文件。  
+
++[.gitkeep说明](https://www.jianshu.com/p/2507dfdb35d8)  
 
 ## gitignore without binary files
 
@@ -332,3 +386,50 @@ git push origin master
 去自己github仓库对应fork的项目下new pull request
 
 + [github如何向开源项目提交pr ](https://github.com/gnipbao/iblog/issues/19)  
+
+## git fork后同步 upstream repository  
+
+分两个步骤，
+1. 给fork配置远程仓库
+
+查看远程仓库。  
+```sh
+git remote -v
+```
+
+指定一个可以同步的远程upstream 仓库。  
+```sh
+git remote add upstream https://github.com/ORIGINAL_OWNER/ORIGINAL_REPOSITORY.git
+```
+
+可以再次验证新的远程的upstream 仓库。  
+```sh
+git remote -v
+```
+
+2. 同步fork  
+
+从上游仓库 fetch 分支和提交点，所有上游分支并会被存储在本地分支，比如 master分支的提交会存储在 upstream/master。  
+```sh
+git fetch upstream
+```
+
+切换到本地分支(比如master)
+```sh
+git checkout master
+```
+
+将 upstream/master分支的更新merge到本地master分支。  
+```sh
+git merge upstream/master
+```
+
+提交更新
+```sh
+git push origin master
+```
+
+
+[gitlab或github下fork后如何同步源的新更新内容？](https://www.zhihu.com/question/28676261)  
+[Configuring a remote for a fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork)  
+[Sync a fork of a repository to keep it up-to-date with the upstream repository.](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork)   

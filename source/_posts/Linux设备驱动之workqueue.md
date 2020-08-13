@@ -23,7 +23,7 @@ categories:
 对于使用者，基本上只需要做 3 件事情，依次为：
 
 + 创建工作队列 ( 如果使用内核默认的工作队列，连这一步都可以省略掉 )
-+ 创、建工作项
++ 创建工作项
 + 向工作队列中提交工作项
 
 执行在进程上下文中，这样使得它可以睡眠，被调度及被抢占，在多核环境下的使用也非常友好。
@@ -43,119 +43,142 @@ categories:
 
 # 创建步骤
 
-## 静态地创建work工作:
+## 静态地创建work工作同时初始化:
 
- 静态地创建一个名为n，待执行函数为f，函数的参数为data的work_struct结构。
-```
+静态地创建一个名为n，待执行函数为f，函数的参数为data的work_struct结构。
+
+```c
 #define DECLARE_WORK(n, f)                    \ 
     struct work_struct n = __WORK_INITIALIZER(n, f)
 
 #define DECLARE_DELAYED_WORK(n, f)                \ 
     struct delayed_work n = __DELAYED_WORK_INITIALIZER(n, f)
 ```
-一般而言，work都是推迟到worker thread被调度的时刻，但是有时候，我们希望在指定的时间过去之后再调度worker thread来处理该work，这种类型的work被称作delayed work，DECLARE_DELAYED_WORK用来初始化delayed work，它的概念和普通work类似。
+一般而言，work都是推迟到worker thread 被调度的时刻，但是有时候，我们希望在指定的时间过去之后再调度worker thread 来处理该work，这种类型的work被称作delayed work，DECLARE_DELAYED_WORK用来初始化delayed work，它的概念和普通work类似。
 
-## 动态地创建work工作:
+## 动态地创建work工作，随后初始化:
 
-动态创建初始化的时候需要把work的指针传递给 `INIT_WORK` 。
+先创建工作任务，后绑定处理函数
+```c
+struct work_struct work;
 ```
-INIT_WORK(struct work_struct work, work_func_t func); 
-PREPARE_WORK(struct work_struct work, work_func_t func); 
-INIT_DELAYED_WORK(struct delayed_work work, work_func_t func); 
-PREPARE_DELAYED_WORK(struct delayed_work work, work_func_t func); 
+动态创建初始化的时候需要把work的指针传递给 `INIT_WORK` 。  
+
+```c
+INIT_WORK(struct work_struct *work, work_func_t func); 
+PREPARE_WORK(struct work_struct *work, work_func_t func); 
+INIT_DELAYED_WORK(struct delayed_work *work, work_func_t func); 
+PREPARE_DELAYED_WORK(struct delayed_work *work, work_func_t func); 
 ```
 ## 清除或取消工作队列中的work工作
 
-想清理特定的任务项目并阻塞任务， 直到任务完成为止， 可以调用 `flush_work` 来实现。 
-指定工作队列中的所有任务能够通过调用 `flush_workqueue` 来完成。 这两种情形下，调用者阻塞直到操作完成为止。 
-为了清理内核全局工作队列，可调用 `flush_scheduled_work`。
-```
+想清理特定的任务项目并阻塞任务，直到任务完成为止，可以调用 `flush_work()` 来实现。  
+指定工作队列中的所有任务能够通过调用 `flush_workqueue` 来完成。   这两种情形下，调用者阻塞直到操作完成为止。   
+为了清理内核全局工作队列，可调用 `flush_scheduled_work()`。  
+```c
 int flush_work( struct work_struct *work );
 int flush_workqueue( struct workqueue_struct *wq );
 void flush_scheduled_work( void );
 ```
-还没有在处理程序当中执行的任务可以被取消。 调用 `cancel_work_sync` 将会终止队列中的任务或者阻塞任务直到回调结束（如果处理程序已经在处理该任务）。 如果任务被延迟，可以调用 `cancel_delayed_work_sync` 。
+还没有在处理程序当中执行的任务可以被取消。 调用 `cancel_work_sync()` 将会终止队列中的任务或者阻塞任务直到回调结束（如果处理程序已经在处理该任务）。 如果任务被延迟，可以调用 `cancel_delayed_work_sync()` 。
 
-```
+```c
 int cancel_work_sync( struct work_struct *work );
 int cancel_delayed_work_sync( struct delayed_work *dwork );
 ```
-最后，可以通过调用 `work_pending` 或者 `delayed_work_pending` 来确定任务项目是否在进行中。
+最后，可以通过调用 `work_pending()` 或者 `delayed_work_pending()` 来确定任务项目是否在进行中。
 
-```
-work_pending( work );
-delayed_work_pending( work );
+```c
+/**
+ * work_pending - Find out whether a work item is currently pending
+ * @work: The work item in question
+ */
+#define work_pending(work) \
+  test_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(work))
+/**
+ * delayed_work_pending - Find out whether a delayable work item is currently
+ * pending
+ * @w: The work item in question
+ */
+#define delayed_work_pending(w) \
+  work_pending(&(w)->work)
 ```
 
 ## 创建销毁workqueue
 
 + 用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。
-```
+```c
 struct workqueue_struct *create_workqueue(const char *name); 
 ```
 + 用于创建workqueue，只创建一个内核线程。
-```
+```c
 struct workqueue_struct *create_singlethread_workqueue(const char *name);
 ```
 + 释放workqueue队列。
-```
+```c
 void destroy_workqueue(struct workqueue_struct *queue);
 ```
 
 ## 使用内核提供的共享列队
 
 系统中包括若干的workqueue，最著名的workqueue就是系统缺省的的工作队列 `keventd_wq` 了，定义如下：
-```
+```c
 static struct workqueue_struct *keventd_wq __read_mostly;
 ```
 + 对工作进行调度，即把给定工作的处理函数提交给缺省的工作队列和工作线程。
-```
-      int schedule_work(struct work_struct *work);
+```c
+int schedule_work(struct work_struct *work);
 ```
 +	确保没有工作队列入口在系统中任何地方运行。
-```
-      void flush_scheduled_work(void);
+```c
+void flush_scheduled_work(void);
 ```
 +	延时执行一个任务
-```
-      int schedule_delayed_work(struct delayed_struct *work, unsigned long delay);
+```c
+int schedule_delayed_work(struct delayed_struct *work, unsigned long delay);
 ```
 +	从一个工作队列中去除入口;
-```
-      int cancel_delayed_work(struct delayed_struct *work);
+```c
+int cancel_delayed_work(struct delayed_struct *work);
 ```
 
 ## 使用自定义队列
 
 
 +	将工作加入工作列队进行调度
-```
+```c
 int queue_work(struct workqueue_struct *wq, struct work_struct *work)
 ```
 
 +	释放创建的工作列队资源
-```
+```c
 void destroy_workqueue(struct workqueue_struct *wq)
 ```
 
-+	延时调用指定工作列队的工作
-```
-queue_delayed_work(struct workqueue_struct *wq, struct delay_struct *work, unsigned long delay)
++	将工作加入指定延时工作列队
+```c
+/*
+ * queue_delayed_work - queue work on a workqueue after delay
+ * @wq: workqueue to use
+ * @dwork: delayable work to queue
+ * @delay: number of jiffies to wait before queueing
+*/
+bool queue_delayed_work(struct workqueue_struct *wq, struct delay_struct *work, unsigned long delay)
 ```
 
 +	取消指定工作列队的延时工作
-```
-cancel_delayed_work(struct delay_struct *work)
+```c
+bool cancel_delayed_work(struct delay_struct *work)
 ```
 
 +	等待列队中的任务全部执行完毕。
-```
+```c
 void flush_workqueue(struct workqueue_struct *wq);
 ```
 
 # 样例代码
 
-```
+```c
 /* https://github.com/cirosantilli/linux-kernel-module-cheat#workqueues */
 
 #include <linux/kernel.h>
@@ -163,7 +186,6 @@ void flush_workqueue(struct workqueue_struct *wq);
 #include <linux/workqueue.h>
 
 static struct workqueue_struct *queue;
-
 
 static void work_func(struct work_struct *work)
 {
@@ -184,8 +206,8 @@ static void myexit(void)
 	destroy_workqueue(queue);
 }
 
-module_init(myinit)
-module_exit(myexit)
+module_init(myinit);
+module_exit(myexit);
 MODULE_LICENSE("GPL");
 ```
 

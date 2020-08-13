@@ -70,7 +70,7 @@ Hello world!
 
 ## 添加章节
 
-```
+```tex
 -1  \part{part}
 0   \chapter{chapter}
 1   \section{section}
@@ -122,7 +122,7 @@ paragraph
 section默认首段不缩进，紧接着的下一段缩进可由 `\parindent` 控制。但是缩进的长度是由 class 决定得，这可通过命令 `\setlength` 更改。  
 `\noindent`放置于段首，段落无缩进。  
 
-```
+```tex
 \setlength{\parindent}{10ex}
 This is the text in first paragraph. This is the text in first 
 paragraph. This is the text in first paragraph. \par
@@ -153,7 +153,7 @@ latex本身不管理图片，需要引入包 *graphicx*，此包包含两个命�
 + `\graphicspath{ {images/} }` 表示图片存放路径在当前路径的 *images*文件夹下。  
 + `\includegraphics{universe} ` 表示在文档中引入名称为 *universe* 的图片， *universe* 没有带文件扩展名，文件名不包括空格和点。  
 
-```
+```tex
 \usepackage{graphicx}
 \graphicspath{ {images/} }
 \begin{document}
@@ -163,7 +163,7 @@ latex本身不管理图片，需要引入包 *graphicx*，此包包含两个命�
 
 ### 标题、标签和引用
 
-```
+```tex
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.25\textwidth]{mesh}
@@ -181,7 +181,7 @@ is the same example.
 
 ## 添加表格
 
-```
+```tex
 Table \ref{table:data} is an example of referenced \LaTeX{} elements.
  
 \begin{table}[h!]
@@ -212,11 +212,46 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 
 表格的 *标题、标签和引用* 和 图片的基本一致。  
 
+### 表格脚注  
+
+需要用到 `threeparttable` 这个包。  
+注意在 `tablenotes` 标签之间使用 `\item`。  
+
+```tex
+\usepackage{threeparttable}
+%A table with footnotes appearing at the bottom of the table:
+\begin{table}
+   \centering
+   \begin{threeparttable}[b]
+   \caption{Table with footnotes after the table}
+   \label{tab:test2}
+   \begin{tabular}{llll}
+   \hline
+   column 1 & column 2 & column 3\tnote{1} & column 4\tnote{2} \\
+   \hline
+   row 1 & data 1 & data 2 & data 3 \\
+   row 2 & data 1 & data 2 & data 3 \\
+   row 3 & data 1 & data 2 & data 3 \\
+   \hline
+   \end{tabular}
+   \begin{tablenotes}
+     \item[1] tablefootnote 1
+     \item[2] tablefootnote 2
+   \end{tablenotes}
+  \end{threeparttable}
+\end{table}
+ 
+\end{document}
+```
+
+[Add notes under the table](https://tex.stackexchange.com/questions/12676/add-notes-under-the-table)  
+[Latex给表格加脚注](https://blog.csdn.net/ShuqiaoS/article/details/86230367)  
+
 ## 添加列表
 
 ### 无序列表
 
-```
+```tex
 \begin{itemize}
   \item The individual entries are indicated with a black dot, a so-called bullet.
   \item The text in the entries may be of any length.
@@ -225,7 +260,7 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 
 ### 有序列表
 
-```
+```tex
 \begin{enumerate}
   \item This is the first entry in our list
   \item The list numbers increase with each entry we add
@@ -238,7 +273,7 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 
 ### The bibliography file
 
-```
+```tex
 @article{einstein,
     author = "Albert Einstein",
     title = "{Zur Elektrodynamik bewegter K{\"o}rper}. ({German})
@@ -358,7 +393,8 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 主要的做发是：  
 
 添加xeCJK中文包，使用 xelatex 命令编译源文件。  
-```
+
+```tex
 % 该文件使用 xelatex 命令可以编译通过
 \documentclass[12pt, a4paper]{article}
 \usepackage{fontspec}

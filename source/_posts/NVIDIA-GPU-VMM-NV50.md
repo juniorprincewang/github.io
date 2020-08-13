@@ -1,5 +1,5 @@
 ---
-title: NVIDIA GPU虚拟内存
+title: NVIDIA GPU虚拟内存（NV50）
 date: 2018-07-09 09:14:15
 tags:
 - virtual memory
@@ -7,7 +7,7 @@ tags:
 categories:
 - [GPU]
 ---
-本文分析 `NVIDIA GPU` 的虚拟内存（virtual memory），由 `envytools` 工具和文档提供。
+本文分析 `NVIDIA GPU` 的虚拟内存（virtual memory），由 `envytools` 工具和文档提供。分析的G80显卡（NV50），由于是首代支持虚拟内存的显卡，对于当前使用的显卡已经不适用了，仅供参考。  
 <!-- more -->
 
 # 介绍
@@ -18,7 +18,7 @@ G80 一代的显卡的内存管理模块，即MMU，将用户可见的虚拟内�
 
 + **逻辑地址**：40位的逻辑地址 + channel描述符地址 + DMA对象地址。所有出现在 FIFO 命令描述符中的地址都是逻辑地址，或者最终转换成逻辑地址。
 + **虚拟地址**：40位的虚拟地址 + channel描述符地址。 指定地址将会在相关channel中的页表中查询。虚拟地址总是逻辑地址转换的结果，并且不能被直接指定。
-+ **线性地址**：40位的线性地址 + 目标区分符（target specifier）。 区分符可以是 `VRAM` 、 `SYSRAM_SNOOP` 、 `SYSRAM_NOSNOOP`。
++ **线性地址**：40位的线性地址 + 目标区分符（target specifier）。 区分符可以是 video memory `VRAM` 、 coherent system memory `SYSRAM_SNOOP`或者`HOST` 、 non-coherent system memory `SYSRAM_NOSNOOP`或者`NCOH`。
 	+ VRAM: 32位线性地址，高8位忽略，在设备板上的内存。
 	+ SYSRAM: 40位的线性地址，访问此空间会使得显卡对给定的地址调用PCI/PCIe读写事务，允许访问系统内存（CPU）或者别的PCI设备内存。 `SYSRAM_SNOOP` 使用正常的 PCIe 事务，`SYSRAM_NOSNOOP` 使用PCIe 事务，启用了 `no snoop` 位。 
 大多数时候，线性地址是逻辑地址翻译的结果，但是一些内存区域可以被它们的线性地址直接赋值。
@@ -27,14 +27,14 @@ G80 一代的显卡的内存管理模块，即MMU，将用户可见的虚拟内�
 + **物理地址**：对于VRAM，是内存单元的分表\子分表\行\列等；对于SYSRAM，是最终的总线地址。
 
 虚拟内存(以下简称VM)的作用是将逻辑地址转换成相关的数据，可以转换成设备物理地址或者主机物理地址。
-+ linear address
-+ target: `VRAM` , `SYSRAM_SNOOP` , `SYSRAM_NOSNOOP` 。
-+ read only flag
-+ supervisor-only flag
-+ storage type: 一个特殊值，选择包含数据的内部结构，通过增加cache的局部性来更有效的访问。
-+ compression mode：
-+ compression tag address：
-+ partition cycle：
++ linear address `addr`
++ target specifier `aper`: `VRAM` , `HOST` , `NCOH` 。
++ read only flag `ro`
++ supervisor-only flag `priv`
++ storage type:  `kind` 一个特殊值，选择包含数据的内部结构，通过增加cache的局部性来更有效的访问。
++ compression mode： `comp`
++ compression tag address： `ctag`
++ partition cycle： 
 + encryption flag：
 
 ![GPU页表](../NVIDIA-GPU虚拟内存/GPU页表.png)
@@ -55,7 +55,7 @@ VM channel 也是一个FIFO channel，被PFIFO和FIFO引擎使用并且包含其
 
 一个channel由 channel描述符（channel descriptor）标识，这是一个30位的数，指向了channel内存结构的基址。
 + 位0-27：channel内存结构体的12-39位，线性地址。
-+ 位28-29： channel 内存结构体的target specifier - 0：VRAM; 1:invalid,不使用; 2: SYSRAM_SNOOP - 3: SYSRAM_NOSNOOP
++ 位28-29： channel 内存结构体的target specifier - 0：VRAM; 1:invalid,不使用; 2: SYSRAM_SNOOP or HOST - 3: SYSRAM_NOSNOOP or NCOH
 
 channel内存结构体包含一些固定偏移的元素，也包含可以放置在结构体内任何位置的channel对象，比如DMA对象。
 channel结构体没有固定的大小，尽管channel对象的最大地址是0xffff0。 channel结构体也必须0x1000字节对齐。
@@ -88,7 +88,7 @@ selector 向左位移4位，并且增加到channel结构体基地址来获取DMA
 + word 0
 	- bits 0-15: object class. 
 Ignored by VM, but usually validated by fifo engines- should be 0x2 [read-only], 0x3 [write-only], or 0x3d [read-write]
-	- bits 16-17: target specifier:
+	- bits 16-17: target specifier:  
 		+ 0: VM - paged object - the logical address is to be added to the base address to obtain a virtual address, then the virtual address should be translated via the page tables
 		+ 1: VRAM - unpaged object - the logical address should be added to the base address to directly obtain the linear address in VRAM
 		+ 2: SYSRAM_SNOOP - like VRAM, but gives SYSRAM address
@@ -107,22 +107,17 @@ Ignored by VM, but usually validated by fifo engines- should be 0x2 [read-only],
 		+ 1: SINGLE compression
 		+ 2: DOUBLE compression
 		+ 3: use compression mode from page tables
-	+ bit 31: if set, is a supervisor DMA object, user DMA object otherwise
-
+	+ bit 31: if set, is a supervisor DMA object, user DMA object otherwise  
 + word 1:
 	+ bits 0-31 of limit address
-
 + word 2:
 	+ bits 0-31 of base address
-
 + word 3:
 	+ bits 0-7: bits 32-39 of base address
 	+ bits 24-31: bits 32-39 of limit address
-
 + word 4:
 	+ bits 0-11: base tag address
 	+ bits 16-27: limit tag address
-
 + word 5:
 	+ bits 0-15: compression base address bits 16-31 [bits 0-15 are forced to 0]
 	+ bits 16-17: partition cycle
@@ -241,14 +236,43 @@ PTE 由两个32位的小端字word 组成，有以下结构：
 	+ bit 62 [G84-]: encryption flag
 
 # TLB flush
-页表内容缓存在每个引擎的TLB中。为了清楚TLB缓存，TLB flush register 0x100c80 被使用。
+页表内容缓存在每个引擎的TLB中。为了清除TLB缓存，TLB flush register 0x100c80 被使用。
 
-MMIO 0x100c80:
+**MMIO 0x100c80**:
 + bit 0: trigger. When set, triggers the TLB flush. Will auto-reset to 0 when flush is complete.
 + bits 16-19: 要flush的VM engine
 
 flush操作包括将 `engine << 16 | 1 ` 命令写入到此寄存器中，并且等待 位0 变为 0。
 
+源码见 *nouveau\nvkm\subdev\mmu\vmmnv50.c* 的 `nv50_vmm_flush()`   
 
+```c
+void nv50_vmm_flush(struct nvkm_vmm *vmm, int level) {
+	...
+	switch (i) {
+		case NVKM_ENGINE_GR    : id = 0x00; break;
+		case NVKM_ENGINE_VP    :
+		case NVKM_ENGINE_MSPDEC: id = 0x01; break;
+		case NVKM_SUBDEV_BAR   : id = 0x06; break;
+		case NVKM_ENGINE_MSPPP :
+		case NVKM_ENGINE_MPEG  : id = 0x08; break;
+		case NVKM_ENGINE_BSP   :
+		case NVKM_ENGINE_MSVLD : id = 0x09; break;
+		case NVKM_ENGINE_CIPHER:
+		case NVKM_ENGINE_SEC   : id = 0x0a; break;
+		case NVKM_ENGINE_CE0   : id = 0x0d; break;
+		default:
+			continue;
+		}
+	nvkm_wr32(device, 0x100c80, (id << 16) | 1);
+	if (nvkm_msec(device, 2000,
+			if (!(nvkm_rd32(device, 0x100c80) & 0x00000001))
+				break;
+		) < 0)
+			nvkm_error(subdev, "%s mmu invalidate timeout\n",
+				   nvkm_subdev_name[i]);
+	
+}
+```
 
 [Tesla virtual memory¶](http://envytools.readthedocs.io/en/latest/hw/memory/g80-vm.html)

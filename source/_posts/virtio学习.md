@@ -706,6 +706,278 @@ struct vring_virtqueue {
 vm_setup_vq()
 ```
 
+一个逻辑buffer可能不是物理内存连续的，因此可能由多个内存块组成。  
+qemu中用 `VirtQueueElement` 结构表示一个逻辑buffer。  
+涉及到VRing，用 `VRingDesc` 结构描述一个物理内存块，用一个描述符数组集中管理所有的描述符。而前后端的配合通过两个ring来实现：`VRingAvail`和 `VRingUsed`，与FE的VRing描述一致。  
+
+**过程**：  
+当HOST需要向客户机发送数据时，先从对应的virtqueue获取客户机设置好的buffer空间（实际的buffer空间由客户机添加到virtqueue）,每次取出一个buffer，相关信息记录到 `VirtQueueElement` 结构中，然后对其进行地址映射，因为这里记录的buffer信息是客户机的物理地址，需要映射成HOST的虚拟地址才可以对其进行访问。每完成一个 `VirtQueueElement` 即buffer的的写入,就需要记录 `VirtQueueElement`相关信息到`VRingUsed`，并撤销地址映射。一个buffer写入完成后会设置`VRingUsed`的`idx`字段并对客户机注入软件中断以通知客户机。
+
+```c
+/* hw/virtio/virtio.c */
+typedef struct VRingDesc
+{
+    uint64_t addr; //buffer 的地址
+    uint32_t len;
+    uint16_t flags;
+    uint16_t next;
+} VRingDesc;
+```
+
+Descriptor Table记录的某一buffer占用VRingDesc entry可以通过`len`计算，即 `len/sizeof(VRingDesc)`。  
+
+```c
+typedef struct VRingAvail
+{
+    uint16_t flags;
+    uint16_t idx;
+    uint16_t ring[0];
+} VRingAvail;
+
+typedef struct VRingUsedElem
+{
+    uint32_t id;
+    uint32_t len;
+} VRingUsedElem;
+
+typedef struct VRingUsed
+{
+    uint16_t flags;
+    uint16_t idx;
+    VRingUsedElem ring[0];
+} VRingUsed;
+
+typedef struct VRingMemoryRegionCaches {
+    struct rcu_head rcu;
+    MemoryRegionCache desc;
+    MemoryRegionCache avail;
+    MemoryRegionCache used;
+} VRingMemoryRegionCaches;
+
+typedef struct VRing
+{
+    unsigned int num;
+    unsigned int num_default;
+    unsigned int align;
+    hwaddr desc;
+    hwaddr avail;
+    hwaddr used;
+    VRingMemoryRegionCaches *caches;
+} VRing;
+
+struct VirtQueue
+{
+    VRing vring;
+    /* Next head to pop 
+     * 上次写入的最后一个avail_ring的索引
+    */
+    uint16_t last_avail_idx;
+    /* Last avail_idx read from VQ. */
+    uint16_t shadow_avail_idx;
+    /* Used Ring 中的idx，表示下次需要使用的ring[]中的index */
+    uint16_t used_idx;
+    /* Last used index value we have signalled on */
+    uint16_t signalled_used;
+    /* Last used index value we have signalled on */
+    bool signalled_used_valid;
+    /* Notification enabled? */
+    bool notification;
+    uint16_t queue_index;
+    unsigned int inuse;
+
+    uint16_t vector;
+    VirtIOHandleOutput handle_output;
+    VirtIOHandleAIOOutput handle_aio_output;
+    VirtIODevice *vdev;
+    EventNotifier guest_notifier;
+    EventNotifier host_notifier;
+    QLIST_ENTRY(VirtQueue) node;
+};
+```
+
+需要重点关注的字段，`last_avail_index` 对应 VRingAvail中 `ring[]`数组的下标，表示上次最后使用的一个buffer首个desc对应的ring[]中的下标。  
+
+
+```c
+typedef struct VirtQueueElement
+{
+    unsigned int index;
+    unsigned int out_num;
+    unsigned int in_num;
+    hwaddr *in_addr;
+    hwaddr *out_addr;
+    struct iovec *in_sg;
+    struct iovec *out_sg;
+} VirtQueueElement;
+```
+其中，`in_addr` 和 `out_addr` 两个数组保存的是客户机的物理地址，而 `in_sg` 和 `out_sg` 中的地址是host的虚拟地址，两者之间需要映射。  
+`index` 记录该逻辑buffer块的首个物理内存块对应的描述符在描述符表中的下标，`out_num`和 `in_num` 是指输出（可读）和输入（可写）块的数量。  
+
++ `virtqueue_pop()`
+
+```c
+/* hw\virtio\virtio.c */
+void *virtqueue_pop(VirtQueue *vq, size_t sz)
+{
+    hwaddr addr[VIRTQUEUE_MAX_SIZE];
+    struct iovec iov[VIRTQUEUE_MAX_SIZE];
+    ...
+    /* When we start there are none of either input nor output. */
+    out_num = in_num = elem_entries = 0;
+    max = vq->vring.num;
+    ...
+    i = head;
+    vring_desc_read(vdev, &desc, desc_cache, i);
+    /* Collect all the descriptors */
+    do {
+        bool map_ok;
+        if (desc.flags & VRING_DESC_F_WRITE) {
+            map_ok = virtqueue_map_desc(vdev, &in_num, addr + out_num,
+                                        iov + out_num,
+                                        VIRTQUEUE_MAX_SIZE - out_num, true,
+                                        desc.addr, desc.len);
+        } else {
+            if (in_num) {
+                virtio_error(vdev, "Incorrect order for descriptors");
+                goto err_undo_map;
+            }
+            map_ok = virtqueue_map_desc(vdev, &out_num, addr, iov,
+                                        VIRTQUEUE_MAX_SIZE, false,
+                                        desc.addr, desc.len);
+        }
+        if (!map_ok) {
+            goto err_undo_map;
+        }
+
+        /* If we've got too many, that implies a descriptor loop. */
+        if (++elem_entries > max) {
+            virtio_error(vdev, "Looped descriptor");
+            goto err_undo_map;
+        }
+
+        rc = virtqueue_read_next_desc(vdev, &desc, desc_cache, max, &i);
+    } while (rc == VIRTQUEUE_READ_DESC_MORE);
+    ...
+    /* Now copy what we have collected and mapped */
+    elem = virtqueue_alloc_element(sz, out_num, in_num);
+    elem->index = head;
+    for (i = 0; i < out_num; i++) {
+        elem->out_addr[i] = addr[i];
+        elem->out_sg[i] = iov[i];
+    }
+    for (i = 0; i < in_num; i++) {
+        elem->in_addr[i] = addr[out_num + i];
+        elem->in_sg[i] = iov[out_num + i];
+    }
+    vq->inuse++;
+    ...
+}
+
+static bool virtqueue_map_desc(VirtIODevice *vdev, unsigned int *p_num_sg,
+                               hwaddr *addr, struct iovec *iov,
+                               unsigned int max_num_sg, bool is_write,
+                               hwaddr pa, size_t sz)
+{
+    unsigned num_sg = *p_num_sg;
+    ...
+    while (sz) {
+        hwaddr len = sz;
+        ...
+        iov[num_sg].iov_base = dma_memory_map(vdev->dma_as, pa, &len,
+                                              is_write ?
+                                              DMA_DIRECTION_FROM_DEVICE :
+                                              DMA_DIRECTION_TO_DEVICE);
+        if (!iov[num_sg].iov_base) {
+            virtio_error(vdev, "virtio: bogus descriptor or out of resources");
+            goto out;
+        }
+
+        iov[num_sg].iov_len = len;
+        addr[num_sg] = pa;
+
+        sz -= len;
+        pa += len;
+        num_sg++;
+    }
+    *p_num_sg = num_sg;
+    ...
+}
+
+/* include\sysemu\dma.h */
+static inline void *dma_memory_map(AddressSpace *as,
+                                   dma_addr_t addr, dma_addr_t *len,
+                                   DMADirection dir)
+{
+    hwaddr xlen = *len;
+    void *p;
+
+    p = address_space_map(as, addr, &xlen, dir == DMA_DIRECTION_FROM_DEVICE);
+    *len = xlen;
+    return p;
+}
+
+/* exec.c */
+/* Map a physical memory region into a host virtual address.
+ * May map a subset of the requested range, given by and returned in *plen.
+ * May return NULL if resources needed to perform the mapping are exhausted.
+ * Use only for reads OR writes - not for read-modify-write operations.
+ * Use cpu_register_map_client() to know when retrying the map operation is
+ * likely to succeed.
+ */
+void *address_space_map(AddressSpace *as,
+                        hwaddr addr,
+                        hwaddr *plen,
+                        bool is_write);
+```
+
++ `virtqueue_push()`  
+
+`virtqueue_push()` 将 `VirtQueueElement *elem` 添加到VQ中然后再刷新 Used Ring。  
+分成了 fill 和 flush 两部分。  
+
+
+```c
+void virtqueue_push(VirtQueue *vq, const VirtQueueElement *elem,
+                    unsigned int len)
+{
+    rcu_read_lock();
+    virtqueue_fill(vq, elem, len, 0);
+    virtqueue_flush(vq, 1);
+    rcu_read_unlock();
+}
+```
+
+`virtqueue_fill()` 将取消VirtQueueElement映射的buffer，并将VirtQueueElement写入Used Ring中。  
+
+```c
+void virtqueue_fill(VirtQueue *vq, const VirtQueueElement *elem,
+                    unsigned int len, unsigned int idx)
+{
+    ...
+     virtqueue_unmap_sg(vq, elem, len);
+     ...
+     idx = (idx + vq->used_idx) % vq->vring.num;
+
+    uelem.id = elem->index;
+    uelem.len = len;
+    vring_used_write(vq, &uelem, idx);
+}
+```
+`virtqueue_flush()` 重新设置Used Ring的idx，`vq->signalled_used` 在 `virtqueue_notify()` 中设置，记录的是`vq->used_idx`。
+
+```c
+void virtqueue_flush(VirtQueue *vq, unsigned int count)
+{
+    ...
+    old = vq->used_idx;
+    new = old + count;
+    vring_used_idx_set(vq, new);
+    vq->inuse -= count;
+    if (unlikely((int16_t)(new - vq->signalled_used) < (uint16_t)(new - old)))
+        vq->signalled_used_valid = false;
+}
+```
+
 #### virtio 数据传输实例  
 
 + [VirtIO实现原理——数据传输演示](https://blog.csdn.net/huang987246510/article/details/103708461#_2)  
@@ -714,9 +986,13 @@ vm_setup_vq()
 
 #### vring event  
 
-+ [VIRTIO中的前后端配合限速分析](https://blog.csdn.net/leoufung/article/details/53584970)  
+[VIRTIO中的前后端配合限速分析](https://blog.csdn.net/leoufung/article/details/53584970)  
+[virtIO前后端notify机制详解 2016-11-15](https://www.cnblogs.com/ck1020/p/6066007.html)  
 
-在 `virtqueue_kick_prepare()` 中  
+
++ Guest 2 Host  
+
+在Guest `virtqueue_kick_prepare()` 中  
 ```c
     old = vq->avail_idx_shadow - vq->num_added;
     new = vq->avail_idx_shadow;
@@ -760,6 +1036,271 @@ static inline int vring_need_event(__u16 event_idx, __u16 new_idx, __u16 old)
 |---|old|-----|event_idx|----|new_idx|------|  
 
 
+`avail_event`在QEMU中的 `virtqueue_pop()` 设置，将VQ中上次处理的Avail Ring中的idx写回Used Ring中：  
+
+```c
+/* qemu/hw/virtio/virtio.c */
+void *virtqueue_pop(VirtQueue *vq, size_t sz){
+    ...
+    if (virtio_vdev_has_feature(vdev, VIRTIO_RING_F_EVENT_IDX)) {
+        vring_set_avail_event(vq, vq->last_avail_idx);
+    ...
+}
+    }
+```
+
++ Host 2 Guest  
+
+  
+首先，如果队列为空即当前没有可用buffer了，那么必然会notify前端。  
+其次判断是否支持这样事件触发式的方式即 `VIRTIO_RING_F_EVENT_IDX`，如果不支持，就通过flags字段来判断。而如果支持，就通过事件触发来通知。  
+最后，判断 `v = vq->signalled_used_valid` 和 `vring_need_event(vring_get_used_event(vq), new, old)`。  
+`v = vq->signalled_used_valid` 在初始化的时候被设置成false，表示还没有向前端做任何通知，而后再每次的 `virtio_should_notify()`中就会设置成`true`，并更新`vq->signalled_used = vq->used_idx`；  
+
+`old` 是上次调用notify更新的 `vq->used_idx`值；  
+`new` 是在 `virtqueue_flush()` 之后更新的Used Ring的idx。  
+`vring_get_used_event(vq)`获取了Avail Ring中保存的used_event，该值在客户机driver中`virtqueue_get_buf_ctx()`被设置。  
+`vring_need_event()` 与 Guest2Host中的判断方式一致。  
+
+```c
+static bool virtio_should_notify(VirtIODevice *vdev, VirtQueue *vq)
+{
+    uint16_t old, new;
+    bool v;
+    /* We need to expose used array entries before checking used event. */
+    smp_mb();
+    /* Always notify when queue is empty (when feature acknowledge) */
+    if (virtio_vdev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
+        !vq->inuse && virtio_queue_empty(vq)) {
+        return true;
+    }
+
+    if (!virtio_vdev_has_feature(vdev, VIRTIO_RING_F_EVENT_IDX)) {
+        return !(vring_avail_flags(vq) & VRING_AVAIL_F_NO_INTERRUPT);
+    }
+
+    v = vq->signalled_used_valid;
+    vq->signalled_used_valid = true;
+    old = vq->signalled_used;
+    new = vq->signalled_used = vq->used_idx;
+    return !v || vring_need_event(vring_get_used_event(vq), new, old);
+}
+```
+
+在 Guest 中，`virtqueue_get_buf_ctx()` 会处理Used Ring，每次取出buffer后将 `vq->last_used_idx` 写入到 Used Ring的event中。  
+
+```c
+/* drivers/virtio/virtio_ring.c */
+void *virtqueue_get_buf_ctx(struct virtqueue *_vq, unsigned int *len,
+                void **ctx)
+{
+    /* If we expect an interrupt for the next entry, tell host
+     * by writing event index and flush out the write before
+     * the read in the next get_buf call. */
+    if (!(vq->avail_flags_shadow & VRING_AVAIL_F_NO_INTERRUPT))
+        virtio_store_mb(vq->weak_barriers,
+                &vring_used_event(&vq->vring),
+                cpu_to_virtio16(_vq->vdev, vq->last_used_idx));
+    ...
+}
+```
+
+#### virtio pci notify机制  
+
++ Guest 2 Host  
+
+Guest若要通知QEMU，会调用 `virtqueue_kick->virtqueue_notify`，而virtqueue结构中绑定的notify函数是`vp_notify`，在创建virtqueue是通过实参传递。
+
+```c
+/* drivers/virtio/virtio_pci_legacy.c */
+setup_vq()
+{
+    vq = vring_create_virtqueue(index, num,
+                    SMP_CACHE_BYTES, &vp_dev->vdev,
+                    true, true, ctx,
+                    vp_notify, callback, name);
+    ...
+    vq->priv = (void __force *)vp_dev->ioaddr + VIRTIO_PCI_QUEUE_NOTIFY;
+}
+
+/* drivers/virtio/virtio_pci_common.c */
+/* the notify function used when creating a virt queue */
+bool vp_notify(struct virtqueue *vq)
+{
+    /* we write the queue's selector into the notification register to
+     * signal the other end */
+    iowrite16(vq->index, (void __iomem *)vq->priv);
+    return true;
+}
+```
+
+通知方式通过PCI IO寄存器`VIRTIO_PCI_QUEUE_NOTIFY` 写入了 VQ的id。  
+再后端QEMU处理此PCI IO寄存器：  
+```c
+/* hw/virtio/virtio-pci.c */ 
+static void virtio_ioport_write(void *opaque, uint32_t addr, uint32_t val)
+{
+    ...
+    case VIRTIO_PCI_QUEUE_PFN:
+        pa = (hwaddr)val << VIRTIO_PCI_QUEUE_ADDR_SHIFT;
+        if (pa == 0) {
+            virtio_pci_reset(DEVICE(proxy));
+        }
+        else
+            virtio_queue_set_addr(vdev, vdev->queue_sel, pa);
+        break;
+    case VIRTIO_PCI_QUEUE_SEL:
+        if (val < VIRTIO_QUEUE_MAX)
+            vdev->queue_sel = val;
+        break;
+    case VIRTIO_PCI_QUEUE_NOTIFY:
+        if (val < VIRTIO_QUEUE_MAX) {
+            virtio_queue_notify(vdev, val);
+        }
+        break;
+    ...
+}
+
+/* hw/virtio/virtio.c */
+void virtio_queue_notify(VirtIODevice *vdev, int n)
+{
+    VirtQueue *vq = &vdev->vq[n];
+
+    if (unlikely(!vq->vring.desc || vdev->broken)) {
+        return;
+    }
+
+    trace_virtio_queue_notify(vdev, vq - vdev->vq, vq);
+    if (vq->handle_aio_output) {
+        event_notifier_set(&vq->host_notifier);
+    } else if (vq->handle_output) {
+        vq->handle_output(vdev, vq);
+    }
+}
+```
+
+此处仅仅调用了VirtQueue结构中绑定的处理函数handle_output，而handle_output通过`virtio_add_queue()` 进行的绑定。  
+该`handle_output()`函数根据不同的设备有不同的实现，比如网卡有网卡的实现，而块设备有块设备的实现。  
+以 virtio-serial-bus.c 为例，对于数据传输的VQ，`handle_output()` 调用了 `do_flush_queued_data()`，此函数对数据进行pop，push,notify。  
+
+
+```c
+/* hw/virtio/virtio.c */
+VirtQueue *virtio_add_queue(VirtIODevice *vdev, int queue_size,
+                            VirtIOHandleOutput handle_output)
+{
+    int i;
+
+    for (i = 0; i < VIRTIO_QUEUE_MAX; i++) {
+        if (vdev->vq[i].vring.num == 0)
+            break;
+    }
+
+    if (i == VIRTIO_QUEUE_MAX || queue_size > VIRTQUEUE_MAX_SIZE)
+        abort();
+
+    vdev->vq[i].vring.num = queue_size;
+    vdev->vq[i].vring.num_default = queue_size;
+    vdev->vq[i].vring.align = VIRTIO_PCI_VRING_ALIGN;
+    vdev->vq[i].handle_output = handle_output;
+    vdev->vq[i].handle_aio_output = NULL;
+
+    return &vdev->vq[i];
+}
+
+/* hw/char/virtio-serial-bus.c */
+static void virtio_serial_device_realize(DeviceState *dev, Error **errp)
+{
+    ...
+    /* Add a queue for host to guest transfers for port 0 (backward compat) */
+    vser->ivqs[0] = virtio_add_queue(vdev, 128, handle_input);
+    /* Add a queue for guest to host transfers for port 0 (backward compat) */
+    vser->ovqs[0] = virtio_add_queue(vdev, 128, handle_output);
+    ...
+}
+
+/* Guest wrote something to some port. */
+static void handle_output(VirtIODevice *vdev, VirtQueue *vq)
+{
+    VirtIOSerial *vser;
+    VirtIOSerialPort *port;
+
+    vser = VIRTIO_SERIAL(vdev);
+    port = find_port_by_vq(vser, vq);
+
+    if (!port || !port->host_connected) {
+        discard_vq_data(vq, vdev);
+        return;
+    }
+
+    if (!port->throttled) {
+        do_flush_queued_data(port, vq, vdev);
+        return;
+    }
+}
+```
+
++ Host 2 Guest  
+
+`virtqueue_notify()`
+先判断是否需要更新，如果需要则通过 `virtio_irq()` 通知。  
+
+`virtio_should_notify()`涉及到了前后端配合限速更新，与Guest中的限速相似，但是也略有不同。
+
+```c
+/* hw/virtio/virtio.c */
+void virtio_notify(VirtIODevice *vdev, VirtQueue *vq)
+{
+    bool should_notify;
+    should_notify = virtio_should_notify(vdev, vq);
+    if (!should_notify) {
+        return;
+    }
+    virtio_irq(vq);
+}
+
+static void virtio_irq(VirtQueue *vq)
+{
+    virtio_set_isr(vq->vdev, 0x1);
+    virtio_notify_vector(vq->vdev, vq->vector);
+}
+
+static void virtio_notify_vector(VirtIODevice *vdev, uint16_t vector)
+{
+    BusState *qbus = qdev_get_parent_bus(DEVICE(vdev));
+    VirtioBusClass *k = VIRTIO_BUS_GET_CLASS(qbus);
+    ...
+    if (k->notify) {
+        k->notify(qbus->parent, vector);
+    }
+}
+```
+
+而 `VirtioBusClass *k->notify` 关联的函数为 `virtio_pci_notify()` 。  
+在 `virtio_pci_bus_class_init()` 初始化。
+```c
+/* hw/virtio/virtio-pci.c */
+static void virtio_pci_bus_class_init(ObjectClass *klass, void *data)
+{
+    BusClass *bus_class = BUS_CLASS(klass);
+    VirtioBusClass *k = VIRTIO_BUS_CLASS(klass);
+    k->notify = virtio_pci_notify;
+    ...
+}
+
+static void virtio_pci_notify(DeviceState *d, uint16_t vector)
+{
+    VirtIOPCIProxy *proxy = to_virtio_pci_proxy_fast(d);
+
+    if (msix_enabled(&proxy->pci_dev))
+        msix_notify(&proxy->pci_dev, vector);
+    else {
+        VirtIODevice *vdev = virtio_bus_get_device(&proxy->bus);
+        pci_set_irq(&proxy->pci_dev, atomic_read(&vdev->isr) & 1);
+    }
+}
+```
+`virtio_pci_notify()` 设置中断来通知Guest。  
 
 
 # virtio的使用

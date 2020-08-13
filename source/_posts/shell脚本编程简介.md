@@ -31,6 +31,51 @@ categories:
 
 	for file in `ls /etc`
 
+## 数组  
+
+1. 声明数组  
+```
+declare -a array
+```
+
+2. 直接定义
+
+```
+(1) array=(var1 var2 var3 ... varN)
+(2) array=([0]=var1 [1]=var2 [2]=var3 ... [n]=varN)
+(3) array[0]=var1
+    arrya[1]=var2
+    ...
+    array[n]=varN
+```
+
+使用数组：  
+
+```
+${array[i]}                     # 引用数组
+${array[*]} 或${array[@]}       # 数组所有成员
+${!array[*]} 或${!array[@]}     # 数组所有下标
+${#array[*]} 或${#array[@]}     # 数组元素个数
+${#array[0]}                    # 数组第一个成员的长度
+```
+
+比如：  
+```
+COLOR=("red" "green" "yellow" "blue" [5]="orange")
+echo ${#COLOR[*]}
+> 5
+
+echo ${!COLOR[*]}
+> 0 1 2 3 5
+
+for item in ${COLOR[*]}
+do
+    printf "   %s/n" $item
+done
+```
+
+<https://blog.csdn.net/ilovemilk/java/article/details/4959747>
+
 ## 使用变量
 使用一个定义过的变量，只要在变量名前面加美元符号 `$` 即可，如：
 
@@ -278,6 +323,8 @@ root@PowerEdge-R610:~/tools# echo $?
 
 	for var in item1 item2 ... itemN; do command1; command2… done;
 
+循环内部同样可以使用 `break` 、 `continue` 等命令。  
+
 ### C风格的for
 
 	for (( EXP1; EXP2; EXP3 ))
@@ -441,6 +488,22 @@ su <otheruser> -c <command >
 [How can I execute a script as root, execute some commands in it as a specific user and just one command as root](https://unix.stackexchange.com/a/264239)  
 [Run a shell script as another user that has no password](https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password)  
 [How to write a shell script that runs some commands as superuser and some commands not as superuser, without having to babysit it?](https://stackoverflow.com/a/10220200)  
+
++ 获得版本  
+
+[Extract version number from file in shell script](https://stackoverflow.com/a/6245903)  
+
+获得CUDA 版本号  
+
+```sh
+#!/bin/bash
+
+version="$(cat /usr/local/cuda/version.txt | head -n1|cut -d " " -f3)"
+echo $version
+
+majorminor=${version%.*}
+echo $majorminor
+```
 
 + 比较版本
 

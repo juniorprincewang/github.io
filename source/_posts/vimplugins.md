@@ -10,6 +10,128 @@ categories:
 为了提高编程效率，需要多利用现有的工具，比如插件！本篇博客介绍好使的vim插件。
 <!-- more -->
 
+# [vimplus](https://github.com/chxuan/vimplus)  
+
+[vimplus](https://github.com/chxuan/vimplus) 这款工具自动帮用户完成了插件配置，包括了 *YouCompleteMe*、 *NerdTree*、 *Airline* 等实用插件，省去了网上甄别配置教程和逐一尝试的烦恼。  
+
+安装vimplus  
+```sh
+git clone https://github.com/chxuan/vimplus.git ~/.vimplus
+cd ~/.vimplus
+./install.sh //不加sudo
+```
+
+注意[快捷键](https://github.com/chxuan/vimplus/blob/master/help.md)的使用，加速查询和编辑。  
+
+涉及到插件的快捷键有个 *Leader Key* 的概念，需要先摁此键，再配合其他键使用。这里默认是 *,*，也可以在配置文件中改。  
+我常用的快捷键：   
+
++ `<leader>f`   搜索~目录下的文件
++ `<leader>t` 打开/关闭函数列表
++ `<c-p>` 切换到上一个buffer
++ `<c-n>`   切换到下一个buffer
++ `<leader>d`    删除当前buffer
++ `<leader>D`   删除当前buffer外的所有buffer
++ `<F9>`  显示上一主题
++ `<F10>`   显示下一主题
++ `<leader><leader>i` 安装插件
++ `<leader><leader>u`   更新插件
++ `<leader><leader>c`   删除插件
+
+## cscope 使用  
+
+函数和声明跳转快捷键不怎么好使，我使用了比较流行的 cscope 来分析 Kernel code。  
+
+
+需要安装插件 cscope，但是 [The Vim/Cscope tutorial](http://cscope.sourceforge.net/cscope_vim_tutorial.html) 并没有说安装，将配置文件 cscope_maps.vim 放入 **~\.vim\plugin** 中，注意此处是 **~\.vim\plugin** ，而非 **~\.vim\plugged** 。
+
+**~\.vim\plugged** 是 vim-plug 为了管理plugin 而创建的文件夹。将vim文件直接放入这里，[这么配置的插件没有起作用](https://stackoverflow.com/a/20826292)。    
+
+cscope_maps.vim 配置文件里面设置了自动载入 cscope.out 和一些快捷键操作。
+
+纠正方法有2
+
+
+
+1. 其实搞错了， 一个 *.vim* 文件仅仅放入 *~/.vim/plugin* 中即可。    
+
+[How do I install a plugin in Vim/vi?](https://vi.stackexchange.com/a/614)  
+
+2. 别人在github上备份的cscope-maps.vim 镜像  
+
+```
+Plug 'dr-kino/cscope-maps'
+```
+
+[How to install cscope_maps with vim-plug?](https://stackoverflow.com/a/55764323)  
+
+linux kernel 创建 tag db。  
+
+如果在out-of-tree的kernel module 使用时，需要使用绝对路径 
+
+```
+ARCH=x86 make O=. cscope
+cscope -d -P `pwd`
+:cs add <base_location>/cscope.out <base_location>/
+```
+
+[引入cscope.out时，提供prefix](https://stackoverflow.com/a/3197191)   
+```
+:cscope add /path/to/cscope.out /path/to/src/code
+```
+
+如果就是在 in-tree 查看源代码，则不用绝对路径。  
+
+对于用户态的c\c++工程：  
+
+```
+cscope -Rbq
+```
+
+比较靠谱的指南：  
++ [vim+cscope使用指南](https://developer.aliyun.com/article/686709)  
++ [Linux kernel makefile cscope target](https://stackoverflow.com/questions/22938266/linux-kernel-makefile-cscope-target)  
++ [Vim configuration for Linux kernel development [closed]](https://stackoverflow.com/questions/33676829/vim-configuration-for-linux-kernel-development)里面建议 `cscope ` 和 `ctags` 两个工具   
+
+每次使用前，在cscope.out所在的根目录打开vim  
+在vim命令行中添加cscope db  
+
+```
+:cs add [path\to\].cscope.out
+```
+
+
+## NERDTree
+
++ [How to filter out files by extension in NERDTree?](https://stackoverflow.com/a/5601830)  
+
+```
+let NERDTreeIgnore = ['\.pyc$', '\.py$']
+```
+
+## search  
+
++ [Vim clear last search highlighting](https://stackoverflow.com/questions/657447/vim-clear-last-search-highlighting)  
+
+```
+To turn off highlighting until the next search:
+
+:noh
+Or turn off highlighting completely:
+
+set nohlsearch
+Or, to toggle it:
+
+set hlsearch!
+
+nnoremap <F3> :set hlsearch!<CR>
+```
+
+
+
+下面内容过于繁琐陈旧，不必再看。  
+
+* * *
 
 # Vundle
 

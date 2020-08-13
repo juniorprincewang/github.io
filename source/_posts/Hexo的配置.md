@@ -152,10 +152,42 @@ npm install
 
 这种情况的出现是由于主题配置出错。查看`themes`文件夹下是否有相关文件夹并且文件夹下是否有文件；`_config.yml`内`theme`是否和主题名称对应。
 
+## 升级依赖包
+
+
+```sh
+npm i hexo-cli -g
+npm update
+```
+
+查看更新到的版本。  
+```
+hexo vesion
+```
+
+检查更新。   
+```
+npm install -g npm-check
+npm-check
+```
+升级。   
+```
+npm install -g npm-upgrade
+npm-upgrade
+```
+
+一路回车确认安装即可。  
+接下来在本地生产环境安装  
+```
+npm install --save
+```
+
+[Hexo博客及环境依赖包的正确升级方法](https://hexo.imydl.tech/archives/51612.html)  
+
 
 # 操作
 
-## 发布新文章 [5](https://lanjingling.github.io/2015/09/24/use-of-hexo-2/)
+## 发布新文章
 
 执行 new 命令， 生成指定名称的文章至 *hexo\source_posts\postName.md* 。  
 
@@ -191,8 +223,8 @@ hexo new draft "new draft"
 ```
 
 如果预览草稿，可
-1. 更改配置文件（*_config.yml*）`render_drafts: true`  
-2. 或者如下方式启动server：`hexo server --drafts`  
+1. 或者如下方式启动server：`hexo server --drafts`  
+2. 更改配置文件（*_config.yml*）`render_drafts: true`，但是deploy前需要求改掉。    
 
 下面这条命令可以把草稿变成文章，或者页面：
 ```sh
@@ -202,8 +234,8 @@ hexo publish [layout] <filename>
 
 
 # 参考  
-[1] [Hexo｜快速搭建自己（Github）博客](http://www.jianshu.com/p/808554f12929)  
-[2] [给Hexo博客添加访问统计](http://www.jianshu.com/p/8a8f880f40c0)  
-[3] [搭建hexo部署到github图文教程 亲测可用超详细](https://m.paopaoche.net/new/85988)  
-[4] [用Hexo 3 搭建github blog](http://forsweet.github.io/hexo/%E7%94%A8Hexo%E6%90%AD%E5%BB%BAGithub%E5%8D%9A%E5%AE%A2/)  
-[5] [hexo使用心得（二）](https://lanjingling.github.io/2015/09/24/use-of-hexo-2/)
++ [Hexo｜快速搭建自己（Github）博客](http://www.jianshu.com/p/808554f12929)  
++ [给Hexo博客添加访问统计](http://www.jianshu.com/p/8a8f880f40c0)  
++ [搭建hexo部署到github图文教程 亲测可用超详细](https://m.paopaoche.net/new/85988)
++ [用Hexo 3 搭建github blog](http://forsweet.github.io/hexo/%E7%94%A8Hexo%E6%90%AD%E5%BB%BAGithub%E5%8D%9A%E5%AE%A2/)  
++ [hexo使用心得（二）](https://lanjingling.github.io/2015/09/24/use-of-hexo-2/)

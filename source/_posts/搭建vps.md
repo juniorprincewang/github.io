@@ -132,6 +132,53 @@ nohup ssserver -c /etc/shadowsocks.json &
 
 到此，就可以访问[油管](www.youtube.com)啦。
 
+## ubuntu client  
+
+这里实验了ss GUI client。  
+
+先去下载客户端 Shadowsocks-Qt5-3.0.1-x86_64.AppImage
+： <https://github.com/shadowsocks/shadowsocks-qt5/releases>  
+
+```
+chmod +x Shadowsocks-Qt5-3.0.1-x86_64.AppImage
+# run 
+./Shadowsocks-Qt5-3.0.1-x86_64.AppImage
+```
+运行此软件后会弹出配置窗口，进行添加、配置就行，选择SOCKS5，最后点击connect。  
+至此，TCP代理运行在 127.0.0.1:1080。  
+> TCP server listening at 127.0.0.1:1080
+
+为系统网络设置proxy 127.0.0.1:1080。
+
+但此时所有的流量都走代理，包括国内网站。因此还需要设置pac让国内网站不经过代理。  
+
+**配置PAC文件**  
+
+安装 `genpac`  
+
+```
+# 如果没有pip工具则先执行安装：
+sudo apt install python-pip
+sudo pip install genpac
+```
+
+```
+genpac --pac-proxy "SOCKS5 127.0.0.1:1080" --gfwlist-proxy="SOCKS5 127.0.0.1:1080" --gfwlist-url=https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt --output="autoproxy.pac"
+```
+
+或者 GitHub 找到 gfwlist的仓库，把内容复制到你放置 pac文件的文件夹中的gfwlist.txt中
+
+```
+genpac --pac-proxy "SOCKS5 127.0.0.1:1080" --gfwlist-proxy="SOCKS5 127.0.0.1:1080" --gfwlist-local="gfwlist.txt" --output="autoproxy.pac"
+```
+
+在设置->network中配置automatic，配置路径输入：  
+```
+file:///xxxx/xxx/xxx/xxx.pac
+```
+
+
+
 # 访问谷歌学术
 
 你是否有这样的烦恼，访问谷歌学术就得到 "We're sorry..." 的页面。尤其最近2018-12月份IPv6科学上外网方法又被过滤掉后，这种情况一度让人头疼。

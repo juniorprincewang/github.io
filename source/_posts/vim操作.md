@@ -207,3 +207,4 @@ categories:
 [1] [Vim 常用命令总结](http://pizn.github.io/2012/03/03/vim-commonly-used-command.html)
 [2] [VIM进阶笔记(1) —— 查找与替换](http://brieflyx.me/2015/linux-tools/vim-advanced-1/)
 [3] [vim 技巧 – 查找的时候忽略大小写](https://xwsoul.com/posts/472)
+[4] [Training and Tutorials Vim 101: A Beginner’s Guide to Vim](https://www.linux.com/training-tutorials/vim-101-beginners-guide-vim/)  

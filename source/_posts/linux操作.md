@@ -7,6 +7,7 @@ tags:
 - scp
 - ip
 - zsh
+- pssh
 categories:
 - [linux]
 ---
@@ -263,6 +264,12 @@ sudo systemd-resolve --status
 
 参考 [Ubuntu-18.04 DNS 配置](https://vqiu.cn/ubuntu-18-04-dns-config/)  
 
+对于 [Ubuntu-18.04 clear DNS cache](https://askubuntu.com/a/2234) ， 可采用  
+```sh
+sudo systemd-resolve --flush-caches
+```
+
+
 ## 通过IPv6访问Google等
 
 在有IPv6支持的网络中，设置自己的静态IPv6。
@@ -432,7 +439,84 @@ scp -P 2222 -r local_folder remote_username@remote_ip:remote_folder
 
 [1] [每天一个linux命令（60）：scp命令](http://www.cnblogs.com/peida/archive/2013/03/15/2960802.html)
 
+## pssh  
 
+pssh命令是一个python编写可以在多台服务器上执行命令的工具，全程 parallel-ssh。  
+此命令用于同步在多台虚拟机内测试，终于找到此命令。  
+
+### 安装  
+
+1、ubuntu安装pssh，
+```sh
+sudo apt-get install pssh
+```
+2、运行 `pssh`，也许会提示：*No command 'pssh' found, did you mean:...*
+
+解决办法参考[Why pssh command is not working?](https://askubuntu.com/questions/119232/why-pssh-command-is-not-working)。  
+
+在安装完pssh后，实际上安装了 parallel-ssh，parallel-scp，parallel-rsync，parallel-nuke，parallel-slurp等工具，需要给这些命令设置别名，即 pssh、pscp、prsync、pnuke和pslurp。  
+需要执行如下命令：
+
+```sh
+echo "alias pssh=parallel-ssh" >> ~/.bashrc && . ~/.bashrc。
+echo "alias pscp=parallel-scp" >> ~/.bashrc && . ~/.bashrc
+echo "alias prsync=parallel-rsync" >> ~/.bashrc && . ~/.bashrc
+echo "alias pnuke=parallel-nuke" >> ~/.bashrc && . ~/.bashrc
+echo "alias pslurp=parallel-slurp" >> ~/.bashrc && . ~/.bashrc
+```
+其中，
++ `pscp`把文件并行地复制到多个客户机；
++ `prsync`使用rsync协议从管理机同步到客户机；
++ `pslurp` 将文件从客户机复制到管理机；
++ `pnuke` 并行地在客户机杀进程。
+
+### 命令  
+
+命令格式：  
+```
+pssh [OPTIONS] command [...]
+```
+
+其中 OPTIONS 为  
+```
+--version：查看版本
+--help：查看帮助，即此信息
+-h：主机文件列表，内容格式”[user@]host[:port]”
+-H：主机字符串，内容格式”[user@]host[:port]”
+-l：登录使用的用户名
+-p：并发的线程数【可选】
+-o：输出的文件目录【可选】
+-e：错误输入文件【可选】
+-t：TIMEOUT 超时时间设置，0无限制【可选】
+-O：SSH的选项
+-v：详细模式
+-A：手动输入密码模式
+-x：额外的命令行参数使用空白符号，引号，反斜线处理
+-X：额外的命令行参数，单个参数模式，同-x
+-i：每个服务器内部处理信息输出
+-P：打印出服务器返回信息
+```
+
+### 实例
+
+具体操作在准备阶段需要在管理机上制作密钥对，将公钥添加给客户机，然后通过ssh免密登录。  
+
+新建客户机user和ip列表hosts.txt。  
+```
+test@192.168.0.101
+test@192.168.0.102
+test@192.168.0.103
+```
+
+在客户机上执行 `uptime` 并将结果保存到管理机。  
+
+```
+pssh -h hosts.txt -i -o /tmp/pssh/ uptime
+```
+
++ [pssh命令](https://man.linuxde.net/pssh)  
++ [pssh HOWTO](http://www.theether.org/pssh/docs/0.2.3/pssh-HOWTO.html)  
++ [使用PSSH批量管理Linux](https://www.jianshu.com/p/d6c8b7aac221)
 
 
 
