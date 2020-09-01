@@ -17,7 +17,7 @@ qemu-kvm的内存虚拟化方案，是由qemu和kvm共同完成的，所以可�
 |VA | Virtual Address, 虚拟地址|
 |PA | Physical Address, 物理地址 |
 |PML4 | Page Map Level 4|
-|PDPT | Page Directory Table|
+|PDPT | Page Directory Pointer Table|
 |PD | Page Directory|
 |PT| Page Table|
 |PGD| Page Global Directory|

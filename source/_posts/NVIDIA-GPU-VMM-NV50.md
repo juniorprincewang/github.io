@@ -55,7 +55,7 @@ VM channel 也是一个FIFO channel，被PFIFO和FIFO引擎使用并且包含其
 
 一个channel由 channel描述符（channel descriptor）标识，这是一个30位的数，指向了channel内存结构的基址。
 + 位0-27：channel内存结构体的12-39位，线性地址。
-+ 位28-29： channel 内存结构体的target specifier - 0：VRAM; 1:invalid,不使用; 2: SYSRAM_SNOOP or HOST - 3: SYSRAM_NOSNOOP or NCOH
++ 位28-29： channel 内存结构体的target specifier - 0：`VRAM`; 1:invalid,不使用; 2: SYSRAM_SNOOP or `HOST` - 3: SYSRAM_NOSNOOP or `NCOH`
 
 channel内存结构体包含一些固定偏移的元素，也包含可以放置在结构体内任何位置的channel对象，比如DMA对象。
 channel结构体没有固定的大小，尽管channel对象的最大地址是0xffff0。 channel结构体也必须0x1000字节对齐。

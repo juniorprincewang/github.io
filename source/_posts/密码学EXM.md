@@ -20,7 +20,14 @@ categories:
 
 ![](../密码学EXM/exm.jpg)
 
-凯撒和栅栏密码
+
+# tutorials  
+
++ [Practical Cryptography for Developers](https://cryptobook.nakov.com/)  
+本书算是实用密码学实战，以python开发，涉及了 **hashes** (like SHA-3 and BLAKE2), **MAC codes** (like HMAC and GMAC), **key derivation functions** (like Scrypt, Argon2), **key agreement protocols** (like DHKE, ECDH), **symmetric ciphers** (like AES and ChaCha20, cipher block modes, authenticated encryption, AEAD, AES-GCM, ChaCha20-Poly1305), **asymmetric ciphers and public-key cryptosystems** (RSA, ECC, ECIES), **elliptic curve cryptography** (ECC, secp256k1, curve25519), **digital signatures** (ECDSA and EdDSA), **secure random numbers** (PRNG, CSRNG) and **quantum-safe cryptography** 。  
+
+
+# 凯撒和栅栏密码
 
 `Cipher Block` ： 分组密码
 `nonce` : [Nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce) 是一个在加密通信只能使用一次的数字。在认证协议中，它往往是一个随机或伪随机数，以避免重放攻击。  
@@ -475,6 +482,19 @@ $$ C = M^e \pmod {n} $$
 
 $$ M = C^d \pmod {n} $$
 
++ RSA signatures  
+
+[RSA Signatures](https://cryptobook.nakov.com/digital-signatures/rsa-signatures)  
+
+1. 计算消息的hash: $h=hash(msg)$
+2. 用私钥 $d$ 加密消息hash: $s=h^d \pmod {n}$
+
++ RSA signatures verification  
+
+1. 计算消息的hash: $h=hash(msg)$
+2. 用公钥 $e$ 解密消息hash: $h'=s^e \pmod {n}$
+3. 比较 $h$ 与 $h'$ 是否相等
+
 ## Modular Exponentiation
 
 RSA 的操作主要是模幂运算，这里有 *Repeated squaring*，*Sliding window*，*Chinese Remainder Theorem (CRT)*，*Montgomery multiplication*，*Karatsuba multiplication* 等。  
@@ -647,13 +667,15 @@ $$ D(E(m\_{1},r\_{1})^{k}{\bmod  n}^{2})=km\_{1}{\bmod  n}$$
 ## 困难问题  
 
 
-+ 离散对数问题  
++ 离散对数问题discrete logarithm problem  
 
 给定素数 $p$ 和正整数 $g$ ，知道 $g^x \pmod{p}$ 的值，求 $x$ 。  
 
-+ 椭圆曲线上的离散对数问题  
++ 椭圆曲线上的离散对数问题 elliptic curve discrete logarithm problem  
 
 k为正整数，P 是椭圆曲线上的点，已知 $P^k$ 和 $P$ ，计算 $k=\log_{P}{P^k}$ 。
+
+[Elliptic-Curve Discrete Logarithm Problem (ECDLP)](https://cryptobook.nakov.com/asymmetric-key-ciphers/elliptic-curve-cryptography-ecc#elliptic-curve-discrete-logarithm-problem-ecdlp)  
 
 [离散对数和椭圆曲线加密原理](https://blog.csdn.net/qmickecs/article/details/76585303)  
 
@@ -869,7 +891,49 @@ A flaw in the random number generator on Android allowed hackers to find the ECD
 Sony's Playstation implementation of ECDSA had a similar vulnerability.   
 A good source of random numbers is needed on the machine making the signatures. Dual_EC_DRBG is not recommended.
 
-from [A (Relatively Easy To Understand) Primer on Elliptic Curve Cryptography](https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/)
+from [A (Relatively Easy To Understand) Primer on Elliptic Curve Cryptography](https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/)  
+
+# Elliptic Curve Cryptography (ECC)  
+
+[Elliptic Curve Cryptography (ECC)](https://cryptobook.nakov.com/asymmetric-key-ciphers/elliptic-curve-cryptography-ecc)  
+
+基于椭圆曲线的密码算法包括：
+
+1. ECC签名算法，比如ECDSA和EdDSA  
+
+2. ECC加密算法，比如ECIES integrated encryption scheme and EEECC (EC-based ElGamal).
+
+3. ECC密钥协商，比如ECDH、X25519。    
+
+
+ECC算法可以选取不同的椭圆曲线，根据曲线的不同，安全等级、密钥长度、计算速度也不同。  
+比如 `secp256k1` 和 `Curve25519` 。   
+一般，ECC私钥长度为 256 bits，但是也分曲线。比如 192-bit (curve secp192r1), 233-bit (curve sect233k1), 224-bit (curve secp224k1), 256-bit (curves secp256k1 and Curve25519), 283-bit (curve sect283k1), 384-bit (curves p384 and secp384r1), 409-bit (curve sect409r1), 414-bit (curve Curve41417), 448-bit (curve Curve448-Goldilocks), 511-bit (curve M-511), 521-bit (curve P-521), 571-bit (curve sect571k1)。  
+
+椭圆曲线的函数表示：  $y^2 = x^3 + a*x + b$  
+例如，对于 secp256k1，$y^2 = x^3 + 7$，a=0,b=7。  
+
+
+椭圆曲线上的操作包括点加（ EC point addition），点乘（EC point multiplication）。  
+
+椭圆曲线的几点要素：  
++ Еlliptic curve (EC) over finite field $𝔽_p$
++ $G$ == generator point (fixed constant, a base point on the EC)
++ $k$ == private key (integer)
++ $P$ == public key (point)  
+
+私钥是 一个整数，公钥是一个椭圆曲线上的点(EC point)，$P = k * G$。  
+
+有限域上的椭圆曲线的点构成了循环群，因此定义曲线的阶数 `order` 为EC全部的点。  
+定义无穷远点为 任一点乘以 0 得到的点。  
+但是有些曲线会生成若干$h$循环子群，每个子群的阶数为$r$，因此整个群的阶数为 $n=h*r$。  
+
+
++ Curve25519  
+
+$y^2 = x^3 + 486662x^2 + x$
+
+
 # 国产密码算法
 
 国产密码算法（国密算法）是指国家密码局认定的`国产商用密码算法`，在金融领域目前主要使用公开的SM2、SM3、SM4三类算法，分别是非对称算法、哈希算法和对称算法。 其中`SM`代表“商密”，即用于商用的、不涉及国家秘密的密码技术。

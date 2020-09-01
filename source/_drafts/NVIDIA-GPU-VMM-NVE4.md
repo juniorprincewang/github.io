@@ -19,7 +19,7 @@ categories:
 
 关于 channel 的设置要重点看 fifo chan，即  <https://github.com/skeggsb/nouveau/blob/master/drm/nouveau/nvkm/subdev/mmu/gpfifogk104.c> 。  
 
-channel descriptor 的抽象概念并没有在gpfifo中找到。  
+channel descriptor 的抽象概念对应的结构体是 `PFIFO_CHAN[ID].CHAN` 和 `PFIFO_CHAN[ID].STATE`。  
 正如CPU 中虚拟页表一样，不同channel的虚拟地址由页目录根地址记录，而这个PD记录在了 `PFIFO_CHAN` MMIO 寄存器中。  
 
 ```c
