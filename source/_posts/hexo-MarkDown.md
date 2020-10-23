@@ -107,7 +107,14 @@ categories:
 
 #### hexo的文章资源文件夹[3]
 
+添加图片有**绝对路径**和**相对路径**两种方法，推荐使用绝对路径的方法，相较而言比较稳定。
 
++ 绝对路径添加图片的方法  
+ 
+创建文件夹`source/images` 并将图片存放在此文件夹中，然后通过 `![](/images/image.jpg)` 来访问。  
+这种方法可适用于 hexo drafts 和 posts 的文档。  
+
++ 相对路径添加图片的方法
 
 通过将 config.yml 文件中的 post_asset_folder 选项设为 true 来打开。
 ```

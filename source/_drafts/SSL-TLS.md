@@ -29,3 +29,5 @@ categories:
 5. **Server** and **Browser** now encrypt all transmitted data with the session key.
 
 由于公钥密码算法占用计算资源大和时间长，因此在协议中只在创建对称密钥时使用一次。  
+
+![](/img/SSL-TLS/ssl_handshake.svg)  

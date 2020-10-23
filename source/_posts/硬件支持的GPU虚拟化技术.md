@@ -81,7 +81,7 @@ GVT-g QEMU源码 <https://github.com/intel/IGVTg-qemu>
 ## NVIDIA GRID
 
 GRID vGPU 是NVIDIA 支持虚拟化的GPU技术，NVIDIA vGPU在特定的GPU卡上支持。  
-NVIDIA 最早引入GRID技术的GPU 是 NVIDIA GRID K1。 
+NVIDIA 最早引入GRID技术的GPU 是 NVIDIA GRID K1，K2，NVIDIA Tesla M6, and M60。 
 
 [白皮书 NVIDIA GRID: GRAPHICS ACCELERATED VDI WITH THE VISUAL PERFORMANCE OF A WORKSTATION,White Paper | May 2014 ](https://www.nvidia.com/content/grid/resources/White_paper_graphics_accelerated_VDI_v1.pdf)
 介绍 GRID 技术是GPU的 MMU 将Host的虚拟地址转换的device的物理地址是隔离的，维护了 256个独立的input buffer，将每个VM提交的命令流隔离到独自的context中。  
@@ -139,5 +139,8 @@ SRIOV 通过 IOMMU 对DMA请求进行保护，实现GPA到 HPA 的转换。
 
 SRIOV 对GPU的虚拟在Host端的GPU硬件，固件和GIM驱动。  
 
+# 参考资料  
 
+[XenGT为什么会比GRID vGPU先实现基于vGPU的在线迁移呢？](https://blog.51cto.com/tasnrh/1833289)  
+[设备内存管理单元的虚拟化方法](https://patentimages.storage.googleapis.com/f1/8e/b3/4a390abd50cb0f/WO2018192160A1.pdf)  
 

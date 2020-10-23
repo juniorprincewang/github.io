@@ -36,7 +36,7 @@ titlecase: false # Transform title into titlecase
 filename_case: 0
 # render drafts and display
 render_drafts: false
-post_asset_folder: true # 上传图片
+post_asset_folder: false # 上传图片
 relative_link: false
 future: true
 highlight:
