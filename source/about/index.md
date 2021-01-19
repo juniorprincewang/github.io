@@ -9,4 +9,5 @@
 
 已发表论文：
 
-[1] Wang Z., Zheng F., Lin J., Dong J. (2018) Utilizing GPU Virtualization to Protect the Private Keys of GPU Cryptographic Computation. In: Naccache D. et al. (eds) Information and Communications Security. ICICS 2018. Lecture Notes in Computer Science, vol 11149. Springer, Cham
++ [1] Utilizing GPU Virtualization to Protect the Private Keys of GPU Cryptographic Computation. Wang Z., Zheng F., Lin J., Dong J. (2018) In: Naccache D. et al. (eds) Information and Communications Security. ICICS 2018. Lecture Notes in Computer Science, vol 11149. Springer, Cham  
++ [2] SEGIVE: A Practical Framework of Secure GPU Execution in Virtualization Environment. Ziyang Wang, Fangyu Zheng and Jingqiang Lin... IPCCC 2020.
