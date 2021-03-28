@@ -4,8 +4,8 @@ tags:
   - certificate
   - PKI
 categories:
-  - - security
-    - crypto
+  - security
+  - crypto
 date: 2020-10-23 15:04:06
 ---
 

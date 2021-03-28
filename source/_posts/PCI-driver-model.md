@@ -47,7 +47,7 @@ $ lspci
 
 在驱动已探测到设备后, 它常常需要读或写 3 个地址空间: 内存（Device Memory）, 端口（I/O port，PIO）, 和配置（Configuration Space）。 特别地, 存取配置空间对驱动是至关重要的, 因为这是唯一的找到设备被映射到内存和 I/O 空间的位置的方法。
 
-![PCI设备配置空间](../PCI-driver-model/450px-Pci-config-space.svg.png)
+![PCI设备配置空间](/img/PCI-driver-model/450px-Pci-config-space.svg.png)
 
 PCI配置空间寄存器定义在 *include/uapi/linux/pci_regs.h* 。  
 ```c

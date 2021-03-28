@@ -1,5 +1,5 @@
 ---
-title: C语言printf中%.*s
+title: C语言printf中格式化字符串问题
 date: 2018-11-21 15:05:55
 tags:
     - printf

@@ -37,7 +37,7 @@ G80 一代的显卡的内存管理模块，即MMU，将用户可见的虚拟内�
 + partition cycle： 
 + encryption flag：
 
-![GPU页表](../NVIDIA-GPU虚拟内存/GPU页表.png)
+![GPU页表](/img/NVIDIA-GPU-VMM-NV50/page-table.png)
 
 
 虚拟内存访问也会以失败结束，比如不在当前页，这就会触发缺页中断。

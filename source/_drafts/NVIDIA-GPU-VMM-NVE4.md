@@ -97,7 +97,7 @@ gk104_vmm_desc_17_12[] = {
 页目录的操作的描述符函数 `gf100_vmm_pgd`，页表的操作的描述符函数 `gf100_vmm_pgt` 。  
 注意，这里还有个大页表的概念LPT，即每页 17 bits。  
 
-![NVE4页表图](../NVIDIA-GPU-VMM-NVE4/pagetable.jpg)
+![NVE4页表图](/img/NVIDIA-GPU-VMM-NVE4/pagetable.jpg)
 
 ## Page Directory Update  
 

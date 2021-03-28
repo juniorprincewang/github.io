@@ -52,7 +52,7 @@ sudo reboot
 
 去官网下载，需要填写信息。<http://rcuda.net/index.php/software-request-form.html>
 
-我在这里保存了一份[rCUDAv16.11.04.02-CUDA8.0-linux64.tgz](../rCUDA/rCUDAv16.11.04.02-CUDA8.0-linux64.tgz)，我的系统是64位Ubuntu16.04。
+我在这里保存了一份[rCUDAv16.11.04.02-CUDA8.0-linux64.tgz](/img/rCUDA/rCUDAv16.11.04.02-CUDA8.0-linux64.tgz)，我的系统是64位Ubuntu16.04。
 
 在client和server两端都需要rCUDA的这份文件。
 

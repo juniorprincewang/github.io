@@ -40,7 +40,7 @@ fast
 # 片上内存
 
     
-![硬件模型](../CUDA-memory/hardware-model.png)
+![硬件模型](/img/CUDA-memory/hardware-model.png)
 
 [3.3. On-chip Shared Memory](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#on-chip-shared-memory) 介绍SMX片上共享内存包括：  
 + 每个SP上有一组32位的寄存器
