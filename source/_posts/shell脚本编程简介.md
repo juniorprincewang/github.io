@@ -446,12 +446,86 @@ sh脚本结合系统命令便有了强大的威力，在字符处理领域，有
 ### 排除grep自身
 ### 查找与target相邻的结果
 
+## sed
 ## awk
 
-## sed
-### 插入
-### 替换
-### 删除
+awk 可对文本的每行进行查找、筛选和处理，是 grep、sed的集大成者。  
+
+awk 内置变量：  
+
+```
+ARGC               命令行参数个数
+ARGV               命令行参数排列
+ENVIRON            支持队列中系统环境变量的使用
+FILENAME           awk浏览的文件名
+FNR                浏览文件的记录数
+FS                 设置输入域分隔符，等价于命令行 -F选项
+NF                 浏览记录的域的个数
+NR                 已读的记录数
+OFS                输出域分隔符
+ORS                输出记录分隔符
+RS                 控制记录分隔符
+```
+
+此外, `$0` 变量是指整条记录， `$1` 表示当前行的第一个域, `$2` 表示当前行的第二个域,......以此类推。  
+
+awk中同时提供了`print` 和 `printf` 两种打印输出的函数。  
+其中 `print` 的参数可以是变量、数值或者字符串。字符串必须用双引号引用，参数用逗号分隔。如果没有逗号，参数就串联在一起而无法区分。这里，逗号的作用与输出文件的分隔符的作用是一样的，只是后者是空格而已。  
+`printf` 函数，可以格式化字符串，与C语言用法一致。  
+
+awk 的语法和C语言很相似，有变量和赋值、条件语句、循环语句、数组（字典）等，非常方便我们对搜索字段进行复杂处理。  
+
+比如，可以根据一个文件中的关键字去另一个文件筛选包含关键字的行。  
+
+a.txt  
+```
+key1, value1
+key2, value2
+key3, value3
+key4, value4
+```
+
+b.txt  
+```
+key2
+key4
+```
+
+```sh
+awk -F '[,]' 'NR==FNR{a[$1]=$2;next}NR!=FNR{if($1 in a)print $0":"a[$1]}’ a.txt b.txt
+```
+此命令的原理是： 
+先对a.txt 进行读取处理，再对 b.txt 读取处理。  NR 表示读取的所有行数， FNR 表示读取的当前文件的行数，所以 `NR==FNR` 表示开始读取的第一个文件，而 NR!=FNR 表示读取的第二个文件。  
+对每行以 `,` 为分隔符进行分割处理。当处理第一个文件时，每行分割后的结果是 $1="key1"，但是 $2=" value1"，这里**注意**，`$2` 是包含前置空格的。这个有时候需要处理的。
+我们定义了一个数组（这里是哈希数组），以 `$1` 为关键字，以 `$2` 为值进行存储，即a["key1"]=" value1"。 `next` 表示不进行对后面命令。
+当处理第二个文件时，判断第二个文件的每行的第一个字段 `$1` 是否出现在前面生成的数组 `a` 的关键字中，如果出现，则打印以 key:value 形式打印。  
+
+
+可以对筛选到的文本进行变为大写字符操作：
+
+```sh
+awk '{ print toupper($0) }' <<< "your string"
+```
+
+去除前后空格：  
+
+```sh
+awk -F, '/,/{gsub(/ /, "", $2); print$1","$2} ' input.txt
+# 更具体地 对前空格删除
+gsub(/^[ \t]+/,"",$2) 
+# 对后空格删除
+gsub(/[ \t]+$/,"",$2)}
+```
+
+可参考的资料：  
+[Using AWK to Process Input from Multiple Files](https://stackoverflow.com/questions/14984340/using-awk-to-process-input-from-multiple-files)  
+[What are NR and FNR and what does “NR==FNR” imply?](https://stackoverflow.com/questions/32481877/what-are-nr-and-fnr-and-what-does-nr-fnr-imply)   
+[Using multiple delimiters in awk](https://stackoverflow.com/questions/12204192/using-multiple-delimiters-in-awk)  
+[Check if an awk array contains a value](https://stackoverflow.com/questions/26746361/check-if-an-awk-array-contains-a-value)  
+[Trim leading and trailing spaces from a string in awk](https://stackoverflow.com/questions/20600982/trim-leading-and-trailing-spaces-from-a-string-in-awk)  
+[Can I use awk to convert all the lower-case letters into upper-case?](https://stackoverflow.com/questions/14021899/can-i-use-awk-to-convert-all-the-lower-case-letters-into-upper-case)  
+[Idiomatic awk](https://backreference.org/2010/02/10/idiomatic-awk/)  
+[[awk shell] 判断一个文件中内容在另一个文件中](https://blog.csdn.net/luanjinlu/article/details/78122429)  
 
 ## xargs
 ## curl
