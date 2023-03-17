@@ -7,7 +7,7 @@ categories:
 - [linux,shell]
 ---
 
-本篇博客介绍shell脚本的语法知识。
+本篇博客介绍shell脚本的语法知识。更多Bash使用请参考[Bash Reference Manual](https://www.gnu.org/software/bash/manual/bash.html)。
 
 <!-- more -->
 
@@ -78,31 +78,49 @@ done
 
 ## 使用变量
 使用一个定义过的变量，只要在变量名前面加美元符号 `$` 即可，如：
-
+```
 	your_name="test"
 	echo $your_name
 	echo ${your_name}
-
+```
 变量名外面的花括号是可选的，加不加都行，加花括号是为了帮助解释器识别变量的边界，比如下面这种情况：
-
+```
 	for skill in Python C Shell Java; do
 		echo "I am good at ${skill}Script"
 	done
-
+```
 如果不给 `skill` 变量加花括号，写成 `echo "I am good at $skillScript"` ，解释器就会把 `$skillScript` 当成一个变量（其值为空），代码执行结果就不是我们期望的样子了。
 
 推荐给所有变量加上花括号，这是个好的编程习惯。
 
 ## 重定义变量
 已定义的变量，可以被重新定义，如：
-
+```
 	your_name="test"
 	echo $your_name
 	
 	your_name="foo"
 	echo $your_name
-	
+```
 这样写是合法的，但注意，第二次赋值的时候不能写 `$your_name="foo"` ，使用变量的时候才加美元符。
+
+## 变量的测试和内容替换
+
+
+|变量配置方式 	|	str 没有配置 |	str 为空字符串 |	str 已配置非为空字符串 |
+|--|	--|	--| -- |
+| `var=${str-expr}`	| `var=expr` |	`var=`	| `var=$str` |
+| `var=${str:-expr}`| `var=expr` |	`var=expr` | 	`var=$str` |
+| `var=${str+expr}` |	`var=` |	`var=expr` |	`var=expr` |
+| `var=${str:+expr}` |	`var=` |	`var=` |	`var=expr` |
+| `var=${str=expr}` |	`str=expr`  `var=expr` |	str 不变 var=	| str 不变 `var=$str` |
+| `var=${str:=expr}` |	`str=expr` `var=expr` |	`str=expr` `var=expr`	| str 不变 `var=$str` |
+| `var=${str?expr}` |	expr 输出至 stderr |	var= 				|	`var=$str` |
+| `var=${str:?expr}` |	expr 输出至 stderr |	expr 输出至 stderr 	 |	`var=$str` |
+
+说明：冒号的作用是，被测试的变量未被配置或者是已被配置为空字符串时，都能够用后面的内容来替换与配置。
+
+[变量的测试与内容替换](http://cn.linux.vbird.org/linux_basic/0320bash.php)
 
 ## 特殊变量
 
@@ -150,6 +168,26 @@ fi
 
 ```
 
+### `shift [n]`
+
+`shift` 命令用于对参数左移n个位置，同时左边被覆盖的参数都被销毁，默认n为1。
+比如：
+```
+#!/bin/bash
+while [ $# != 0 ];do
+	echo "第一个参数为：$1,参数个数为：$#"
+	shift
+done
+```
+
+> run.sh a b c d e f
+
+	第一个参数为：a,参数个数为：6
+	第一个参数为：b,参数个数为：5
+	第一个参数为：c,参数个数为：4
+	第一个参数为：d,参数个数为：3
+	第一个参数为：e,参数个数为：2
+	第一个参数为：f,参数个数为：1
 
 # 注释
 
@@ -166,40 +204,84 @@ COMMENT
 字符串是 `shell` 编程中最常用最有用的数据类型，字符串可以用单引号，也可以用双引号，也可以不用引号。单双引号的区别跟PHP类似。
 
 ## 单引号
-
+```
 	str='this is a string'
-
+```
 单引号字符串的限制：
 
 - 单引号里的任何字符都会原样输出，单引号字符串中的变量是无效的
 - 单引号字串中不能出现单引号（对单引号使用转义符后也不行）
  
 ## 双引号
-
+```
 	your_name='test'
 	str="Hello, I know your are \"$your_name\"! \n"
-
+```
 - 双引号里可以有变量
 - 双引号里可以出现转义字符
 
 ## 字符串操作
 ### 拼接字符串
-	
+
+```
 	your_name="test"
 	greeting="hello, "$your_name" !"
 	greeting_1="hello, ${your_name} !"
 	
 	echo $greeting $greeting_1
+```
 
 ### 获取字符串长度：
 
+```
 	string="abcd"
 	echo ${#string} #输出：4
+```
 
 ### 提取子字符串
-
+```
 	string="foos bar"
 	echo ${string:1:3} #输出：foo
+```
+
+### 子字符串替换
+
+|format|description|
+|--|--|
+| `${变量#关键词}` 	| 若变量内容从头开始的数据符合『关键词』，则将符合的**最短**数据删除 |
+| `${变量##关键词}` 	| 若变量内容从头开始的数据符合『关键词』，则将符合的**最长**数据删除 |
+| `${变量%关键词}` 	| 若变量内容从尾向前的数据符合『关键词』，则将符合的**最短**数据删除 |
+| `${变量%%关键词}` 	| 若变量内容从尾向前的数据符合『关键词』，则将符合的**最长**数据删除 |
+| `${变量/旧字符串/新字符串}` | 若变量内容符合『旧字符串』则『**第一个**旧字符串会被新字符串取代』|
+| `${变量//旧字符串/新字符串}` | 若变量内容符合『旧字符串』则『**全部**的旧字符串会被新字符串取代』|
+
+例子：
+```
+[centos ~]# x="a1 b1 c2 d2"
+[centos ~]# echo ${x}
+a1 b1 c2 d2
+[centos ~]# echo ${x#*1}
+b1 c2 d2
+[centos ~]# echo ${x##*1}
+c2 d2
+[centos ~]# echo ${x%1*}
+a1 b
+[centos ~]# echo ${x%%1*}
+a
+[centos ~]# echo ${x/1/3}
+a3 b1 c2 d2
+[centos ~]# echo ${x//1/3}
+a3 b3 c2 d2
+[centos ~]# echo ${x//?1/z3}
+z3 z3 c2 d2
+[centos ~]# basename /usr/bin
+bin
+[centos ~]# dirname /usr/bin
+/usr
+```
+
+[What is the meaning of the ${0##...} syntax with variable, braces and hash character in bash?](https://stackoverflow.com/questions/2059794/what-is-the-meaning-of-the-0-syntax-with-variable-braces-and-hash-chara)  
+[变量内容的删除、取代与替换](http://cn.linux.vbird.org/linux_basic/0320bash.php)
 
 ## 更多
 参见本文档末尾的参考资料中[Advanced Bash-Scripting Guid Chapter 10.1](http://tldp.org/LDP/abs/html/string-manipulation.html)
@@ -215,13 +297,23 @@ COMMENT
 |操作符 |	特征|
 |-------|-------|
 |! EXPRESSION 		|	EXPRESSION 条件为假	|
-|-n STRING			|  STRING 长度大于0 		|
+|EXPRESSION1 **`-a`** EXPRESSION2  |	EXPRESSION1 与 EXPRESSION2 都为 true，此处 `a` 为and |
+|EXPRESSION1 **`-o`** EXPRESSION2  |	EXPRESSION1 或者 EXPRESSION2 为 true，此处 `o` 为or |
+|-n STRING			|  STRING 长度大于0 	|
 |-z STRING			|  STRING 长度为0		|
 |STRING1 = STRING2  |	STRING1 与 STRING2 字符串相同 |
 |STRING1 != STRING2	| STRING1 与 STRING2 字符串不同 |
-|INTEGER1 -eq INTEGER2 |	INTEGER1 数值上与 INTEGER2相等 |
-|INTEGER1 -gt INTEGER2 |	INTEGER1 数值上比 INTEGER2 大|
-|INTEGER1 -lt INTEGER2 |	INTEGER1 数值上比 INTEGER2 小|
+|INTEGER1 **`-eq`** INTEGER2 |	INTEGER1 数值上与 INTEGER2相等，equal |
+|INTEGER1 **`-ge`** INTEGER2 |	INTEGER1 数值上比 INTEGER2 大或相等， greater than or equal to|
+|INTEGER1 **`-gt`** INTEGER2 |	INTEGER1 数值上比 INTEGER2 大， greater than|
+|INTEGER1 **`-le`** INTEGER2 |	INTEGER1 数值上比 INTEGER2 小或相等， less than or equal to|
+|INTEGER1 **`-lt`** INTEGER2 |	INTEGER1 数值上比 INTEGER2 小，less than|
+|INTEGER1 **`-ne`** INTEGER2 |	INTEGER1 数值上比 INTEGER2 不相等，not equal to|
+|FILE1 **`-ef`** FILE2 |	FILE1 与 FILE2 有相同的 device 和 inode numbers|
+|FILE1 **`-nt`** FILE2 |	FILE1 与 FILE2 相比更新（modification date），newer than|
+|FILE1 **`-ot`** FILE2 |	FILE1 与 FILE2 相比更旧，older than|
+|-b FILE |	FILE 存在并且是block文件|
+|-c FILE |	FILE 存在并且是character文件|
 |-d FILE |	FILE 目录存在|
 |-e FILE |	FILE 存在.|
 |-r FILE |	FILE 存在并且可读.|
@@ -249,7 +341,7 @@ root@PowerEdge-R610:~/tools# echo $?
 ## 流程控制
 
 和Java、PHP等语言不一样，`bash` 的流程控制不可为空，如：
-
+```
 	<?php
 	if (isset($_GET["q"])) {
 		search(q);
@@ -257,20 +349,20 @@ root@PowerEdge-R610:~/tools# echo $?
 	else {
 		//do nothing
 	}
-
+```
 在 `bash shell` 里可不能这么写，如果else分支没有语句执行，就不要写这个else。
 
 还要注意，`BASH` 里的 `if [ $foo -eq 0 ]`，这个方括号跟 `Java/PHP` 里 `if` 后面的圆括号大不相同，它是一个可执行程序（和 `ls` , `grep` 一样），想不到吧？在CentOS上，它在 `/usr/bin` 目录下：
-
+```
 	ll /usr/bin/[
 	-rwxr-xr-x. 1 root root 33408 4月  16 2018 /usr/bin/[
-
+```
 正因为方括号在这里是一个可执行程序，方括号后面必须加空格，不能写成 `if [$foo -eq 0]`。
 
 
 ## if else
 ### if
-
+```
 	if condition
 	then
 		command1 
@@ -278,7 +370,7 @@ root@PowerEdge-R610:~/tools# echo $?
 		...
 		commandN 
 	fi
-
+```
 写成一行（适用于终端命令提示符）：
 
 	if `ps -ef | grep ssh`;  then echo hello; fi
@@ -286,6 +378,7 @@ root@PowerEdge-R610:~/tools# echo $?
 末尾的fi就是if倒过来拼写，后面还会遇到类似的
 
 ### if else
+```
 	if condition
 	then
 		command1 
@@ -295,9 +388,9 @@ root@PowerEdge-R610:~/tools# echo $?
 	else
 		command
 	fi
-
+```
 ### if else-if else
-
+```
 	if condition1
 	then
 		command1
@@ -306,11 +399,11 @@ root@PowerEdge-R610:~/tools# echo $?
 	else
 		commandN
 	fi
-
+```
 ## for while
 ### for
 在开篇的示例里演示过了：
-
+```
 	for var in item1 item2 ... itemN
 	do
 		command1
@@ -318,55 +411,56 @@ root@PowerEdge-R610:~/tools# echo $?
 		...
 		commandN
 	done
-
+```
 写成一行：
-
+```
 	for var in item1 item2 ... itemN; do command1; command2… done;
-
+```
 循环内部同样可以使用 `break` 、 `continue` 等命令。  
 
 ### C风格的for
-
+```
 	for (( EXP1; EXP2; EXP3 ))
 	do
 		command1
 		command2
 		command3
 	done
-
+```
 ### while
+```
 	while condition
 	do
 		command
 	done
-	
+```
 ### 无限循环
-
+```
 	while :
 	do
 		command
 	done
-
+```
 或者
-
+```
 	while true
 	do
 		command
 	done
-
+```
 或者
-
+```
 	for (( ; ; ))
-
+```
 ### until
-
+```
 	until condition
 	do
 		command
 	done
-
+```
 ## case
-
+```
 	case "${opt}" in
 		"Install-Puppet-Server" )
 			install_master $1
@@ -394,8 +488,8 @@ root@PowerEdge-R610:~/tools# echo $?
 
 		* ) echo "Bad option, please choose again"
 	esac
-
-case的语法和C family语言差别很大，它需要一个esac（就是case反过来）作为结束标记，每个case分支用右圆括号，用两个分号表示break
+```
+`case` 的语法和C family语言差别很大，它需要一个esac（就是case反过来）作为结束标记，每个case分支用右圆括号，用两个分号表示break
 
 ## `&&` 和 `||`
 
@@ -409,32 +503,43 @@ fi
 
 # 文件包含
 可以使用source和.关键字，如：
-
+```
 	source ./function.sh
 	. ./function.sh
-
-在bash里，source和.是等效的，他们都是读入function.sh的内容并执行其内容（类似PHP里的include），为了更好的可移植性，推荐使用第二种写法。
+```
+在bash里，`source` 和 `.` 是等效的，他们都是读入 `function.sh` 的内容并执行其内容（类似PHP里的 `include`），为了更好的可移植性，推荐使用第二种写法。
 
 包含一个文件和执行一个文件一样，也要写这个文件的路径，不能光写文件名，比如上述例子中:
-
+```
 	. ./function.sh
-
+```
 不可以写作：
-
+```
 	. function.sh
-
+```
 如果function.sh是用户传入的参数，如何获得它的绝对路径呢？方法是：
-
+```
 	real_path=`readlink -f $1`#$1是用户输入的参数，如function.sh
 	. $real_path
-
+```
 
 # 用户输入
 ## 执行脚本时传入
 ## 脚本运行中输入
 ## select菜单
 
-# stdin和stdout
+# stdin、stdout和stderr
+
+文件描述符0 代表 `stdin`，文件描述符1 代表 `stdout`，文件描述符2 代表 `stderr`。
+
+`&` 指示后面是文件描述符，而不是文件名。因此，使用 `2>&1`，将`>&`视为重定向合并运算符。
+而 `2>1` 会将标准错误输出重定向到名为"1"的文件里。
+
+而 `&>` 会将 `stdout` 与 `stderr` 都重定向到输出文件中。
+
+比如 `command &>file` 也可以写成 `command >file 2>&1`。
+
+[What does " 2>&1 " mean?](https://stackoverflow.com/a/818284)
 
 # 常用的命令
 sh脚本结合系统命令便有了强大的威力，在字符处理领域，有grep、awk、sed三剑客，grep负责找出特定的行，awk能将行拆分成多个字段，sed则可以实现更新插入删除等写操作。

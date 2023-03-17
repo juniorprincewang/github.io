@@ -166,7 +166,7 @@ git tag --delete tagname
 
 [How to delete a remote tag?](https://stackoverflow.com/a/5480292)  
 
-# 版本管理
+# version management
 
 + [5.2 代码回滚：Reset、Checkout、Revert 的选择](https://github.com/geeeeeeeeek/git-recipes/wiki/5.2-%E4%BB%A3%E7%A0%81%E5%9B%9E%E6%BB%9A%EF%BC%9AReset%E3%80%81Checkout%E3%80%81Revert-%E7%9A%84%E9%80%89%E6%8B%A9)  
 
@@ -308,9 +308,15 @@ git clean -d -fx
 + `-f` 强制运行
 
 
-# github操作
+# github
 
 为了方便管理repository，免去每次push时候输入账户名和密码，接下来我们需要生成SSH公私钥对，并将公钥上传到 project->Settings->Deploy keys->Add deploy key。
+SSH免密登录只针对以 *git@github.com:torvalds/linux.git* 形式的url访问的仓库，如果当前仓库以 HTTPS访问，需要先转换下。
+```
+git remote set-url origin <SSH url>
+```
+比如： `git remote set-url origin git@github.com:torvalds/linux.git`，查看 remote url 是否生效： `git remote -v`。
+
 首先[检查是否已经存在 SSH key](https://help.github.com/en/articles/checking-for-existing-ssh-keys) 。  
 
 ```

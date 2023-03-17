@@ -320,6 +320,15 @@ all:
 	one
 	two
 	three
++ `foreach`
+
+`foreach` 的语法：`$(foreach  var, list, text)`，参数`list`中的单词逐一取出放到参数`var`中，然后再执行`text`所包含的表达式。每一次会返回一个字符串，循环过程中，`text`所返回的每个字符串会以空格分隔，最后当整个循环结束时，`text`返回的每个字符串所组成的整个字符串（以空格分隔）将会是 `foreach` 函数的返回值。
+例如:
+```
+names := a b c d
+files := $(foreach n,$(names),$(n).o)
+```
+`$(files)`的值是 `a.o b.o c.o d.o`。
 
 ## 函数
 Makefile 还可以使用函数，格式如下。
@@ -330,7 +339,7 @@ $(function arguments)
 ```
 ${function arguments}
 ```
-Makefile提供了许多内置函数，可供调用。下面是几个常用的内置函数。
+Makefile提供了许多内置函数可供调用。下面是几个常用的内置函数。更多函数请参考 [8 Functions for Transforming Text](https://www.gnu.org/software/make/manual/html_node/Functions.html)。
 
 - shell 函数
 
@@ -384,6 +393,21 @@ $(patsubst %.c,%.o,x.c.c bar.c)
 min: $(OUTPUT:.js=.min.js)
 ```
 上面代码的意思是，将变量 `OUTPUT` 中的后缀名 `.js` 全部替换成 `.min.js` 。
+
+- call 函数
+
+`call` 可以用于常见新的参数化函数，类似于函数调用，格式如下。
+```
+$(call variable,param,param,…)
+```
+`make` 命令会将其展开，每个 `param` 会依次赋值成临时变量 `$(1)`、`$(2)` 等，变量 `$(0)` 被赋值成 `variable`。
+例如：
+```
+reverse = $(2) $(1)
+
+foo = $(call reverse,a,b)
+```
+得到的结果是 *b a*。
 
 # 参考
 - [跟我一起写 Makefile（一）](https://blog.csdn.net/haoel/article/details/2886)
