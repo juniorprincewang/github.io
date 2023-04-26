@@ -33,11 +33,18 @@ categories:
 + `Alt D` : 删除光标之后的一个 `单词`
 + `Ctrl W` : 删除光标前的 `单词` (Word, 不包含空格的字符串)
 + `Ctrl K` ：删除光标之后所有字符
-+ `Ctrl U` : 清空当前键入的命令
++ `Ctrl U` : 清空光标前的所有字符
 + `Ctrl Y` : 粘贴 `Ctrl W` 或 `Ctrl K` 删除的内容
 
-盗图一张...**Ctrl U 命令应当是清空所有输入命令，而非光标之前所有字符！**
+盗图一张...
 ![bash命令行命令操作](/img/linux-docs/bash.jpg)
+
+## 清屏
+
++ `Ctrl L` / `clear` : 清空屏幕(添加新行，相当于向上滚动屏幕，原屏幕历史还保留）
++ `reset` / `printf "\033c"`: 彻底清空屏幕
+
+[How to really clear the terminal?](https://askubuntu.com/a/684887)
 
 # man
 
@@ -439,12 +446,12 @@ scp -P 2222 -r local_folder remote_username@remote_ip:remote_folder
 
 [1] [每天一个linux命令（60）：scp命令](http://www.cnblogs.com/peida/archive/2013/03/15/2960802.html)
 
-## pssh  
+## pssh
 
 pssh命令是一个python编写可以在多台服务器上执行命令的工具，全程 parallel-ssh。  
 此命令用于同步在多台虚拟机内测试，终于找到此命令。  
 
-### 安装  
+### 安装
 
 1、ubuntu安装pssh，
 ```sh
@@ -470,7 +477,7 @@ echo "alias pslurp=parallel-slurp" >> ~/.bashrc && . ~/.bashrc
 + `pslurp` 将文件从客户机复制到管理机；
 + `pnuke` 并行地在客户机杀进程。
 
-### 命令  
+### 命令
 
 命令格式：  
 ```
@@ -520,9 +527,9 @@ pssh -h hosts.txt -i -o /tmp/pssh/ uptime
 
 
 
-# 文件操作  
+# 文件操作
 
-## rm 
+## rm
 
 + [Unable to remove a file which has a name like a command argument [duplicate]](https://askubuntu.com/a/482183)  
 
@@ -538,7 +545,7 @@ rm -- -r
 rm /home/you/directory/-r
 ```
 
-## xxd  
+## xxd
 
 将文件以二进制呈现。  
 
@@ -1235,7 +1242,7 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-L
 4. 启动Ubuntu即可，这里默认以 root 用户登录。
 
 
-### 文件系统交互 
+### 文件系统交互
 
 Ubuntu默认把磁盘挂载到/mnt目录下，可以直接`cd /mnt/c` 进入C盘，进而操作文件。
 
