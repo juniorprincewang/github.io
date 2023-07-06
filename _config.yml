@@ -67,7 +67,7 @@ pagination_dir: page
 math:
   engine: 'mathjax' # or 'katex'
   mathjax:
-    src: custom_mathjax_source
+    # src: custom_mathjax_source
     config:
       # MathJax config
   katex:
@@ -88,7 +88,7 @@ stylus:
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: git@github.com:juniorprincewang/juniorprincewang.github.io.git
+  repository: https://github.com/juniorprincewang/juniorprincewang.github.io.git
   branch: master
 
 index_generator:
