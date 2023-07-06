@@ -6,13 +6,14 @@ tags:
 - hexo
 categories:
 - [hexo]
+mathjax: true
 ---
 
 本篇博客介绍了Markdown最常见命令的语法，有代码有效果。持续更新
 
 <!-- more -->
 
-## 文章头格式 
+## 文章头格式
 
 `front-matter`
 
@@ -163,7 +164,7 @@ post_asset_folder: true
 	1. 北京
 	2. 天津
 
-### 交叉引用  
+### 交叉引用
 
 在需要引用的分级标题后设置一个 id。  
 ```
@@ -251,7 +252,6 @@ post_asset_folder: true
 ```
 python -c "print '\x01'*10"
 (此处应该有三个` ` `,但是现在无法显示lol)
-
 ```
 
 反正效果就是
@@ -296,24 +296,71 @@ int main(){
 
 ## LaTeX 公式
 
-待续。。。
+hexo 提供了两种公式渲染引擎 `mathjax` 和 `katex`，这里选择 `mathjax`。
 
+### 支持markdown公式编辑配置
 
-## 支持markdown公式编辑
-
-在在主题配置文件 *blog\themes\next\_config.yml* 中定位到如下片段:
+在根目录配置文件 *_config.yml*，`math` 的 `engine` 一栏默认选择的是 `mathjax`，对 `src` 注释掉。
 
 ```
-# MathJax Support
-mathjax:
-  enable: true
+#math
+
+math:
+  engine: 'mathjax' # or 'katex'
+  mathjax:
+    # src: custom_mathjax_source
+    config:
+      # MathJax config
+  katex:
+    css: custom_css_source
+    js: custom_js_source # not used
+    config:
+      # KaTeX config
+```
+
+在主题Next配置文件 *blog\themes\next\_config.yml* 中，`math` 的 `per_page` 为 `true` 表示每个文件默认启用 mathjax，而为 `false` 则需要在 `front-matter` 中添加 `mathjax: true`，不加 `mathjax` 和 `mathjax: false` 效果一样，都不启用 mathjax。
+例如
+```
+---
+title: Will Render Math
+mathjax: true
+---
+```
+
+启用 `mathjax`，`enable: true`。
+```
+# Math Formulas Render Support
+math:
+  # Default (true) will load mathjax / katex script on demand.
+  # That is it only render those page which has `mathjax: true` in Front-matter.
+  # If you set it to false, it will load mathjax / katex srcipt EVERY PAGE.
   per_page: false
-  cdn: //cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML
+
+  # hexo-renderer-pandoc (or hexo-renderer-kramed) required for full MathJax support.
+  mathjax:
+    enable: true
+    # See: https://mhchem.github.io/MathJax-mhchem/
+    mhchem: false
+
+  # hexo-renderer-markdown-it-plus (or hexo-renderer-markdown-it with markdown-it-katex plugin) required for full Katex support.
+  katex:
+    enable: false
+    # See: https://github.com/KaTeX/KaTeX/tree/master/contrib/copy-tex
+    copy_tex: false
 ```
 
 并在博客文件夹下执行：
 ```
 npm install hexo-math --save
+npm un hexo-renderer-marked
+npm i hexo-renderer-pandoc
+```
+`hexo-renderer-pandoc` 需要安装 `pandoc`，安装pandoc参见[这里](https://github.com/jgm/pandoc/blob/master/INSTALL.md)。Windows上安装完成后要重启电脑，不然启动hexo服务会一直提示pandoc exited with code null的错误。
+
+重启后，执行 `hexo clean` 再重新生成或启动服务。
+```
+$ hexo clean && hexo g -d
+# or hexo clean && hexo s
 ```
 
 ### 插入公式
@@ -331,7 +378,8 @@ npm install hexo-math --save
 ```
 $$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
 ```
-$$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
+
+$$x^{y^z}=(1+{\rm e}^x)^{-2xy^w}$$
 
 ### 输入上下标
 
@@ -363,7 +411,7 @@ $$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
 
 更多的去参考 [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)
 
-# 参考网站
+## 参考网站
 
 [1] [Hexo Markdown 简明语法手册](https://hyxxsfwy.github.io/2016/01/15/Hexo-Markdown-%E7%AE%80%E6%98%8E%E8%AF%AD%E6%B3%95%E6%89%8B%E5%86%8C/)
 [2] [Hexo基础操作和Markdown语法](https://yuxishe.github.io/2016/11/15/Hexo/)

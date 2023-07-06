@@ -2,6 +2,7 @@
 title: 浮点数拾遗
 tags:
 - float point
+mathjax: true
 ---
 对浮点数做知识点整理，包括表示方式和与十进制转换。  
 <!-- more -->
@@ -13,7 +14,7 @@ tags:
 
 表示形式为：
 
-$$ V=(-1)^{s} \times M \times 2^{E} $$
+$$V=(-1)^{s} \times M \times 2^{E}$$
 
 + `s` 表示符号位，只有1比特；
 + M表示有效数字
@@ -58,13 +59,14 @@ S EEEEEEEEEEE FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
 对于双精度浮点数而言：  
 
-If E=2047 and F is nonzero, then V=NaN ("Not a number")
-If E=2047 and F is zero and S is 1, then V=-Infinity
-If E=2047 and F is zero and S is 0, then V=Infinity
-If 0<E<2047 then V=(-1)**S * 2 ** (E-1023) * (1.F) where "1.F" is intended to represent the binary number created by prefixing F with an implicit leading 1 and a binary point.
-If E=0 and F is nonzero, then V=(-1)**S * 2 ** (-1022) * (0.F) These are "unnormalized" values.
-If E=0 and F is zero and S is 1, then V=-0
-If E=0 and F is zero and S is 0, then V=0
+
+	If E=2047 and F is nonzero, then V=NaN ("Not a number")
+	If E=2047 and F is zero and S is 1, then V=-Infinity
+	If E=2047 and F is zero and S is 0, then V=Infinity
+	If 0<E<2047 then V=(-1)**S * 2 ** (E-1023) * (1.F) where "1.F" is intended to represent the binary number created by prefixing F with an implicit leading 1 and a binary point.
+	If E=0 and F is nonzero, then V=(-1)**S * 2 ** (-1022) * (0.F) These are "unnormalized" values.
+	If E=0 and F is zero and S is 1, then V=-0
+	If E=0 and F is zero and S is 0, then V=0
 
 为方便理解，需要跟十进制转换后加深理解，两个相互转换的方法见下方：
 

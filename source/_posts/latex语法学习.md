@@ -3,6 +3,7 @@ title: latex语法学习
 date: 2019-08-15 15:48:04
 tags:
 - latex
+- markdown
 categories:
 - [latex]
 ---
@@ -101,13 +102,13 @@ document. A brief introduction about the main subject.
 
 ## 段落
 
-### 换行  
+### 换行
 
 + 如果要另起一段，需要摁 "Enter" 键两次。即两段之间有一空白行。  
 + `\\` 放在行位换行。  
 + `\par` 放在段尾，起到了换行的作用。  
 
-### Paragraph Alignment(Text Justification)  
+### Paragraph Alignment(Text Justification)
 
 默认两端对齐，如果要调整，可以换成 *center*, *flushleft* 和 *flushright* 。  
 
@@ -146,7 +147,7 @@ paragraph. This is the text in second paragraph.
 + font families： `\textrm` 等  
 
 
-## 添加图片 
+## 添加图片
 
 latex本身不管理图片，需要引入包 *graphicx*，此包包含两个命令 `\includegraphics{...}` 和 `\graphicspath{...}` 。  
 
@@ -212,7 +213,7 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 
 表格的 *标题、标签和引用* 和 图片的基本一致。  
 
-### 表格脚注  
+### 表格脚注
 
 需要用到 `threeparttable` 这个包。  
 注意在 `tablenotes` 标签之间使用 `\item`。  
@@ -434,3 +435,7 @@ Table \ref{table:data} is an example of referenced \LaTeX{} elements.
 可以使用 latex，pdflatex，xelatex 或者 lualatex 命令来编译 生成 PDF 文件，CTeX 开发者推荐使用 xelatex 命令编译源文件。
 
 + [如何在 LaTeX 中使用中文](https://jdhao.github.io/2018/03/29/latex-chinese.zh/)
+
+# Markdown 中使用latex
+
+[MarkDown 中使用 LaTeX 数学式 ](https://www.cnblogs.com/nowgood/p/latexstart.html)
