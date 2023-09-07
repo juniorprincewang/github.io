@@ -1,4 +1,5 @@
 ---
+name: فارسی
 title:
   archive: بایگانی
   category: دسته بندی
@@ -17,6 +18,7 @@ menu:
 sidebar:
   overview: نمای کلی
   toc: فهرست مطالب
+  links: Links
 post:
   posted: نوشته شده در
   edited: ویرایش شده در
@@ -24,7 +26,6 @@ post:
   modified: تغییر یافته
   edit: ویرایش این پست
   in: در
-  more: بیشتر
   read_more: ادامه مطلب
   untitled: بدون عنوان
   sticky: چسبنده
@@ -33,13 +34,18 @@ post:
   copyright:
     author: نویسنده پست
     link: لینک پست
+    post_author: Written by
+    post_link: This article originally appeared on
     license_title: مقررات کپی رایت
     license_content: "همه مقالات در این وبلاگ تحت %s مجاز می باشند مگر اینکه به طور اضافی بیان شوند."
+    license_content_reprint: "This article is a reprinted article and has been reprinted with permission. Please indicate the source!"
 footer:
   powered: "قدرت گرفته از %s"
-  theme: پوسته
   total_views: مجموع بازدیدها
   total_visitors: تعداد بازدید کنندگان
+widget:
+  github: Follow me on GitHub
+  chat: Chat
 counter:
   tag_cloud:
     zero: بدون برچسب
@@ -59,6 +65,9 @@ state:
   categories: دسته بندی ها
 search:
   placeholder: جستجو...
+  empty: "We didn't find any results for the search: %s"
+  hits_time: "%s results found in %s ms"
+  hits: "%s results found"
 cheers:
   um: ام...
   ok: باشه
@@ -75,11 +84,17 @@ reward:
   donate: کمک مالی
   wechatpay: پرداخت WeChat
   alipay: AliPay
+  paypal: PayPal
   bitcoin: بیت کوین
+  comment: Buy me a coffee
+follow_me:
+  welcome: Welcome to my other publishing channels
 accessibility:
   nav_toggle: تغییر ناوبری
   prev_page: صفحه قبلی
   next_page: صفحه بعدی
+  back_to_top: Back to top
+  select_lang: Select language
 symbols_count_time:
   count: تعداد نمادها در مقاله
   count_total: تعداد کل نمادها

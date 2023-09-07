@@ -2,48 +2,35 @@
 
 'use strict';
 
+const { parse } = require('url');
+const { unescapeHTML } = require('hexo-util');
+
 hexo.extend.filter.register('after_post_render', data => {
   const { config } = hexo;
   const theme = hexo.theme.config;
-  const filters = {
-    exturl  : theme.exturl,
-    lazyload: theme.lazyload
-  };
-  if (!filters.exturl && !filters.lazyload) return;
-  const cheerio = require('cheerio');
-  const $ = cheerio.load(data.content, {
-    decodeEntities: false
-  });
-  if (filters.lazyload) {
-    $('img').each((i, o) => {
-      let src = $(o).attr('src');
-      $(o).attr('data-src', src).removeAttr('src');
+  if (!theme.exturl && !theme.lazyload) return;
+  if (theme.lazyload) {
+    data.content = data.content.replace(/(<img[^>]*)\ssrc=/ig, '$1 data-src=');
+  }
+  if (theme.exturl) {
+    const siteHost = parse(config.url).hostname || config.url;
+    // External URL icon
+    const exturlIcon = theme.exturl_icon ? '<i class="fa fa-external-link-alt"></i>' : '';
+    data.content = data.content.replace(/<a[^>]*\shref="([^"]+)"[^>]*>([^<]+)<\/a>/ig, (match, href, html) => {
+      // Exit if the href attribute doesn't exist.
+      if (!href) return match;
+
+      // Exit if the url has same host with `config.url`, which means it's an internal link.
+      const link = parse(href);
+      if (!link.protocol || link.hostname === siteHost) return match;
+
+      // Return encrypted URL with title.
+      const title = match.match(/title="([^"]+)"/);
+      const encoded = Buffer.from(unescapeHTML(href)).toString('base64');
+      if (title) return `<span class="exturl" data-url="${encoded}" title="${title[1]}">${html}${exturlIcon}</span>`;
+
+      return `<span class="exturl" data-url="${encoded}">${html}${exturlIcon}</span>`;
     });
   }
-  if (filters.exturl) {
-    const url = require('url');
-    var siteHost = url.parse(config.url).hostname || config.url;
 
-    $('a').each((i, o) => {
-      var href = $(o).attr('href');
-      // Exit if the href attribute doesn't exists.
-      if (!href) return;
-
-      var data = url.parse(href);
-
-      // Exit if the url has same host with `config.url`, which means it's an internal link
-      if (!data.protocol || data.hostname === siteHost) return;
-
-      // If title atribute filled, set it as title; if not, set url as title.
-      var title = $(o).attr('title') || href;
-
-      var encoded = Buffer.from(href).toString('base64');
-
-      $(o).replaceWith(() => {
-        return $(`<span class="exturl" data-url="${encoded}" title="${title}">${$(o).html()}<i class="fa fa-external-link"></i></span>`);
-      });
-    });
-  }
-  data.content = $.html();
-
-}, 20);
+}, 0);
