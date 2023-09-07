@@ -50,7 +50,7 @@ git pull --rebase origin master
 [如何解决failed to push some refs to git](https://www.jianshu.com/p/835e0a48c825)  
 
 
-# clone 
+# clone
 
 `--depth <depth>` 可以加速repository的下载速度，指定commit history中的depth条记录。
 
@@ -65,6 +65,21 @@ git clone --depth 1 git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.g
 ```
 git clone -b 'v2.0' --single-branch --depth 1 https://github.com/git/git.git
 ```
+
+## submodule
+
+仓库使用了其他仓库，可将其他仓库当作子模块，通过submodule来管理，只需要在必要时更新子模块即可。
+git将submodule有关的信息保存在两个地方：
+- `.gitmodules`: 有版本控制，修改后会同步到其他仓库，使用 `submodule` 相关命令时候会自动更新
+- `.git/config`： 需要手动更新，或者执行同步命令 `submodule sync`  将新的配置从 `.gitsubmodule` 拷贝至此。
+
+子模块代码更新：
+```
+git submodule sync
+git submodule update --init --recursive
+```
+
+[7.11 Git 工具 - 子模块](https://git-scm.com/book/zh/v2/Git-%E5%B7%A5%E5%85%B7-%E5%AD%90%E6%A8%A1%E5%9D%97)
 
 # branch
 
@@ -244,7 +259,7 @@ git reset -- main/dontcheckmein.txt
 完全忽略某一文件：
 在仓库根目录创建 *.gitignore* 文件，并将要忽略的文件相对路径写入。
 
-## *.gitkeep*  
+## *.gitkeep*
 
 git无法追踪一个空的文件夹，当用户需要追踪(track)一个空的文件夹的时候，按照惯例，大家会把一个称为.gitkeep的文件放在这些文件夹里。  
 
@@ -363,7 +378,7 @@ ssh-add -l
 之后将 *~/.ssh/id_rsa.pub* 内容拷贝到github的project->Settings->Deploy keys->Add deploy key。
 
 这时执行 `push` 命令可能还会出现输入密码的问题，或者说没有权限。  
-查看*.git/config*文件查看传输协议, 如果是https模式改为ssh模式即可。  
+查看 *.git/config* 文件查看传输协议, 如果是https模式改为ssh模式即可。  
 
 [Github Deploy Key 操作如何避免输密码](https://www.jianshu.com/p/8d0fae451745)  
 
@@ -393,7 +408,7 @@ git push origin master
 
 + [github如何向开源项目提交pr ](https://github.com/gnipbao/iblog/issues/19)  
 
-## git fork后同步 upstream repository  
+## git fork后同步 upstream repository
 
 分两个步骤，
 1. 给fork配置远程仓库
@@ -439,3 +454,25 @@ git push origin master
 [gitlab或github下fork后如何同步源的新更新内容？](https://www.zhihu.com/question/28676261)  
 [Configuring a remote for a fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork)  
 [Sync a fork of a repository to keep it up-to-date with the upstream repository.](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork)   
+
+## fatal: remote error: Git repository not found
+
+远程仓库存在但是在clone或者pull时候报错不存在，可以通过查看并清理认证缓存方式解决(Credential Issues)。
+
+首先执行 `git config -l | grep credential.helper` 确认机器是否有系统缓存，当返回值不为空时说明机器有认证缓存。
+
+credential.helper有多个模式，分别为 `cache`、 `store`、 `osxkeychain`、 `manager-core`。
+
+- `cache` 模式会将凭证存放在内存中一段时间。 密码永远不会被存储在磁盘中，并且在15分钟后从内存中清除。
+- `store` 模式会将凭证用明文的形式存放在磁盘中，并且永不过期。
+    + 该模式为通用模式，所有操作系统均可能出现该模式缓存，清理手段如下：
+        `cat ~/.gitconfig` ，在文件内找到 credential 对应的缓存文件路径，一般默认为~/.git-credentials，查询出缓存文件路径后，可直接删除掉该文件，也可通过编辑该文件来修改认证缓存信息，认证缓存格式为https://用户名:密码@github.com
+- `osxkeychain` 模式，该模式为Mac系统独有，它会将凭证缓存到你系统用户的钥匙串中。 这种方式将凭证存放在磁盘中，并且永不过期
+    + 该模式清理手段如下：通过钥匙串，搜索git相关的凭证，点击进入后可以看到缓存的用户名称并清除。
+- `manager-core` 模式，该模式为windows系统独有，效果类似于“osxkeychain” 模式
+    + 该清理手段如下：开始-->控制面板-->所有控制面板项-->凭据管理器-->清除和git相关记录的凭据
+
+
+
+
+[[Fix] ‘Fatal: Repository Not Found’ Error In Git](https://www.technewstoday.com/repository-not-found/)

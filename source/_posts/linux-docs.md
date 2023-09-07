@@ -446,6 +446,24 @@ scp -P 2222 -r local_folder remote_username@remote_ip:remote_folder
 
 [1] [每天一个linux命令（60）：scp命令](http://www.cnblogs.com/peida/archive/2013/03/15/2960802.html)
 
+### 大文件传输
+
+传输大文件可以采用化整为零的思路。
+先拆成小文件，得到 xaa, xab, xac... 等
+```
+split -b 1G file.zip
+```
+使用 `scp` 传输
+```
+scp xa* xxx@xxx:
+```
+
+将传输完成的所有文件组装
+```
+cat xa* > file.zip
+```
+
+[Transferring large (8 GB) files over ssh](https://unix.stackexchange.com/a/190540)
 ## pssh
 
 pssh命令是一个python编写可以在多台服务器上执行命令的工具，全程 parallel-ssh。  
@@ -528,6 +546,17 @@ pssh -h hosts.txt -i -o /tmp/pssh/ uptime
 
 
 # 文件操作
+
+## cp
+
++ [How can I copy the contents of a folder to another folder in a different directory using terminal?](https://askubuntu.com/a/86891)
+
+```sh
+cp -a /source/. /dest/
+```
+
+- `-a` 选项保留了所有文件属性也包括链接(option is an improved recursive option, that preserve all file attributes, and also preserve symlinks.)
+- 在源文件路径最后得 `.` 表示所有文件和文件夹，包含了隐藏文件。(The `.` at end of the source path is a specific `cp` syntax that allow to copy all files and folders, included hidden ones.)
 
 ## rm
 

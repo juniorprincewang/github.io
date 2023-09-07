@@ -32,6 +32,69 @@ categories:
 
 # 搭建 Shadowsocks 服务
 
+新项目地址迁移到了 [shadowsocks-rust](https://github.com/shadowsocks/shadowsocks-rust)，构建方式换成rust而已。
+
+先安装rust工具集rustup：
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+根据提示导入环境变量：
+```
+source $HOME/.cargo/env
+```
+查看rust版本
+
+```
+rustc --version
+```
+
+那么可以根据 shadowsocks-rust 的 README 指引选择一种安装方式即可。
+可以从 crates.io 上安装
+```
+cargo install shadowsocks-rust
+```
+
+或者源码编译安装
+```
+git clone https://github.com/shadowsocks/shadowsocks-rust.git
+cd shadowsocks-rust
+cargo build --release
+sudo make install TARGET=release
+```
+安装成功后编写server配置文件
+
+```
+{
+    "server": "::",
+    "server_port": 8388,
+    "password": "rwQc8qPXVsRpGx3uW+Y3Lj4Y42yF9Bs0xg1pmx8/+bo=",
+    "method": "chacha20-ietf-poly1305",
+    // ONLY FOR `sslocal`
+    // Delete these lines if you are running `ssserver` or `ssmanager`
+    //"local_address": "127.0.0.1",
+    //"local_port": 1080
+}
+```
+
+启动server服务：
+```
+ssserver -c config.json
+```
+
+注意将server服务端口在云服务器安全组规则中和防火墙中放行，启动服务后可以在本地测试下该服务是否成功启动。
+```
+telnet XX.XX.XX.XX 8388
+```
+
+安卓客户端在 [Shadowsocks for Android](https://github.com/shadowsocks/shadowsocks-android) 这个项目，windows客户端在 [Shadowsocks for Windows](https://github.com/shadowsocks/shadowsocks-windows)，下载release版本后安装配置再连接测试即可。
+
+[如何部署Shadowsocks-rust和Cloak](https://mirror.xyz/0x78874f895B96BEc9f48e67BAE188309D285b45a0/Q6n5_2LXgPVDla_oJtcO3EZ3Z98z4LDlryIGId2yMLY)  
+[ShadowSocks Rust的配置与优化](https://blog.substitute.tech/blog/20220506-shadowsocks-rust.html)
+
+--------------------------------------
+**以下为历史版本**
+
 搭建VPS的过程中遇到的问题。
 安装的操作系统是CENTOS 7。
 
@@ -132,7 +195,7 @@ nohup ssserver -c /etc/shadowsocks.json &
 
 到此，就可以访问[油管](www.youtube.com)啦。
 
-## ubuntu client  
+## ubuntu client
 
 这里实验了ss GUI client。  
 

@@ -1,5 +1,6 @@
 ---
 title: AMD GPU open-source资料整理
+date: 2019-08-17 18:53:51
 tags:
 - GPU
 - amd
@@ -19,14 +20,14 @@ xorg 保存了若干AMD开源的GPU设计白皮书。 <https://www.x.org/docs/AM
 
 
 
-# opensource driver  
+# opensource driver
 
 AMDGPU 在linux内核源码的 drivers/gpu/drm/amd/amdgpu 目录下。  
 
 [AMD Open Source Driver for Vulkan](https://github.com/GPUOpen-Drivers/AMDVLK)  
 [ROCm: open source platform for HPC GPU computing](https://rocmdocs.amd.com)
 
-# blogs  
+# blogs
 
 关于 此白皮技术书的解读：  
 [Linux环境下的图形系统和AMD R600显卡编程(1)——Linux环境下的图形系统简介]https://www.cnblogs.com/shoemaker/p/linux_graphics01.html()  

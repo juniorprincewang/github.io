@@ -4,8 +4,10 @@ date: 2017-08-01 22:51:53
 tags:
 - markdown
 - hexo
+- latex
 categories:
 - [hexo]
+- [markdown]
 mathjax: true
 ---
 
@@ -380,6 +382,32 @@ $$ x^{y^z}=(1+{\rm e}^x)^{-2xy^w} $$
 ```
 
 $$x^{y^z}=(1+{\rm e}^x)^{-2xy^w}$$
+
+公式中添加编号：
+```
+$$y=F(x) \tag{1.1} \label{eq1}$$
+```
+$$y=F(x) \tag{1.1} \label{eq1}$$
+
+引用公式 $\eqref{eq1}$。
+
+或者使用自动编号：
+```
+$$
+\begin{equation} 
+y=F(x)
+\end{equation}
+\label{eq2}
+$$
+```
+$$
+\begin{equation} 
+y=F(x)
+\end{equation}
+\label{eq2}
+$$
+
+引用公式 $\eqref{eq2}$。
 
 ### 输入上下标
 

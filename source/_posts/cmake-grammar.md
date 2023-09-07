@@ -2,6 +2,7 @@
 title: cmake-grammar
 date: 2021-06-02 11:32:27
 tags:
+- cmake
 categories:
 ---
 
@@ -11,7 +12,7 @@ categories:
 
 
 
-# demo  
+# demo
 
 ```
 cmake_minimum_required(VERSION 3.9)
@@ -33,7 +34,7 @@ install(FILES ${CMAKE_BINARY_DIR}/mylib.pc
 
 语法解析：  
 
-[cmake命令](https://cmake.org/cmake/help/v3.19/manual/cmake-commands.7.html)可以分为脚本命令与项目命令。  
+[**cmake命令**](https://cmake.org/cmake/help/v3.19/manual/cmake-commands.7.html)可以分为脚本命令与项目命令。  
 
 脚本命令包括一些命令流控制（if、else、elseif、endif、break、continue...）、循环（while、endwhile、foreach、endforeach...）、设置（set、set_property、set_directory_properties...）、cmake相关（cmake_language、cmake_minimum_required...）、查找（find_file、find_library、find_package、find_path、find_program...）等等。  
 
@@ -85,7 +86,7 @@ install(FILES ${CMAKE_BINARY_DIR}/mylib.pc
     * `CMAKE_CURRENT_BINARY_DIR`:target 编译目录。
     * `CMAKE_CURRENT_SOURCE_DIR`:当前处理的源文件所在目录。
 
-# 参考资料  
+# 参考资料
 
 系统学习CMake资料：  
 
@@ -94,8 +95,10 @@ install(FILES ${CMAKE_BINARY_DIR}/mylib.pc
 + [Introduction to CMake by Example](http://derekmolloy.ie/hello-world-introductions-to-cmake/)  
 
 其他具体的参考资料：  
+
 + [How to create a shared library with cmake?](https://stackoverflow.com/questions/17511496/how-to-create-a-shared-library-with-cmake/45843676#45843676)  
 
 每个subdirectory下面都有CMakeLists.txt。  
+
 + [cmake-add-subdirectory-vs-include](https://stackoverflow.com/a/48510440)  
 + [[CMake] Difference between ADD_SUBDIRECTORY and INCLUDE](https://cmake.org/pipermail/cmake/2007-November/017897.html)  
