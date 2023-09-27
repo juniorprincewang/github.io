@@ -29,7 +29,7 @@ npm install -g hexo-cli
 
 ## 发布到github
 
-### Permission denied (publickey).  
+### Permission denied (publickey).
 
 在使用 `git push`  时候报以下错误。
 
@@ -53,7 +53,7 @@ ssh-keygen -t rsa -C "youremail" -f your_file
 
 然后再登录github，进入个人设置settings--->ssh and gpg keys-->new ssh key 添加新生成的公钥即可。
 
-### hexo Error: Host key verification failed.   
+### hexo Error: Host key verification failed.
 
 
 今天电脑重装系统，我决定将这个hexo文件夹整个拷贝到新电脑，配置好本地环境后，再部署的时候遇到了问题。
@@ -97,6 +97,25 @@ ssh git@github.com
 ```
 hexo d -g
 ```
+
+## 主题
+
+本博客更换到了 [NexT 主题UI](https://github.com/next-theme/hexo-theme-next)，直接clone下来最新代码到 `themes/next` 目录即可。
+
+```
+cd hexo-site
+git clone https://github.com/next-theme/hexo-theme-next themes/next
+```
+
+修改 Hexo 的配置文件，改成next主题:
+```
+theme: next
+```
+
+查看next的安装包依赖 hexo 本地是否满足，一般都要升级依赖包，见下文。
+
+如果本地预览和部署的文件有差异，猜测是由依赖包不符引起的，需要升级，并且部署前将 `.deploy_git` 文件夹删除。
+
 
 ## 添加访问统计
 
@@ -233,7 +252,7 @@ hexo publish [layout] <filename>
 
 
 
-# 参考  
+# 参考
 + [Hexo｜快速搭建自己（Github）博客](http://www.jianshu.com/p/808554f12929)  
 + [给Hexo博客添加访问统计](http://www.jianshu.com/p/8a8f880f40c0)  
 + [搭建hexo部署到github图文教程 亲测可用超详细](https://m.paopaoche.net/new/85988)
