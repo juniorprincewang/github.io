@@ -30,7 +30,7 @@ git commit -m "some info"
 git remote add origin https://github.com/yourgithubID/gitRepo.git 
 ```
 
-这个 *https://github.com/yourgithubID/gitRepo.git * 必须存在，需要提前到github上建好。当然这里不限于github，其他git服务器也可以。  
+这个 *https://github.com/yourgithubID/gitRepo.git* 必须存在，需要提前到github上建好。当然这里不限于github，其他git服务器也可以。  
 
 将本地仓库push到远程仓库  
 ```
@@ -69,9 +69,15 @@ git clone -b 'v2.0' --single-branch --depth 1 https://github.com/git/git.git
 ## submodule
 
 仓库使用了其他仓库，可将其他仓库当作子模块，通过submodule来管理，只需要在必要时更新子模块即可。
-git将submodule有关的信息保存在两个地方：
+git将submodule有关的信息保存在两个地方：  
+
 - `.gitmodules`: 有版本控制，修改后会同步到其他仓库，使用 `submodule` 相关命令时候会自动更新
 - `.git/config`： 需要手动更新，或者执行同步命令 `submodule sync`  将新的配置从 `.gitsubmodule` 拷贝至此。
+
+clone 时候下载 submodule
+```
+git clone --recursive YOUR-GIT-REPO-URL
+```
 
 子模块代码更新：
 ```
@@ -180,6 +186,35 @@ git tag --delete tagname
 ```
 
 [How to delete a remote tag?](https://stackoverflow.com/a/5480292)  
+
+# diff/patch
+
+## 生成patch
+
++ single file
+```
+git diff main.c > test.patch
+```
++ all files
+```
+git diff > test.patch
+```
+
+## 应用patch
+
++ check patch file
+```
+git apply --stat test.patch
+```
+or
+```
+git apply --check test.patch
+```
+
++ apply patch
+```
+git apply test.patch
+```
 
 # version management
 
@@ -317,6 +352,7 @@ git clean -d -fx
 ```
 
 `git clean` 参数:  
+
 + `-n` 显示将要删除的文件和目录；
 + `-x` 删除忽略文件已经对git来说不识别的文件
 + `-d` 删除未被添加到git的路径中的文件
@@ -354,6 +390,7 @@ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 ```
 
 如果想要保存不一样的位置或者名称，在下面的提示信息中输入即可。  
+
 > Enter a file in which to save the key (/home/you/.ssh/id_rsa): [Press enter]
 
 将 SSH key 添加到 ssh-agent 中。 

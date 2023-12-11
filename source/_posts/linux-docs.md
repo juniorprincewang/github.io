@@ -318,6 +318,7 @@ ping6 ipv6.google.com
 apt-get install bridge-utils        # 虚拟网桥工具
 apt-get install uml-utilities       # UML（User-mode linux）工具
 ```
+
 ### 添加网卡/网桥
 
 网桥是一个虚拟的交换机，而tap接口就是在这个虚拟交换机上用来和虚拟机连接的那个口。虚拟机就通过这么一个连接的方式和主机连接。  
@@ -400,11 +401,54 @@ sudo networkctl status -a
 ```
 
 
+## rsync
+
+[rsync(1) - Linux man page](https://linux.die.net/man/1/rsync) 是一款用于remote(local)的文件拷贝工具。 优势在于它的差量传输(delta-transfer)，仅仅传输原文件和目标文件的差异部分，这包括了强制覆盖目标文件。
+
+使用说明：
+```
+Local:  rsync [OPTION...] SRC... [DEST]
+Access via remote shell:
+  Pull: rsync [OPTION...] [USER@]HOST:SRC... [DEST]
+  Push: rsync [OPTION...] SRC... [USER@]HOST:DEST
+Access via rsync daemon:
+  Pull: rsync [OPTION...] [USER@]HOST::SRC... [DEST]
+        rsync [OPTION...] rsync://[USER@]HOST[:PORT]/SRC... [DEST]
+  Push: rsync [OPTION...] SRC... [USER@]HOST::DEST
+        rsync [OPTION...] SRC... rsync://[USER@]HOST[:PORT]/DEST
+```
+
+使用选项很多，最主要的
+
+    -r, --recursive 对子目录以递归模式处理;
+    -u, --update  仅仅进行更新，也就是跳过所有已经存在于DST，并且文件时间晚于要备份的文件；
+    --delete 删除那些target中有而source没有的文件;
+    -a, --archive  归档模式，表示以递归的方式传输文件，并保持所有文件属性不变，相当于使用了组合参数-rlptgoD;
+    --progress                    显示备份过程
+
+几个典型例子：
+
++ [Copying files using rsync from remote server to local machine](https://stackoverflow.com/a/9090859)
+
+```
+rsync -chavzP --delete -e "ssh -p $portNumber" user@remote.host:/path/to/copy /local/path
+```
+
++ [Recursively copy a directory (using cp, tar or rsync)](https://gist.github.com/zachharkey/7198898)
+
+```
+rsync -aH /source/ /target
+```
+
+`-H, --hard-links`: 保留硬链结
+
+可以同 `cp -a /source /target` 相互替换。
 
 ## scp
 
 `scp`是`secure copy`的缩写，用于远程文件的安全拷贝，使用ssh传输，认证。
 主机上的文件前可能需要用户名和主机指定并通过`:`连接文件。本地文件可通过相对或绝对路径表示。
+
 ### 表示格式为
 `scp [参数] [原路径] [目标路径]`
 
@@ -464,6 +508,7 @@ cat xa* > file.zip
 ```
 
 [Transferring large (8 GB) files over ssh](https://unix.stackexchange.com/a/190540)
+
 ## pssh
 
 pssh命令是一个python编写可以在多台服务器上执行命令的工具，全程 parallel-ssh。  

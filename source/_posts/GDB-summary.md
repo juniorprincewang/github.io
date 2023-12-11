@@ -101,7 +101,7 @@ $g++ -g hello.cpp -o hello
 
 列出所有的断点。
 
-## list  
+## list
 
 `list` 用于查看源代码，简记为 `l` ，默认每次显示10行。  
 
@@ -122,7 +122,7 @@ print [First element]@[Element count]
 print /[Format] [Expression]
 ```
 
-### 格式化输出  
+### 格式化输出
 
 	print /[Format] [Expression]
 		o - octal
@@ -193,7 +193,7 @@ x/FMT ADDRESS
 
 `attach process-id`: 在GDB状态下，开始调试一个正在运行的进程，其进程ID为process-id
 
-## set 
+## set
 
 `set variable`将值赋予变量
 
@@ -202,9 +202,24 @@ x/FMT ADDRESS
 识别数组或数据的类型，`ptype`比`whatis`功能更强，它可以提供一个结构的定义。
 
 
+# GDB arguments
+
++ `-symbols=file` `-s file`: 读取符号表文件。
++ `-write `: 使能往可执行文件和核心文件写的权限。
++ `-exec=file`、 `-e file`: 在适当时候把File作为可执行的文件执行，来检测与core dump结合的数据。
++ `－se File`: 从File读取符号表并把它作为可执行文件。
++ `－core File`、`-c File`: 把File作为core dump来执行。
++ `－command=File`、`-x File`: 从File中执行GDB命令。
++ `－directory=Directory`、 `-d Directory`: 把Dicrctory加入源文件搜索的路径中。
+
+还有更常用的带命令行参数启动：
+```
+gdb --args executablename arg1 arg2 arg3
+```
 
 # 参考网站
 [1] [GDB十分钟教程](http://blog.csdn.net/liigo/article/details/582231)
 [2] [Using GDB to Develop Exploits - A Basic Run Through](https://www.exploit-db.com/papers/13205/)
 [3] [比较全面的gdb调试命令](http://blog.csdn.net/dadalan/article/details/3758025)
 [4] [1.gdb 调试利器](https://linuxtools-rst.readthedocs.io/zh_CN/latest/tool/gdb.html)
+[5] [How do I run a program with commandline arguments using GDB within a Bash script?](https://stackoverflow.com/a/6121299)

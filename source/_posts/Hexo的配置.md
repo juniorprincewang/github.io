@@ -206,16 +206,42 @@ npm install --save
 
 # 操作
 
+## 启动本地server
+
+有时候本地server启动后会遇到端口被占用情况，可以在 `node_modules\hexo-server\index.js` 文件中设置 或者在启动命令行中加入 `-p <port>` 启动选项。
+
+```js
+hexo.config.server = Object.assign({
+  port: 4321,
+  log: false,
+  // `undefined` uses Node's default (try `::` with fallback to `0.0.0.0`)
+  ip: undefined,
+  compress: false,
+  header: true
+}, hexo.config.server);
+
+hexo.extend.console.register('server', 'Start the server.', {
+  desc: 'Start the server and watch for file changes.',
+  options: [
+    {name: '-i, --ip', desc: 'Override the default server IP. Bind to all IP address by default.'},
+    {name: '-p, --port', desc: 'Override the default port.'},
+    {name: '-s, --static', desc: 'Only serve static files.'},
+    {name: '-l, --log [format]', desc: 'Enable logger. Override log format.'},
+    {name: '-o, --open', desc: 'Immediately open the server url in your default web browser.'}
+  ]
+}, require('./lib/server'));
+```
+
 ## 发布新文章
 
-执行 new 命令， 生成指定名称的文章至 *hexo\source_posts\postName.md* 。  
+执行 `new` 命令， 生成指定名称的文章至 `hexo\source_posts\postName.md` 。  
 
 ```
 hexo new [layout] "postName" 
 ```
 
 其中layout是可选参数，默认值为post。有哪些layout呢，请到scaffolds目录下查看，这些文件名称就是layout名称。  
-当然你可以添加自己的layout，方法就是添加一个文件即可，同时你也可以编辑现有的layout，比如post的layout默认是 *hexo\scaffolds\post.md*。  
+当然你可以添加自己的layout，方法就是添加一个文件即可，同时你也可以编辑现有的layout，比如post的layout默认是 `hexo\scaffolds\post.md`。  
 
 
 
@@ -236,7 +262,7 @@ hexo new [layout] "postName"
 
 ## 草稿
 
-草稿默认不会显示在页面上，链接也搜索不到。会在 *source/_drafts* 目录下生成一个 *new-draft.md* 文件。  
+草稿默认不会显示在页面上，链接也搜索不到。会在 `source/_drafts` 目录下生成一个 `new-draft.md` 文件。  
 ```
 hexo new draft "new draft"
 ```
